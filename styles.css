@@ -1,0 +1,40 @@
+:root {
+    --primary-color: #202121;
+    --secondary-color: #376666;
+}
+
+body {
+    background: var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 85vh;
+    margin: 0;
+    text-align: center;
+}
+
+#header {
+    text-align: center;
+    color: #dedede;
+    font-size: 30px;
+}
+
+.login-button {
+    display: inline-block;
+    width: 75%;
+    padding: 30px;
+    text-align: center;
+    background-color: var(--secondary-color);
+    color: var(--primary-color);
+    font-size: 40px;
+    font-weight: bold;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+    background-color: #1d3636;
+}
