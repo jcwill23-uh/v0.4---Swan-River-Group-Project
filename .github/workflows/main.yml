@@ -25,7 +25,7 @@ jobs:
       # Deploy CSS files (optional step if your CSS is separate)
       - name: Deploy CSS Files
         run: |
-          cp -r _css/* ./gh-pages/  # Copies your CSS to the same location as HTML
+          cp -r _css/* ./gh-pages/  
 
       # Commit changes to the gh-pages branch
       - name: Commit and push changes
