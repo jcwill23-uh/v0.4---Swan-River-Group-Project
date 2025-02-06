@@ -1,0 +1,40 @@
+name: Deploy Django or Flask Web App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run Tests
+        run: |
+          source venv/bin/activate
+          python manage.py test  # For Django, replace with "pytest" for Flask projects
+
+      - name: Deploy to Heroku
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          heroku git:remote -a your-heroku-app-name
+          git push heroku main
+
+      - name: Notify Deployment Success
+        run: echo "Deployment to Heroku completed successfully."
