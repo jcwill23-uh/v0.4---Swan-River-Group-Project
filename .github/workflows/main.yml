@@ -1,0 +1,51 @@
+name: Deploy Website
+
+on:
+  push:
+    branches:
+      - main  # or the branch you want to deploy from
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Node.js (optional step if you need it for additional tasks)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # Adjust based on your needs
+
+      # Install dependencies (if any)
+      # - name: Install dependencies
+      #   run: npm install
+
+      # Build step (optional if you need a build step for your site)
+      # - name: Build the website
+      #   run: npm run build # Add if you have a build process
+
+      # Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages  # The branch where your website files will be deployed
+          folder: _html  # The folder containing your HTML files
+          target_folder: /  # Root of your gh-pages branch
+
+      # Deploy CSS files
+      - name: Deploy CSS Files
+        run: |
+          cp -r _css/* ./gh-pages/  # Copies your CSS to the same location as HTML
+
+      # Commit changes to the gh-pages branch
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Deploy website updates"
+          git push origin gh-pages
