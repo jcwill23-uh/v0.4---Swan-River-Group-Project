@@ -28,7 +28,7 @@ body {
     padding: 30px;
     text-align: center;
     background-color: var(--secondary-color);
-    color: var(--primary-color);
+    color: var(--darker-white);
     font-size: 40px;
     font-weight: bold;
     border-radius: 8px;
