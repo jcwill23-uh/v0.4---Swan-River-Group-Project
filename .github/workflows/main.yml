@@ -14,29 +14,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Node.js (optional step if you need it for additional tasks)
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'  # Adjust based on your needs
-
-      # Install dependencies (if any)
-      # - name: Install dependencies
-      #   run: npm install
-
-      # Build step (optional if you need a build step for your site)
-      # - name: Build the website
-      #   run: npm run build # Add if you have a build process
-
       # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages  # The branch where your website files will be deployed
           folder: _html  # The folder containing your HTML files
-          target_folder: /  # Root of your gh-pages branch
+          target-folder: /  # Root of your gh-pages branch
 
-      # Deploy CSS files
+      # Deploy CSS files (optional step if your CSS is separate)
       - name: Deploy CSS Files
         run: |
           cp -r _css/* ./gh-pages/  # Copies your CSS to the same location as HTML
