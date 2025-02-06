@@ -1,37 +1,36 @@
-name: Deploy Website
+name: Scrape Talk Locations
 
 on:
   push:
-    branches:
-      - main  # or the branch you want to deploy from
+    paths:
+      - 'talks/**'
+      - 'talkmap.ipynb'
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    
+
     steps:
-      # Check out the repository code
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v2
 
-      # Deploy to GitHub Pages
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: gh-pages  # The branch where your website files will be deployed
-          folder: _html  # The folder containing your HTML files
-          target-folder: /  # Root of your gh-pages branch
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'  # Specify the Python version you need
 
-      # Deploy CSS files (optional step if your CSS is separate)
-      - name: Deploy CSS Files
-        run: |
-          cp -r _css/* ./gh-pages/  # Copies your CSS to the same location as HTML
+    - name: Install dependencies
+      run: |
+        pip install jupyter pandas requests beautifulsoup4 geopy  # Add other dependencies as needed
+        pip install getorg --upgrade
 
-      # Commit changes to the gh-pages branch
-      - name: Commit and push changes
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add .
-          git commit -m "Deploy website updates"
-          git push origin gh-pages
+    - name: Run Jupyter Notebook
+      run: |
+        jupyter nbconvert --to notebook --execute talkmap.ipynb --output talkmap_out.ipynb
+
+    - name: Commit changes
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Automated update of talk locations" || echo "No changes to commit"
+        git push
