@@ -1,0 +1,26 @@
+name: Build and Deploy Website
+
+on:
+  push:
+    branches:
+      - main  # Trigger the workflow on changes to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Use Ubuntu for the build environment
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2  # Checkout the code in the repository
+
+    - name: Set up Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4.2.2
+      with:
+        branch: gh-pages  # The branch to deploy to (GitHub Pages uses this by default)
+        folder: ./  # The folder where the HTML and CSS files are located (current directory in this case)
+        token: ${{ secrets.GITHUB_TOKEN }}  # GitHub token for authentication
