@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project.">
+    <meta name="keywords" content="swan river, group project, cosc 4353">
+    <meta property="og:title" content="Swan River Group Project">
+    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://yourwebsite.com">
+
+    <title>Swan River Group Project</title>
+
+    <link rel="icon" type="image/png" href="/images/swan.png">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="script.js" defer></script>
+</head>
+
+<body class="userList">
+    <div>
+        <h1>List of Users</h1>
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Name &#x25B2;&#x25BC;</th>
+                    <th onclick="sortTable(1)">Email &#x25B2;&#x25BC;</th>
+                    <th onclick="sortTable(2)">Role &#x25B2;&#x25BC;</th>
+                    <th onclick="sortTable(3)">Status &#x25B2;&#x25BC;</th>
+                </tr>
+            </thead>
+            <tbody id="userList">
+                <!-- User rows will be inserted dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <a class="login-btn" href="admin.html">Back to Home</a>
+
+    <script>
+        // Example users
+        const users = [
+          { name: 'John Williams', email: 'jcwill23@cougarnet.uh.edu', role: 'admin', status: 'active' },
+          { name: 'John Doe', email: 'johndoe@email.com', role: 'basicuser', status: 'active'}
+        ];
+    
+        // Render user list into the table
+        function renderUserList(users) {
+          const userListElement = document.getElementById('userList');
+          userListElement.innerHTML = users.map(user => `
+            <tr>
+              <td>${user.name}</td>
+              <td>${user.email}</td>
+              <td>${user.role}</td>
+              <td>${user.status}</td>
+            </tr>
+          `).join('');
+        }
+    
+        // Initial rendering
+        renderUserList(users);
+    
+        // Sorting function
+        function sortTable(columnIndex) {
+          const rows = Array.from(document.querySelectorAll("#userList tr"));
+          
+          const sortedRows = rows.sort((rowA, rowB) => {
+            const cellA = rowA.children[columnIndex].textContent.trim().toLowerCase();
+            const cellB = rowB.children[columnIndex].textContent.trim().toLowerCase();
+    
+            return cellA > cellB ? 1 : cellA < cellB ? -1 : 0;
+          });
+    
+          // Clear the table and append sorted rows
+          document.getElementById('userList').innerHTML = '';
+          sortedRows.forEach(row => document.getElementById('userList').appendChild(row));
+        }
+      </script>
+
+</body>
+</html>

@@ -22,7 +22,7 @@
 
 <body class="normal">
     <form class="edit-info">
-        <h2><u>Edit Profile</u></h2>
+        <h2><u>Create New User</u></h2>
 
         <div class="form-row">
           <label class="edit" for="userName">Name:</label>
@@ -35,20 +35,25 @@
         </div>
       
         <div class="form-row">
-          <label class="edit" for="userRole">Role:</label>
-          <input class="box" type="text" id="userRole" name="userRole" value="" disabled>
+          <label class="edit">Role:</label>
+          <div>
+            <input type="radio" id="basicuser" name="userRole" value="basicuser" required>
+            <label for="basicuser">Basic User</label>
+            
+            <input type="radio" id="admin" name="userRole" value="admin" required>
+            <label for="admin">Admin</label>
+          </div>
         </div>
       
         <div class="form-row">
           <label class="edit" for="userStatus">Status:</label>
-          <input class="box" type="text" id="userStatus" name="userStatus" value="" disabled>
+          <input class="box" type="text" id="userStatus" name="userStatus" value="" required>
         </div>
         <br>
         <button class="save-btn" id="save" type="POST">Save</button>
         
-        <a class="login-btn" href="basic_user_home.html">Back to Home</a>
+        <a class="login-btn" href="admin.html">Back to Home</a>
     </form>
 
-    <script src="editProfile.js"></script>
 </body>
 </html>

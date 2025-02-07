@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="COSC 4353 group project. Admin User Management">
+  <meta name="keywords" content="swan river, admin, user management, cosc 4353">
+  <meta property="og:title" content="Admin User Management">
+  <meta property="og:description" content="Admin Panel for User Management">
+  <meta property="og:image" content="/images/swan.jpg">
+  <meta property="og:url" content="https://yourwebsite.com">
+  <title>Admin User Management</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body class="userList">
+  <div>
+    <h1>Update User Information</h1>
+    <table id="editUserTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">Name &#x25B2;&#x25BC;</th>
+          <th onclick="sortTable(1)">Email &#x25B2;&#x25BC;</th>
+          <th onclick="sortTable(2)">Role &#x25B2;&#x25BC;</th>
+          <th onclick="sortTable(3)">Status &#x25B2;&#x25BC;</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userList">
+        <!-- User rows will be inserted dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+  <a class="login-btn" href="admin.html">Back to Home</a>
+
+  <!-- Modal for confirmation -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <h3>Are you sure you want to save the changes?</h3>
+      <button class="modal-button confirm" onclick="confirmChanges()">Yes</button>
+      <button class="modal-button cancel" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    // Example users
+    const users = [
+      { name: 'John Williams', email: 'jcwill23@cougarnet.uh.edu', role: 'admin', status: 'active' },
+      { name: 'John Doe', email: 'johndoe@email.com', role: 'basicuser', status: 'inactive' }
+    ];
+
+    // Track changes and current user
+    let currentUserIndex = null;
+
+    // Render user list into the table
+    function renderUserList(users) {
+      const userListElement = document.getElementById('userList');
+      userListElement.innerHTML = users.map((user, index) => `
+        <tr>
+          <td><input type="text" value="${user.name}" onchange="updateUser(${index}, 'name', this.value)"></td>
+          <td><input type="email" value="${user.email}" onchange="updateUser(${index}, 'email', this.value)"></td>
+          <td>
+            <label><input type="radio" name="role-${index}" value="admin" ${user.role === 'admin' ? 'checked' : ''} 
+            onchange="updateUser(${index}, 'role', 'admin')"> Admin</label>
+            <label><input type="radio" name="role-${index}" value="basicuser" ${user.role === 'basicuser' ? 'checked' : ''} 
+            onchange="updateUser(${index}, 'role', 'basicuser')"> Basic User</label>
+          </td>
+          <td>
+            <select onchange="updateUser(${index}, 'status', this.value)">
+              <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
+              <option value="inactive" ${user.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+              <option value="suspended" ${user.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+            </select>
+          </td>
+          <td><button class="save-btn" onclick="openModal(${index})">Save Changes</button></td>
+        </tr>
+      `).join('');
+    }
+
+    // Update user property
+    function updateUser(index, property, value) {
+      users[index][property] = value;
+      console.log(`User ${index} updated:`, users[index]);
+    }
+
+    // Open the save changes modal for confirmation
+    function openModal(index) {
+      currentUserIndex = index;
+      document.getElementById('confirmModal').style.display = "block";
+    }
+
+    // Confirm the changes and close the modal
+    function confirmChanges() {
+      const index = currentUserIndex;
+      console.log(`Changes confirmed for user:`, users[index]);
+      closeModal();
+    }
+
+    // Close the modal without saving
+    function closeModal() {
+      document.getElementById('confirmModal').style.display = "none";
+    }
+
+    // Sorting function
+    function sortTable(columnIndex) {
+      const rows = Array.from(document.querySelectorAll("#userList tr"));
+      const sortedRows = rows.sort((rowA, rowB) => {
+        const cellA = rowA.children[columnIndex].querySelector('input, select')?.value?.toLowerCase() || "";
+        const cellB = rowB.children[columnIndex].querySelector('input, select')?.value?.toLowerCase() || "";
+
+        return cellA > cellB ? 1 : cellA < cellB ? -1 : 0;
+      });
+
+      // Clear the table and append sorted rows
+      document.getElementById('userList').innerHTML = '';
+      sortedRows.forEach(row => document.getElementById('userList').appendChild(row));
+    }
+
+    // Initial rendering
+    renderUserList(users);
+  </script>
+</body>
+
+</html>
