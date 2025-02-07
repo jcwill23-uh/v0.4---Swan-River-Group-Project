@@ -21,14 +21,34 @@
 </head>
 
 <body>
-    <div class="user-info">
+    <form class="edit-info">
         <h2><u>Edit Profile</u></h2>
-        <p>Name: </p>
-        <p>Email: </p>
-        <p>Role: </p>
-        <p>Status: </p>
-        <button class="save-btn" id="save" type="POST">Save</button>
-    </div>
 
+        <div class="form-row">
+          <label class="edit" for="userName">Name:</label>
+          <input class="box" type="text" id="userName" name="name" value="" required>
+        </div>
+      
+        <div class="form-row">
+          <label class="edit" for="userEmail">Email:</label>
+          <input class="box" type="email" id="userEmail" name="email" value="" required>
+        </div>
+      
+        <div class="form-row">
+          <label class="edit" for="userRole">Role:</label>
+          <input class="box" type="text" id="userRole" name="userRole" value="" disabled>
+        </div>
+      
+        <div class="form-row">
+          <label class="edit" for="userStatus">Status:</label>
+          <input class="box" type="text" id="userStatus" name="userStatus" value="" disabled>
+        </div>
+        <br>
+        <button class="save-btn" id="save" type="POST">Save</button>
+        
+        <a class="login-btn" href="basic_user_home.html">Back to Home</a>
+    </form>
+
+    <script src="editProfile.js"></script>
 </body>
 </html>
