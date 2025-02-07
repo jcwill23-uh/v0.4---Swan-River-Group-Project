@@ -3,7 +3,7 @@ name: Deploy Website
 on:
   push:
     branches:
-      - main 
+      - main  # Trigger on push to the main branch
   pull_request:
     branches:
       - main
@@ -21,8 +21,7 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
 
-    - name: Push to GitHub Pages
+    - name: Check for changes and deploy
       run: |
-        git add -A
-        git commit -m "Automated deployment"
-        git push origin main:gh-pages  # Push from main to gh-pages
+        # Check if there are any changes to commit
+        git diff --exit-code || (git add -A && git commit -m "Automated deployment" && git push origin main:gh-pages)
