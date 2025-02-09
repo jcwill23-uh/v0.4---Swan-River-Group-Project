@@ -55,10 +55,10 @@ def authorized(resp):
     session['azure_token'] = resp['access_token']
     return redirect('https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html')
 
-@app.route('/admin')
+@app.route('https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html')
 @login_required
 def admin():
-    return render_template('admin.html')
+    return render_template('https://jcwill23-uh.github.io/Swan-River-Group-Project/index.html')
 
 @azure.tokengetter
 def get_azure_token():
