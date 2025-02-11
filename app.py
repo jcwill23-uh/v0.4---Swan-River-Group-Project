@@ -80,9 +80,9 @@ def authorized():
 
         # Redirect based on user role
         if is_admin:
-            return redirect(url_for('admin'))
+            return redirect(url_for('admin.html'))
         else:
-            return redirect(url_for('basic_user_home'))
+            return redirect(url_for('basic_user_home.html'))
 
     except Exception as e:
         print("Error during authorization:", str(e))  # Debug: Print the error
