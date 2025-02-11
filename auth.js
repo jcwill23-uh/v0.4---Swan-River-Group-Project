@@ -27,10 +27,25 @@ async function login() {
     }
 }
 
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+        .then(registration => {
+            console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch(error => {
+            console.error('Service Worker registration failed:', error);
+        });
+}
+
+// auth.js
 function checkAuth() {
     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    console.log('checkAuth called, isLoggedIn:', isLoggedIn);
+
     if (!isLoggedIn) {
-        // Redirect to index.html if not logged in
+        console.log('Not logged in, redirecting to index.html');
         window.location.href = 'index.html';
     }
 }
+
+
