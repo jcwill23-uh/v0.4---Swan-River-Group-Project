@@ -32,6 +32,11 @@ SCOPE = ['User.Read', 'Files.ReadWrite', 'email', 'openid', 'profile']
 # OAuth2 session
 client = WebApplicationClient(CLIENT_ID)
 
+# DELETE ME AFTER TEST
+@app.route('/test_env')
+def test_env():
+    return f"CLIENT_SECRET is: {CLIENT_SECRET[:4]}****"
+
 def generate_pkce_pair():
     code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).rstrip(b'=').decode('utf-8')
     code_challenge = base64.urlsafe_b64encode(hashlib.sha256(code_verifier.encode('utf-8')).digest()).rstrip(b'=').decode('utf-8')
