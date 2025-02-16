@@ -5,7 +5,6 @@ from flask import send_from_directory
 from authlib.integrations.flask_client import OAuth
 import os
 import requests
-# DELETE NEXT LINE, JUST FOR DEBUGGING
 import traceback
 
 # Initialize Flask app
@@ -78,10 +77,11 @@ def home():
 # OAuth Login Route
 @app.route("/login")
 def login():
-    return oauth.microsoft.authorize_redirect(url_for("authorize", _external=True, _scheme="https"))
+    # Use the unique endpoint name "authorize_callback"
+    return oauth.microsoft.authorize_redirect(url_for("authorize_callback", _external=True, _scheme="https"))
 
-# OAuth Authorization Callback
-@app.route('/authorize')
+# OAuth Authorization Callback with unique endpoint name
+@app.route('/authorize', endpoint='authorize_callback')
 def authorize():
     try:
         token = oauth.microsoft.authorize_access_token()
@@ -127,6 +127,7 @@ def authorize():
     except Exception as e:
         app.logger.error("Error processing /authorize callback: %s", traceback.format_exc())
         return jsonify({"error": "Processing failed", "details": str(e)}), 500
+
 # Logout Route
 @app.route('/logout')
 def logout():
@@ -171,7 +172,6 @@ def create_user():
         role=data['role'],
         status=data['status']
     )
-
     db.session.add(new_user)
     db.session.commit()
     return jsonify({"message": "User created successfully"}), 201
@@ -190,7 +190,6 @@ def update_user(user_id):
     user.email = data.get('email', user.email)
     user.role = data.get('role', user.role)
     user.status = data.get('status', user.status)
-
     db.session.commit()
     return jsonify({"message": "User updated successfully"}), 200
 
