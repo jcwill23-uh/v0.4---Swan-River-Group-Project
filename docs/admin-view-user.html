@@ -16,8 +16,6 @@
     <link rel="icon" type="image/png" href="/images/swan.png">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
-    <script src="script.js" defer></script>
 </head>
 
 <body class="userList">
@@ -32,7 +30,7 @@
                     <th onclick="sortTable(3)">Status &#x25B2;&#x25BC;</th>
                 </tr>
             </thead>
-            <tbody id="userList">
+            <tbody id="userTableBody">
                 <!-- User rows will be inserted dynamically -->
             </tbody>
         </table>
@@ -41,44 +39,57 @@
     <a class="login-btn" href="admin.html">Back to Home</a>
 
     <script>
-        // Example users
-        const users = [
-          { name: 'John Williams', email: 'jcwill23@cougarnet.uh.edu', role: 'admin', status: 'active' },
-          { name: 'John Doe', email: 'johndoe@email.com', role: 'basicuser', status: 'active'}
-        ];
-    
-        // Render user list into the table
+        let users = []; // Store users for sorting
+        let sortDirections = [true, true, true, true]; // Track sorting directions per column
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/admin/all_users');
+                users = await response.json();
+
+                if (users.error) {
+                    alert("Error fetching users: " + users.error);
+                    return;
+                }
+
+                renderUserList(users);
+            } catch (error) {
+                console.error("Failed to fetch users", error);
+            }
+        }
+
         function renderUserList(users) {
-          const userListElement = document.getElementById('userList');
-          userListElement.innerHTML = users.map(user => `
-            <tr>
-              <td>${user.name}</td>
-              <td>${user.email}</td>
-              <td>${user.role}</td>
-              <td>${user.status}</td>
-            </tr>
-          `).join('');
+            const userTable = document.getElementById("userTableBody");
+            userTable.innerHTML = ""; // Clear the table before rendering
+
+            users.forEach(user => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td>${user.status}</td>
+                `;
+                userTable.appendChild(row);
+            });
         }
-    
-        // Initial rendering
-        renderUserList(users);
-    
-        // Sorting function
+
         function sortTable(columnIndex) {
-          const rows = Array.from(document.querySelectorAll("#userList tr"));
-          
-          const sortedRows = rows.sort((rowA, rowB) => {
-            const cellA = rowA.children[columnIndex].textContent.trim().toLowerCase();
-            const cellB = rowB.children[columnIndex].textContent.trim().toLowerCase();
-    
-            return cellA > cellB ? 1 : cellA < cellB ? -1 : 0;
-          });
-    
-          // Clear the table and append sorted rows
-          document.getElementById('userList').innerHTML = '';
-          sortedRows.forEach(row => document.getElementById('userList').appendChild(row));
+            const sortAscending = sortDirections[columnIndex];
+            sortDirections[columnIndex] = !sortDirections[columnIndex]; // Toggle sorting order
+
+            users.sort((a, b) => {
+                let valueA = Object.values(a)[columnIndex].toLowerCase();
+                let valueB = Object.values(b)[columnIndex].toLowerCase();
+                
+                return sortAscending ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+            });
+
+            renderUserList(users);
         }
-      </script>
+
+        window.onload = fetchUsers;
+    </script>
 
 </body>
 </html>
