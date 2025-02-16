@@ -33,7 +33,7 @@ Session(app)
 CLIENT_ID = os.getenv("CLIENT_ID", "f435d3c1-426e-4490-80c4-ac8ff8c05574")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")  # Ensure it's set as an environment variable
 AUTHORITY = 'https://login.microsoftonline.com/170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259'
-REDIRECT_URI = 'https://swan-river-group-project.azurewebsites.net/authorize'
+REDIRECT_URI = 'https://swan-river-group-project.azurewebsites.net/login'
 SCOPE = ['User.Read', 'email', 'openid', 'profile']
 
 # Initialize OAuth
@@ -75,54 +75,43 @@ def home():
     return render_template('login.html')
 
 # OAuth Login Route
-@app.route("/login")
+@app.route('/login')
 def login():
-    # Use the unique endpoint name "authorize_callback"
-    return oauth.microsoft.authorize_redirect(url_for("authorize_callback", _external=True, _scheme="https"))
-
-# OAuth Authorization Callback
-# Note: The function is renamed to "authorize_callback" to match its endpoint.
-# OAuth Authorization Callback
-@app.route('/authorize')
-def authorize():
-    
     try:
         token = oauth.microsoft.authorize_access_token()
+        user_info = requests.get(
+            'https://graph.microsoft.com/v1.0/me',
+            headers={'Authorization': f'Bearer {token["access_token"]}'}
+        ).json()
+
+        user_email = user_info.get('mail') or user_info.get('userPrincipalName')
+        user_name = user_info.get('displayName')
+
+        if not user_email:
+            return jsonify({"error": "Unable to retrieve email from Office365"}), 400
+
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
+            db.session.add(new_user)
+            db.session.commit()
+            user = new_user
+
+        session['user'] = {
+            'name': user.name,
+            'email': user.email,
+            'role': user.role,
+            'status': user.status
+        }
+        session.modified = True  
+
+        # Redirect based on role
+        if user.role == "admin":
+            return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html")
+        return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
+
     except Exception as e:
         return jsonify({"error": "Authentication failed", "details": str(e)}), 400
-
-    # Fetch user info from Microsoft Graph API
-    user_info = requests.get('https://graph.microsoft.com/v1.0/me', headers={
-        'Authorization': f'Bearer {token["access_token"]}'
-    }).json()
-
-    user_email = user_info.get('mail') or user_info.get('userPrincipalName')
-    user_name = user_info.get('displayName')
-
-    if not user_email:
-        return jsonify({"error": "Unable to retrieve email from Office365"}), 400
-
-    # Check or create user
-    user = User.query.filter_by(email=user_email).first()
-    if not user:
-        new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
-        db.session.add(new_user)
-        db.session.commit()
-        user = new_user
-
-    # Store session
-    session['user'] = {
-        'name': user.name,
-        'email': user.email,
-        'role': user.role,
-        'status': user.status
-    }
-    session.modified = True  # Ensure session updates
-
-    # Redirect based on role
-    if user.role == "admin":
-        return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html")
-    return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
 
 # Logout Route
 @app.route('/logout')
