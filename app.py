@@ -48,8 +48,7 @@ def home():
 
 @app.route("/login")
 def login():
-    authorization_url = f"{AUTHORITY}/oauth2/v2.0/authorize"
-    return redirect(f"{authorization_url}?client_id={CLIENT_ID}&response_type=code&redirect_uri={REDIRECT_URI}&scope={' '.join(SCOPE)}")
+    return oauth.microsoft.authorize_redirect(REDIRECT_URI)
 
 @app.route('/authorize')
 def authorize():
