@@ -58,9 +58,29 @@ class User(db.Model):
 # Debugging Route (DELETE AFTER TESTING)
 @app.route("/routes")
 def show_routes():
-    return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})
+    return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})    
 
-# DELETE LINES 63-109, JUST FOR DEBUGGING
+# Serve static files from the docs folder
+@app.route('/docs/<path:filename>')
+def serve_docs_static(filename):
+    return send_from_directory('docs', filename)
+
+# Function to initialize database
+def setup_db():
+    with app.app_context():
+        db.create_all()
+
+# Home route (Login Page)
+@app.route('/')
+def home():
+    return render_template('login.html')
+
+# OAuth Login Route
+@app.route("/login")
+def login():
+    return oauth.microsoft.authorize_redirect(url_for("authorize", _external=True, _scheme="https"))
+
+# OAuth Authorization Callback
 @app.route('/authorize')
 def authorize():
     try:
@@ -107,68 +127,6 @@ def authorize():
     except Exception as e:
         app.logger.error("Error processing /authorize callback: %s", traceback.format_exc())
         return jsonify({"error": "Processing failed", "details": str(e)}), 500
-
-# Serve static files from the docs folder
-@app.route('/docs/<path:filename>')
-def serve_docs_static(filename):
-    return send_from_directory('docs', filename)
-
-# Function to initialize database
-def setup_db():
-    with app.app_context():
-        db.create_all()
-
-# Home route (Login Page)
-@app.route('/')
-def home():
-    return render_template('login.html')
-
-# OAuth Login Route
-@app.route("/login")
-def login():
-    return oauth.microsoft.authorize_redirect(url_for("authorize", _external=True, _scheme="https"))
-
-# OAuth Authorization Callback
-@app.route('/authorize')
-def authorize():
-    try:
-        token = oauth.microsoft.authorize_access_token()
-    except Exception as e:
-        return jsonify({"error": "Authentication failed", "details": str(e)}), 400
-
-    # Fetch user info from Microsoft Graph API
-    user_info = requests.get('https://graph.microsoft.com/v1.0/me', headers={
-        'Authorization': f'Bearer {token["access_token"]}'
-    }).json()
-
-    user_email = user_info.get('mail') or user_info.get('userPrincipalName')
-    user_name = user_info.get('displayName')
-
-    if not user_email:
-        return jsonify({"error": "Unable to retrieve email from Office365"}), 400
-
-    # Check or create user
-    user = User.query.filter_by(email=user_email).first()
-    if not user:
-        new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
-        db.session.add(new_user)
-        db.session.commit()
-        user = new_user
-
-    # Store session
-    session['user'] = {
-        'name': user.name,
-        'email': user.email,
-        'role': user.role,
-        'status': user.status
-    }
-    session.modified = True  # Ensure session updates
-
-    # Redirect based on role
-    if user.role == "admin":
-        return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html")
-    return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
-
 # Logout Route
 @app.route('/logout')
 def logout():
