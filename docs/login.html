@@ -10,37 +10,40 @@
     <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
     <meta property="og:image" content="/images/swan.jpg">
     <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
-    <title>Login - Office 365</title>
 
+    <title>Swan River Group Project</title>
+
+    <link rel="icon" type="image/png" href="/images/swan.png">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="script.js" defer></script>
 </head>
 
-<body class="login-page">
+<body class="normal">
     <div class="login-container">
-        <h2>Login with Office365</h2>
+        <h2>Welcome</h2>
+        <p>Click the button below to login with Office365:</p>
         <a class="login-btn" href="/login">Login with Office365</a>
-    </div>
 
     <script>
         async function checkLogin() {
-            try {
-                const response = await fetch('/check_session');
-                const data = await response.json();
+            const response = await fetch('/check_session');
+            const data = await response.json();
 
-                if (data.logged_in) {
-                    if (data.role === "admin") {
-                        window.location.href = "admin.html";
-                    } else {
-                        window.location.href = "basic_user_home.html";
-                    }
+            if (data.logged_in) {
+                if (data.role === "admin") {
+                    window.location.href = "admin.html";
+                } else {
+                    window.location.href = "basic_user_home.html";
                 }
-            } catch (error) {
-                console.error("Error checking session:", error);
             }
         }
 
         checkLogin();
     </script>
+        <!--<a class="login-btn" href="{{ url_for('login') }}">Login with Office365</a>-->
+      </div>
 </body>
 </html>
+
