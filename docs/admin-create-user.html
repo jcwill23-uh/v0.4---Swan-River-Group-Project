@@ -37,7 +37,7 @@
         <div class="form-row">
           <label class="edit">Role:</label>
           <div>
-            <input type="radio" id="basicuser" name="userRole" value="basicuser" required>
+            <input type="radio" id="basicuser" name="userRole" value="basicuser" required checked>
             <label for="basicuser">Basic User</label>
             
             <input type="radio" id="admin" name="userRole" value="admin" required>
@@ -47,13 +47,53 @@
       
         <div class="form-row">
           <label class="edit" for="userStatus">Status:</label>
-          <input class="box" type="text" id="userStatus" name="userStatus" value="" required>
+          <div>
+            <input type="radio" id="userStatus" name="userStatus" value="active" required checked>
+            <label for="basicuser">Active</label>
+            
+            <input type="radio" id="userStatus" name="userStatus" value="deactivated" required>
+            <label for="admin">Deactivated</label>
+          </div>
         </div>
         <br>
-        <button class="save-btn" id="save" type="POST">Save</button>
+        <button class="save-btn" id="save" type="button" onclick="createUser()">Save</button>
+       <script>
+        async function createUser() {
+          const name = document.getElementById('userName').value.trim();
+          const email = document.getElementById('userEmail').value.trim();
+          const roleInput = document.querySelector('input[name="userRole"]:checked');
+          const status = document.getElementById('userStatus').value;
+
+          if (!name || !email) {
+              alert("Name and Email are required.");
+              return;
+          }
+
+          if (!roleInput) {
+              alert("Please select a role (Basic User or Admin).");
+              return;
+          }
+
+          const role = roleInput.value;
+
+          const response = await fetch('/admin/create_user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name, email, role, status })
+          });
+
+          if (response.ok) {
+              alert('User created successfully');
+              window.location.href = 'admin-view-user.html';
+          } else {
+              alert('Error creating user');
+          }
+        }
+       </script>
         
         <a class="login-btn" href="admin.html">Back to Home</a>
     </form>
 
 </body>
 </html>
+
