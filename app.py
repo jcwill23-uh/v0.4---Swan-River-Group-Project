@@ -53,6 +53,11 @@ class User(db.Model):
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
 
+# DELETE LINE 56-59 AFTER TESTING
+@app.route("/routes")
+def show_routes():
+    return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})
+
 # Ensure database tables exist
 @app.before_first_request
 def setup_db():
