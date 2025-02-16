@@ -51,7 +51,7 @@ def home():
 
 @app.route("/login")
 def login():
-    return oauth.microsoft.authorize_redirect(REDIRECT_URI)
+    return oauth.microsoft.authorize_redirect(url_for("authorize", _external=True))
 
 @app.route('/authorize')
 def authorize():
@@ -60,7 +60,7 @@ def authorize():
     except Exception as e:
         return jsonify({"error": "Authentication failed", "details": str(e)}), 400
 
-    # Fetch user info from Microsoft Graph API
+    # Fetch user info
     user_info = requests.get('https://graph.microsoft.com/v1.0/me', headers={
         'Authorization': f'Bearer {token["access_token"]}'
     }).json()
@@ -71,17 +71,15 @@ def authorize():
     if not user_email:
         return jsonify({"error": "Unable to retrieve email from Office365"}), 400
 
-    # Check if user exists in the database
+    # Check or create user
     user = User.query.filter_by(email=user_email).first()
-
     if not user:
-        # Create a new user with role "basicuser"
         new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
         db.session.add(new_user)
         db.session.commit()
-        user = new_user  # Assign the newly created user
+        user = new_user
 
-    # Store user session
+    # Store session
     session['user'] = {
         'name': user.name,
         'email': user.email,
@@ -89,11 +87,12 @@ def authorize():
         'status': user.status
     }
 
+    session.modified = True  # Ensure session updates
+
     # Redirect based on role
     if user.role == "admin":
         return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html")
-    else:
-        return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
+    return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
 
 @app.route('/logout')
 def logout():
