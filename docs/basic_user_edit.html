@@ -49,6 +49,38 @@
         <a class="login-btn" href="basic_user_home.html">Back to Home</a>
     </form>
 
-    <script src="editProfile.js"></script>
+    <script>
+    async function loadUserProfile() {
+        const response = await fetch('/user/profile');
+        const user = await response.json();
+
+        if (user.error) {
+            alert("Error: " + user.error);
+            return;
+        }
+
+        document.getElementById('userName').value = user.name;
+        document.getElementById('userEmail').value = user.email;
+        document.getElementById('userRole').value = user.role;
+        document.getElementById('userStatus').value = user.status;
+    }
+
+    async function updateUserProfile() {
+        const updatedName = document.getElementById('userName').value;
+        const updatedEmail = document.getElementById('userEmail').value;
+
+        const response = await fetch('/user/profile/update', {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: updatedName, email: updatedEmail })
+        });
+
+        const data = await response.json();
+        alert(data.message);
+        window.location.href = "basic_user_view.html";
+    }
+
+    window.onload = loadUserProfile;
+    </script>
 </body>
 </html>
