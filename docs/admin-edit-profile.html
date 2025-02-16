@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,14 +9,10 @@
     <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
     <meta property="og:image" content="/images/swan.jpg">
     <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+    <title>Edit Profile - Admin</title>
 
-    <title>Swan River Group Project</title>
-
-    <link rel="icon" type="image/png" href="/images/swan.png">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
-    <script src="script.js" defer></script>
 </head>
 
 <body class="normal">
@@ -25,30 +20,66 @@
         <h2><u>Edit Profile</u></h2>
 
         <div class="form-row">
-          <label class="edit" for="userName">Name:</label>
-          <input class="box" type="text" id="userName" name="name" value="" required>
+            <label class="edit" for="userName">Name:</label>
+            <input class="box" type="text" id="userName" name="name" required>
         </div>
-      
+
         <div class="form-row">
-          <label class="edit" for="userEmail">Email:</label>
-          <input class="box" type="email" id="userEmail" name="email" value="" required>
+            <label class="edit" for="userEmail">Email:</label>
+            <input class="box" type="email" id="userEmail" name="email" required>
         </div>
-      
+
         <div class="form-row">
-          <label class="edit" for="userRole">Role:</label>
-          <input class="box" type="text" id="userRole" name="userRole" value="" disabled>
+            <label class="edit" for="userRole">Role:</label>
+            <input class="box" type="text" id="userRole" name="userRole" disabled>
         </div>
-      
+
         <div class="form-row">
-          <label class="edit" for="userStatus">Status:</label>
-          <input class="box" type="text" id="userStatus" name="userStatus" value="" disabled>
+            <label class="edit" for="userStatus">Status:</label>
+            <input class="box" type="text" id="userStatus" name="userStatus" disabled>
         </div>
         <br>
-        <button class="save-btn" id="save" type="POST">Save</button>
-        
+
+        <button class="save-btn" type="button" onclick="updateProfile()">Save</button>
         <a class="login-btn" href="admin.html">Back to Home</a>
     </form>
 
-    <script src="editProfile.js"></script>
+    <script>
+        async function loadAdminProfile() {
+            try {
+                const response = await fetch('/admin/profile');
+                const user = await response.json();
+
+                if (user.error) {
+                    alert("Error: " + user.error);
+                    return;
+                }
+
+                document.getElementById('userName').value = user.name;
+                document.getElementById('userEmail').value = user.email;
+                document.getElementById('userRole').value = user.role;
+                document.getElementById('userStatus').value = user.status;
+            } catch (error) {
+                console.error("Failed to fetch profile", error);
+            }
+        }
+
+        async function updateProfile() {
+            const updatedName = document.getElementById('userName').value;
+            const updatedEmail = document.getElementById('userEmail').value;
+
+            const response = await fetch('/admin/update_profile', {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: updatedName, email: updatedEmail })
+            });
+
+            const data = await response.json();
+            alert(data.message);
+            window.location.href = "admin-view-profile.html";
+        }
+
+        window.onload = loadAdminProfile;
+    </script>
 </body>
 </html>
