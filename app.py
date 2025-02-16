@@ -5,8 +5,15 @@ from authlib.integrations.flask_client import OAuth
 import os
 import requests
 
-app = Flask(__name__, template_folder='docs')
+# Initialize Flask app
+app = Flask(__name__, template_folder='docs', static_folder='docs')
+
+# Secure configuration settings
 app.secret_key = os.getenv("SECRET_KEY", "swanRiver")  # Secure the secret key
+app.config['SESSION_TYPE'] = 'filesystem'  # Prevents session loss in Azure
+app.config['SESSION_COOKIE_SECURE'] = True  # Forces HTTPS session cookies
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevents JavaScript from accessing cookies
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
@@ -15,16 +22,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
     '?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SESSION_COOKIE_SECURE'] = True  # Forces HTTPS session cookies
-app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevents JavaScript from accessing cookies
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication
 
+# Initialize database
 db = SQLAlchemy(app)
-
 Session(app)
 
-# Azure AD credentials
-CLIENT_ID = os.getenv("CLIENT_ID", "f435d3c1-426e-4490-80c4-ac8ff8c05574")  # Use environment variable
+# Azure AD OAuth Configuration
+CLIENT_ID = os.getenv("CLIENT_ID", "f435d3c1-426e-4490-80c4-ac8ff8c05574")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")  # Ensure it's set as an environment variable
 AUTHORITY = 'https://login.microsoftonline.com/170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259'
 REDIRECT_URI = 'https://swan-river-group-project-egh0hmfcf6c9f2ef.centralus-01.azurewebsites.net/authorize'
@@ -49,14 +53,22 @@ class User(db.Model):
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
 
+# Ensure database tables exist
+@app.before_first_request
+def setup_db():
+    db.create_all()
+
+# Home route (Login Page)
 @app.route('/')
 def home():
     return render_template('login.html')
 
+# OAuth Login Route
 @app.route("/login")
 def login():
-    return oauth.microsoft.authorize_redirect(url_for("authorize", _external=True))
+    return oauth.microsoft.authorize_redirect(url_for("authorize", _external=True, _scheme="https"))
 
+# OAuth Authorization Callback
 @app.route('/authorize')
 def authorize():
     try:
@@ -64,7 +76,7 @@ def authorize():
     except Exception as e:
         return jsonify({"error": "Authentication failed", "details": str(e)}), 400
 
-    # Fetch user info
+    # Fetch user info from Microsoft Graph API
     user_info = requests.get('https://graph.microsoft.com/v1.0/me', headers={
         'Authorization': f'Bearer {token["access_token"]}'
     }).json()
@@ -90,7 +102,6 @@ def authorize():
         'role': user.role,
         'status': user.status
     }
-
     session.modified = True  # Ensure session updates
 
     # Redirect based on role
@@ -98,22 +109,18 @@ def authorize():
         return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html")
     return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
 
+# Logout Route
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('home'))
 
-@app.route('/check_session')
-def check_session():
-    if 'user' in session:
-        return jsonify({
-            "logged_in": True,
-            "name": session['user']['name'],
-            "email": session['user']['email'],
-            "role": session['user']['role']
-        })
-    return jsonify({"logged_in": False})
+# Debug Route to Check Session
+@app.route('/debug_session')
+def debug_session():
+    return jsonify(session.get('user', "No user session found"))
 
+# Retrieve User Profile
 @app.route('/user/profile', methods=['GET'])
 def get_user_profile():
     if 'user' not in session:
@@ -132,14 +139,6 @@ def get_user_profile():
         "role": user.role,
         "status": user.status
     })
-
-@app.before_first_request
-def setup_db():
-    db.create_all()
-
-if __name__ == '__main__':
-    setup_db()
-    app.run(debug=True)
 
 # Admin Routes
 @app.route('/admin/create_user', methods=['POST'])
@@ -189,3 +188,8 @@ def deactivate_user(user_id):
     user.status = 'deactivated'
     db.session.commit()
     return jsonify({"message": "User deactivated"}), 200
+
+# Start the Flask application
+if __name__ == '__main__':
+    setup_db()
+    app.run(debug=True)
