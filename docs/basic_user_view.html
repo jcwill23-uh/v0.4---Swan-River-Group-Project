@@ -31,6 +31,23 @@
         <a class="login-btn" href="basic_user_home.html">Back to Home</a>
     </div>
 
-    <script src="profile.js"></script>
+    <script>
+    async function loadUserProfile() {
+        const response = await fetch('/user/profile');
+        const user = await response.json();
+
+        if (user.error) {
+            alert("Error: " + user.error);
+            return;
+        }
+
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userEmail').textContent = user.email;
+        document.getElementById('userRole').textContent = user.role;
+        document.getElementById('userStatus').textContent = user.status;
+    }
+
+    window.onload = loadUserProfile;
+    </script>
 </body>
 </html>
