@@ -210,4 +210,4 @@ def deactivate_user(user_id):
 # **Place this block at the bottom**
 if __name__ == '__main__':
     setup_db()  # Initialize database tables
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
