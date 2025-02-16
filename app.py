@@ -82,52 +82,47 @@ def login():
 
 # OAuth Authorization Callback
 # Note: The function is renamed to "authorize_callback" to match its endpoint.
-@app.route('/authorize', endpoint='authorize_callback')
-def authorize_callback():
+# OAuth Authorization Callback
+@app.route('/authorize')
+def authorize():
+    
     try:
         token = oauth.microsoft.authorize_access_token()
     except Exception as e:
-        app.logger.error("Error during token exchange: %s", traceback.format_exc())
         return jsonify({"error": "Authentication failed", "details": str(e)}), 400
 
-    try:
-        # Fetch user info from Microsoft Graph API
-        response = requests.get('https://graph.microsoft.com/v1.0/me', headers={
-            'Authorization': f'Bearer {token["access_token"]}'
-        })
-        user_info = response.json()
-        
-        user_email = user_info.get('mail') or user_info.get('userPrincipalName')
-        user_name = user_info.get('displayName')
+    # Fetch user info from Microsoft Graph API
+    user_info = requests.get('https://graph.microsoft.com/v1.0/me', headers={
+        'Authorization': f'Bearer {token["access_token"]}'
+    }).json()
 
-        if not user_email:
-            app.logger.error("Unable to retrieve email from Office365: %s", user_info)
-            return jsonify({"error": "Unable to retrieve email from Office365"}), 400
+    user_email = user_info.get('mail') or user_info.get('userPrincipalName')
+    user_name = user_info.get('displayName')
 
-        # Check or create user
-        user = User.query.filter_by(email=user_email).first()
-        if not user:
-            new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
-            db.session.add(new_user)
-            db.session.commit()
-            user = new_user
+    if not user_email:
+        return jsonify({"error": "Unable to retrieve email from Office365"}), 400
 
-        # Store session
-        session['user'] = {
-            'name': user.name,
-            'email': user.email,
-            'role': user.role,
-            'status': user.status
-        }
-        session.modified = True  # Ensure session updates
+    # Check or create user
+    user = User.query.filter_by(email=user_email).first()
+    if not user:
+        new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
+        db.session.add(new_user)
+        db.session.commit()
+        user = new_user
 
-        # Redirect based on role
-        if user.role == "admin":
-            return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html")
-        return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
-    except Exception as e:
-        app.logger.error("Error processing /authorize callback: %s", traceback.format_exc())
-        return jsonify({"error": "Processing failed", "details": str(e)}), 500
+    # Store session
+    session['user'] = {
+        'name': user.name,
+        'email': user.email,
+        'role': user.role,
+        'status': user.status
+    }
+    session.modified = True  # Ensure session updates
+
+    # Redirect based on role
+    if user.role == "admin":
+        return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html")
+    return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
 
 # Logout Route
 @app.route('/logout')
