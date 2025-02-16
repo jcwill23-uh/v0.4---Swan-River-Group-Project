@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,14 +9,10 @@
     <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
     <meta property="og:image" content="/images/swan.jpg">
     <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+    <title>View Profile - Admin</title>
 
-    <title>Swan River Group Project</title>
-
-    <link rel="icon" type="image/png" href="/images/swan.png">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
-    <script src="script.js" defer></script>
 </head>
 
 <body class="normal">
@@ -31,6 +26,27 @@
         <a class="login-btn" href="admin.html">Back to Home</a>
     </div>
 
-    <script src="profile.js"></script>
+    <script>
+        async function loadAdminProfile() {
+            try {
+                const response = await fetch('/admin/profile');
+                const user = await response.json();
+
+                if (user.error) {
+                    alert("Error: " + user.error);
+                    return;
+                }
+
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userRole').textContent = user.role;
+                document.getElementById('userStatus').textContent = user.status;
+            } catch (error) {
+                console.error("Failed to fetch profile", error);
+            }
+        }
+
+        window.onload = loadAdminProfile;
+    </script>
 </body>
 </html>
