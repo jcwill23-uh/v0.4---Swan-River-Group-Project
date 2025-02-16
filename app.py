@@ -45,6 +45,12 @@ class User(db.Model):
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
 
+# DELETE LINE 48-51 AFTER TEST
+@app.route("/routes")
+def show_routes():
+    return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})
+
+
 @app.route('/')
 def home():
     return render_template('login.html')
