@@ -1,4 +1,5 @@
-from flask import Flask, redirect, url_for, session, request, render_template
+from flask import Flask, redirect, url_for, session, request, render_template, jsonify
+from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from oauthlib.oauth2 import WebApplicationClient
 from requests_oauthlib import OAuth2Session
@@ -6,10 +7,22 @@ import os
 import secrets
 import base64
 import hashlib
+import requests
 
 app = Flask(__name__, template_folder='docs')
 app.secret_key = 'swanRiver'  # Replace with a real secret key
-app.config['SESSION_TYPE'] = 'filesystem'
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+    'DATABASE_URL',
+    'mssql+pyodbc://jcwill23@cougarnet.uh.edu@swan-river-user-information:{Superman517071!}@swan-river-user-information.database.windows.net/User%20Information?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
+)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
 Session(app)
 
 # Azure AD credentials
@@ -31,131 +44,186 @@ def generate_pkce_pair():
 def home():
     return render_template('login.html')
 
-@app.route('/login')
-def login():
-    code_verifier, code_challenge = generate_pkce_pair()
-    session['code_verifier'] = code_verifier
-
-    state = secrets.token_urlsafe(16)  # Generate a random state value
-    session['oauth_state'] = state
-
-    authorization_url = client.prepare_request_uri(
-        f'{AUTHORITY}/oauth2/v2.0/authorize',
-        redirect_uri=REDIRECT_URI,
-        scope=SCOPE,
-        state=state,
-        code_challenge=code_challenge,
-        code_challenge_method='S256'
+@app.route('/authorize')
+def authorize():
+    token = client.fetch_token(
+        f'{AUTHORITY}/oauth2/v2.0/token',
+        authorization_response=request.url,
+        client_secret=CLIENT_SECRET
     )
 
-    return redirect(authorization_url)
+    # Fetch user info from Microsoft Graph API
+    user_info = requests.get('https://graph.microsoft.com/v1.0/me', headers={
+        'Authorization': f'Bearer {token["access_token"]}'
+    }).json()
 
-@app.route('/login/authorized')
-def authorized():
-    try:
-        token_url, headers, body = client.prepare_token_request(
-            f'{AUTHORITY}/oauth2/v2.0/token',
-            authorization_response=request.url,
-            redirect_url=REDIRECT_URI,
-            code_verifier=session['code_verifier']
-        )
-        token_response = OAuth2Session(CLIENT_ID).fetch_token(
-            token_url,
-            client_secret=CLIENT_SECRET,
-            authorization_response=request.url,
-            headers=headers,
-            body=body
-        )
-        session['oauth_token'] = token_response
+    user_email = user_info.get('mail') or user_info.get('userPrincipalName')
+    user_name = user_info.get('displayName')
 
-        # Fetch user info
-        graph_client = OAuth2Session(CLIENT_ID, token=token_response)
-        user_info = graph_client.get('https://graph.microsoft.com/v1.0/me').json()
-        session['user_name'] = user_info['displayName']
-        session['user_email'] = user_info['mail']  # Store user email in session
+    # Check if user exists in the database
+    user = User.query.filter_by(email=user_email).first()
 
-        # Check if the user is an admin based on email domain
-        user_email = session.get('user_email', '').lower()
-        is_admin = user_email.endswith('@example.com')  # Replace with your organization's domain
+    if not user:
+        # Create a new user with role "basicuser"
+        new_user = User(name=user_name, email=user_email, role="basicuser")
+        db.session.add(new_user)
+        db.session.commit()
 
-        # Redirect based on user role
-        if is_admin:
-            return redirect(url_for('admin.html'))
-        else:
-            return redirect(url_for('basic_user_home.html'))
+    # Store user session
+    session['user'] = {
+        'name': user_name,
+        'email': user_email,
+        'role': user.role if user else "basicuser"
+    }
 
-    except Exception as e:
-        print("Error during authorization:", str(e))  # Debug: Print the error
-        return "Internal Server Error"
-
-@app.route('/admin')
-def admin():
-    if 'oauth_token' not in session:
-        return redirect(url_for('home'))  # Redirect to login if not authenticated
-    user_name = session.get('user_name', 'Guest')
-    return render_template('admin.html', user_name=user_name)
-
-@app.route('/basic_user_home')
-def basic_user_home():
-    if 'oauth_token' not in session:
-        return redirect(url_for('home'))  # Redirect to login if not authenticated
-    user_name = session.get('user_name', 'Guest')
-    return render_template('basic_user_home.html', user_name=user_name)
-
-@app.route('/view_profile')
-def view_profile():
-    if 'oauth_token' not in session:
-        return redirect(url_for('home'))  # Redirect to login if not authenticated
-    user_name = session.get('user_name', 'Guest')
-    user_email = session.get('user_email', 'guest@example.com')
-    return render_template('basic_user_view.html', user_name=user_name, user_email=user_email)
-
-@app.route('/edit_profile')
-def edit_profile():
-    if 'oauth_token' not in session:
-        return redirect(url_for('home'))  # Redirect to login if not authenticated
-    user_name = session.get('user_name', 'Guest')
-    user_email = session.get('user_email', 'guest@example.com')
-    return render_template('basic_user_edit.html', user_name=user_name, user_email=user_email)
-
-@app.route('/update_profile', methods=['POST'])
-def update_profile():
-    if 'oauth_token' not in session:
-        return redirect(url_for('home'))  # Redirect to login if not authenticated
-    user_name = session.get('user_name', 'Guest')
-    user_email = request.form.get('email')
-
-    # Update the user email in the session
-    session['user_email'] = user_email
-
-    # Here you can add code to update the user profile in the database or any other storage
-
-    return redirect(url_for('basic_user_home'))
-
-@app.route('/view_emails')
-def view_emails():
-    if 'oauth_token' not in session:
-        return redirect(url_for('home'))  # Redirect to login if not authenticated
-
-    token = session.get('oauth_token')
-    graph_client = OAuth2Session(CLIENT_ID, token=token)
-
-    # Fetch email info
-    response = graph_client.get('https://graph.microsoft.com/v1.0/me/messages').json()
-    print("Response from Graph API:", response)  # Debug: Print the full response
-
-    email_list = []
-    if 'value' in response:
-        email_list = [email['subject'] for email in response['value']]  # Example: Fetch email subjects
-    else:
-        print("Key 'value' not found in the response")
-
-    return render_template('emails.html', emails=email_list)
+    return redirect(url_for('home'))
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('home'))
 
+# Import User model
+from models import User
+
+@app.route('/users', methods=['GET'])
+def get_users():
+    users = User.query.all()
+    return jsonify([{"id": user.id, "name": user.name, "email": user.email, "role": user.role, "status": user.status} for user in users])
+
+@app.route('/users', methods=['POST'])
+def create_user():
+    data = request.json
+    new_user = User(name=data['name'], email=data['email'], role=data.get('role', 'basicuser'))
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message": "User created successfully"}), 201
+
+@app.route('/user/profile', methods=['GET'])
+def get_user_profile():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user_email = session['user']['email']
+    user = User.query.filter_by(email=user_email).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify({
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+        "status": user.status
+    })
+
+@app.route('/user/profile/update', methods=['PUT'])
+def update_user_profile():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    user_email = session['user']['email']
+    user = User.query.filter_by(email=user_email).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.json
+    user.name = data.get('name', user.name)
+    user.email = data.get('email', user.email)
+
+    db.session.commit()
+    return jsonify({"message": "Profile updated successfully"})
+
+@app.route('/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "User deleted successfully"})
+
+@app.route('/users/deactivate/<int:user_id>', methods=['POST'])
+def deactivate_user(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    user.status = "deactivated"
+    db.session.commit()
+    return jsonify({"message": "User deactivated successfully"})
+
+@app.before_first_request
+def setup_db():
+    db.create_all()
+
 if __name__ == '__main__':
+    setup_db()
     app.run(debug=True)
+    
+
+# Routes for database as an admin
+@app.route('/admin/all_users', methods=['GET'])
+def get_all_users():
+    if 'user' not in session or session['user']['role'] != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    users = User.query.all()
+    user_list = [{
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+        "status": user.status
+    } for user in users]
+
+    return jsonify(user_list)
+
+@app.route('/admin/create_user', methods=['POST'])
+def create_user():
+    if 'user' not in session or session['user']['role'] != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.json
+    new_user = User(
+        name=data['name'],
+        email=data['email'],
+        role=data['role'],
+        status=data['status']
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message": "User created successfully"}), 201
+
+@app.route('/admin/update_user/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    if 'user' not in session or session['user']['role'] != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.json
+    user.name = data.get('name', user.name)
+    user.email = data.get('email', user.email)
+    user.role = data.get('role', user.role)
+    user.status = data.get('status', user.status)
+
+    db.session.commit()
+    return jsonify({"message": "User updated successfully"}), 200
+
+@app.route('/admin/deactivate_user/<int:user_id>', methods=['PUT'])
+def deactivate_user(user_id):
+    if 'user' not in session or session['user']['role'] != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.status = 'deactivated'
+    db.session.commit()
+    return jsonify({"message": "User deactivated"}), 200
