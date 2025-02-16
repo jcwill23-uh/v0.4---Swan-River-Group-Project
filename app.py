@@ -10,12 +10,12 @@ import hashlib
 import requests
 
 app = Flask(__name__, template_folder='docs')
-app.secret_key = 'swanRiver'  # Replace with a real secret key
+app.secret_key = 'swanRiver' 
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
     'DATABASE_URL',
-    'mssql+pyodbc://jcwill23@cougarnet.uh.edu@swan-river-user-information:{Superman517071!}@swan-river-user-information.database.windows.net/User%20Information?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
+    'mssql+pyodbc://jcwill23@cougarnet.uh.edu@swan-river-user-information:Superman517071!@swan-river-user-information.database.windows.net/User%20Information?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -23,10 +23,10 @@ db = SQLAlchemy(app)
 Session(app)
 
 # Azure AD credentials
-CLIENT_ID = '7d3a3c1c-46ec-4247-9ed4-ef0d1526c5b9'  # Replace with your Application (client) ID
-CLIENT_SECRET = '1pF8Q~cPp9z-i_1N3gkeN4FN4t3gT9_7fcl-Tcek'  # Replace with your client secret
+CLIENT_ID = 'f435d3c1-426e-4490-80c4-ac8ff8c05574'
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 AUTHORITY = 'https://login.microsoftonline.com/170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259'
-REDIRECT_URI = 'https://jcwill23-uh.github.io/Swan-River-Group-Project/basic_user_home.html'
+REDIRECT_URI = 'https://swan-river-group-project-egh0hmfcf6c9f2ef.centralus-01.azurewebsites.net/authorize'
 SCOPE = ['User.Read', 'Files.ReadWrite', 'email', 'openid', 'profile']
 
 # OAuth2 session
@@ -82,9 +82,9 @@ def authorize():
 
     # Redirect based on role
     if user.role == "admin":
-        return redirect(url_for('admin_home'))
+        return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html")
     else:
-        return redirect(url_for('basic_user_home'))
+        return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
 
 @app.route('/logout')
 def logout():
@@ -131,29 +131,6 @@ def setup_db():
 if __name__ == '__main__':
     setup_db()
     app.run(debug=True)
-
-# Routes for Admin and User Management
-@app.route('/admin/home')
-def admin_home():
-    return "Admin Dashboard (Replace with your admin.html page logic)"
-
-@app.route('/basic-user/home')
-def basic_user_home():
-    return "Basic User Home (Replace with your basic_user_home.html page logic)"
-
-@app.route('/admin/all_users', methods=['GET'])
-def get_all_users():
-    if 'user' not in session or session['user']['role'] != 'admin':
-        return jsonify({"error": "Unauthorized"}), 403
-
-    users = User.query.all()
-    return jsonify([{
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "role": user.role,
-        "status": user.status
-    } for user in users])
 
 @app.route('/admin/create_user', methods=['POST'])
 def create_user():
