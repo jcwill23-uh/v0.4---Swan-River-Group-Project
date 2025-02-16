@@ -24,7 +24,7 @@
     <div class="login-container">
         <h2>Welcome</h2>
         <p>Click the button below to login with Office365:</p>
-        <a class="login-btn" href="https://swan-river-group-project-egh0hmfcf6c9f2ef.centralus-01.azurewebsites.net/login">Login with Office365</a>
+        <a class="login-btn" href="{{ url_for('login') }}">Login with Office365</a>
 
     <script>
         async function checkLogin() {
@@ -46,7 +46,6 @@
 
         checkLogin();
     </script>
-        <!--<a class="login-btn" href="{{ url_for('login') }}">Login with Office365</a>-->
-      </div>
+    </div>
 </body>
 </html>
