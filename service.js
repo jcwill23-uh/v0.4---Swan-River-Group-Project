@@ -19,12 +19,7 @@ self.addEventListener('fetch', event => {
             .then(response => {
                 if (response) {
                     // If the user is authenticated, serve the cached file
-                    if (localStorage.getItem('isLoggedIn')) {
-                        return response;
-                    } else {
-                        // If not authenticated, redirect to index.html
-                        return caches.match('/index.html');
-                    }
+                    return response || fetch(event.request);
                 }
                 return fetch(event.request);
             })
