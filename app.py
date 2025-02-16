@@ -23,7 +23,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize database
+# Initialize database and session
 db = SQLAlchemy(app)
 Session(app)
 
@@ -53,15 +53,15 @@ class User(db.Model):
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
 
-# DELETE LINE 56-59 AFTER TESTING
+# Debugging Route (DELETE AFTER TESTING)
 @app.route("/routes")
 def show_routes():
     return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})
 
-# Ensure database tables exist
-@app.before_first_request
+# Function to initialize database
 def setup_db():
-    db.create_all()
+    with app.app_context():
+        db.create_all()
 
 # Home route (Login Page)
 @app.route('/')
@@ -194,7 +194,7 @@ def deactivate_user(user_id):
     db.session.commit()
     return jsonify({"message": "User deactivated"}), 200
 
-# Start the Flask application
+# **Place this block at the bottom**
 if __name__ == '__main__':
-    setup_db()
+    setup_db()  # Initialize database tables
     app.run(debug=True)
