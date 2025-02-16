@@ -41,8 +41,7 @@ oauth.register(
     "microsoft",
     client_id=CLIENT_ID,
     client_secret=CLIENT_SECRET,
-    authorize_url=f"{AUTHORITY}/oauth2/v2.0/authorize",
-    access_token_url=f"{AUTHORITY}/oauth2/v2.0/token",
+    server_metadata_url=f"{AUTHORITY}/v2.0/.well-known/openid-configuration",
     client_kwargs={"scope": " ".join(SCOPE)},
 )
 
