@@ -80,9 +80,10 @@ def login():
     # Use the unique endpoint name "authorize_callback"
     return oauth.microsoft.authorize_redirect(url_for("authorize_callback", _external=True, _scheme="https"))
 
-# OAuth Authorization Callback with unique endpoint name
+# OAuth Authorization Callback
+# Note: The function is renamed to "authorize_callback" to match its endpoint.
 @app.route('/authorize', endpoint='authorize_callback')
-def authorize():
+def authorize_callback():
     try:
         token = oauth.microsoft.authorize_access_token()
     except Exception as e:
