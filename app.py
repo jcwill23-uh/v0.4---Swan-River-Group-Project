@@ -24,7 +24,7 @@ Session(app)
 
 # Azure AD credentials
 CLIENT_ID = 'f435d3c1-426e-4490-80c4-ac8ff8c05574'
-CLIENT_SECRET = 'fdr8Q~mL3nbSdFx1R8ABT1rBIs3nKq9w.EPsFamh'
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 AUTHORITY = 'https://login.microsoftonline.com/170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259'
 REDIRECT_URI = 'https://swan-river-group-project-egh0hmfcf6c9f2ef.centralus-01.azurewebsites.net/authorize'
 SCOPE = ['User.Read', 'Files.ReadWrite', 'email', 'openid', 'profile']
