@@ -15,6 +15,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
     '?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SESSION_COOKIE_SECURE'] = True  # Forces HTTPS session cookies
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevents JavaScript from accessing cookies
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication
+
 db = SQLAlchemy(app)
 
 Session(app)
