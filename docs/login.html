@@ -28,15 +28,19 @@
 
     <script>
         async function checkLogin() {
-            const response = await fetch('/check_session');
-            const data = await response.json();
+            try {
+                const response = await fetch('https://swan-river-group-project-egh0hmfcf6c9f2ef.centralus-01.azurewebsites.net/check_session');
+                const data = await response.json();
 
-            if (data.logged_in) {
-                if (data.role === "admin") {
-                    window.location.href = "admin.html";
-                } else {
-                    window.location.href = "basic_user_home.html";
+                if (data.logged_in) {
+                    if (data.role === "admin") {
+                        window.location.href = "admin.html";
+                    } else {
+                        window.location.href = "basic-user-home.html";
+                    }
                 }
+            } catch (error) {
+                console.error("Error checking session:", error);
             }
         }
 
@@ -46,4 +50,3 @@
       </div>
 </body>
 </html>
-
