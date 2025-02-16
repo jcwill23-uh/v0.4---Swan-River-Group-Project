@@ -28,5 +28,21 @@
         <a href="login.html" class="login-button">Get Started</a>
     </div>
 
-</body> 
+<script>
+        async function checkLogin() {
+            const response = await fetch('/check_session');
+            const data = await response.json();
+
+            if (data.logged_in) {
+                if (data.role === "admin") {
+                    window.location.href = "admin.html";
+                } else {
+                    window.location.href = "basic_user_home.html";
+                }
+            }
+        }
+
+        checkLogin();
+    </script>
+    </body> 
 </html> 
