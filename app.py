@@ -20,9 +20,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
 Session(app)
 
 # Azure AD credentials
@@ -43,6 +40,11 @@ def generate_pkce_pair():
 @app.route('/')
 def home():
     return render_template('login.html')
+
+@app.route("/login")
+def login():
+    authorization_url = f"{AUTHORITY}/oauth2/v2.0/authorize"
+    return redirect(f"{authorization_url}?client_id={CLIENT_ID}&response_type=code&redirect_uri={REDIRECT_URI}&scope={' '.join(SCOPE)}")
 
 @app.route('/authorize')
 def authorize():
@@ -65,18 +67,24 @@ def authorize():
 
     if not user:
         # Create a new user with role "basicuser"
-        new_user = User(name=user_name, email=user_email, role="basicuser")
+        new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
         db.session.add(new_user)
         db.session.commit()
+        user = new_user  # Assign the newly created user
 
     # Store user session
     session['user'] = {
-        'name': user_name,
-        'email': user_email,
-        'role': user.role if user else "basicuser"
+        'name': user.name,
+        'email': user.email,
+        'role': user.role,
+        'status': user.status
     }
 
-    return redirect(url_for('home'))
+    # Redirect based on role
+    if user.role == "admin":
+        return redirect(url_for('admin_home'))
+    else:
+        return redirect(url_for('basic_user_home'))
 
 @app.route('/logout')
 def logout():
@@ -86,18 +94,16 @@ def logout():
 # Import User model
 from models import User
 
-@app.route('/users', methods=['GET'])
-def get_users():
-    users = User.query.all()
-    return jsonify([{"id": user.id, "name": user.name, "email": user.email, "role": user.role, "status": user.status} for user in users])
-
-@app.route('/users', methods=['POST'])
-def create_user():
-    data = request.json
-    new_user = User(name=data['name'], email=data['email'], role=data.get('role', 'basicuser'))
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({"message": "User created successfully"}), 201
+@app.route('/check_session')
+def check_session():
+    if 'user' in session:
+        return jsonify({
+            "logged_in": True,
+            "name": session['user']['name'],
+            "email": session['user']['email'],
+            "role": session['user']['role']
+        })
+    return jsonify({"logged_in": False})
 
 @app.route('/user/profile', methods=['GET'])
 def get_user_profile():
@@ -118,42 +124,6 @@ def get_user_profile():
         "status": user.status
     })
 
-@app.route('/user/profile/update', methods=['PUT'])
-def update_user_profile():
-    if 'user' not in session:
-        return jsonify({"error": "User not authenticated"}), 401
-
-    user_email = session['user']['email']
-    user = User.query.filter_by(email=user_email).first()
-
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    data = request.json
-    user.name = data.get('name', user.name)
-    user.email = data.get('email', user.email)
-
-    db.session.commit()
-    return jsonify({"message": "Profile updated successfully"})
-
-@app.route('/users/<int:user_id>', methods=['DELETE'])
-def delete_user(user_id):
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"message": "User deleted successfully"})
-
-@app.route('/users/deactivate/<int:user_id>', methods=['POST'])
-def deactivate_user(user_id):
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-    user.status = "deactivated"
-    db.session.commit()
-    return jsonify({"message": "User deactivated successfully"})
-
 @app.before_first_request
 def setup_db():
     db.create_all()
@@ -161,24 +131,29 @@ def setup_db():
 if __name__ == '__main__':
     setup_db()
     app.run(debug=True)
-    
 
-# Routes for database as an admin
+# Routes for Admin and User Management
+@app.route('/admin/home')
+def admin_home():
+    return "Admin Dashboard (Replace with your admin.html page logic)"
+
+@app.route('/basic-user/home')
+def basic_user_home():
+    return "Basic User Home (Replace with your basic_user_home.html page logic)"
+
 @app.route('/admin/all_users', methods=['GET'])
 def get_all_users():
     if 'user' not in session or session['user']['role'] != 'admin':
         return jsonify({"error": "Unauthorized"}), 403
 
     users = User.query.all()
-    user_list = [{
+    return jsonify([{
         "id": user.id,
         "name": user.name,
         "email": user.email,
         "role": user.role,
         "status": user.status
-    } for user in users]
-
-    return jsonify(user_list)
+    } for user in users])
 
 @app.route('/admin/create_user', methods=['POST'])
 def create_user():
