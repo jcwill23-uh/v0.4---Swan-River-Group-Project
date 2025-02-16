@@ -23,10 +23,10 @@
     <table id="editUserTable">
       <thead>
         <tr>
-          <th onclick="sortTable(0)">Name &#x25B2;&#x25BC;</th>
-          <th onclick="sortTable(1)">Email &#x25B2;&#x25BC;</th>
-          <th onclick="sortTable(2)">Role &#x25B2;&#x25BC;</th>
-          <th onclick="sortTable(3)">Status &#x25B2;&#x25BC;</th>
+          <th onclick="sortUsersBy('name')">Name ▲▼</th>
+          <th onclick="sortUsersBy('email')">Email ▲▼</th>
+          <th onclick="sortUsersBy('role')">Role ▲▼</th>
+          <th onclick="sortUsersBy('status')">Status ▲▼</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -48,14 +48,14 @@
   </div>
 
   <script>
-    // Example users
-    const users = [
-      { name: 'John Williams', email: 'jcwill23@cougarnet.uh.edu', role: 'admin', status: 'active' },
-      { name: 'John Doe', email: 'johndoe@email.com', role: 'basicuser', status: 'inactive' }
-    ];
+    let users = []; // Define users array
+    let sortDirections = [true, true, true, true]; // Track sorting directions per column
 
-    // Track changes and current user
-    let currentUserIndex = null;
+    async function fetchUsers() {
+        const response = await fetch('/admin/all_users');
+        users = await response.json();
+        renderUserList(users);
+    }
 
     // Render user list into the table
     function renderUserList(users) {
@@ -73,8 +73,8 @@
           <td>
             <select onchange="updateUser(${index}, 'status', this.value)">
               <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
-              <option value="inactive" ${user.status === 'inactive' ? 'selected' : ''}>Inactive</option>
-              <option value="suspended" ${user.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+              <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
+              <option value="deactivated" ${user.status === 'deactivated' ? 'selected' : ''}>Deactivated</option>
             </select>
           </td>
           <td><button class="save-btn" onclick="openModal(${index})">Save Changes</button></td>
@@ -85,7 +85,6 @@
     // Update user property
     function updateUser(index, property, value) {
       users[index][property] = value;
-      console.log(`User ${index} updated:`, users[index]);
     }
 
     // Open the save changes modal for confirmation
@@ -95,11 +94,20 @@
     }
 
     // Confirm the changes and close the modal
-    function confirmChanges() {
-      const index = currentUserIndex;
-      console.log(`Changes confirmed for user:`, users[index]);
-      closeModal();
-    }
+    async function confirmChanges() {
+      const userId = users[currentUserIndex].id;
+      const updatedUser = users[currentUserIndex];
+  
+      await fetch(`/admin/update_user/${userId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedUser)
+      });
+  
+      alert('User updated successfully');
+      document.getElementById('confirmModal').style.display = "none";
+      fetchUsers(); // Refresh user list
+  }
 
     // Close the modal without saving
     function closeModal() {
@@ -107,22 +115,17 @@
     }
 
     // Sorting function
-    function sortTable(columnIndex) {
-      const rows = Array.from(document.querySelectorAll("#userList tr"));
-      const sortedRows = rows.sort((rowA, rowB) => {
-        const cellA = rowA.children[columnIndex].querySelector('input, select')?.value?.toLowerCase() || "";
-        const cellB = rowB.children[columnIndex].querySelector('input, select')?.value?.toLowerCase() || "";
-
-        return cellA > cellB ? 1 : cellA < cellB ? -1 : 0;
+    function sortUsersBy(property) {
+      sortDirection[property] = !sortDirection[property]; // Toggle sorting order
+      users.sort((a, b) => {
+          if (a[property] < b[property]) return sortDirection[property] ? -1 : 1;
+          if (a[property] > b[property]) return sortDirection[property] ? 1 : -1;
+          return 0;
       });
+      renderUserList(users);
+  }
 
-      // Clear the table and append sorted rows
-      document.getElementById('userList').innerHTML = '';
-      sortedRows.forEach(row => document.getElementById('userList').appendChild(row));
-    }
-
-    // Initial rendering
-    renderUserList(users);
+  window.onload = fetchUsers;
   </script>
 </body>
 
