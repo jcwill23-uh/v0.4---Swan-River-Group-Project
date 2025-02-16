@@ -1,6 +1,7 @@
 from flask import Flask, redirect, url_for, session, request, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
+from flask import send_from_directory
 from authlib.integrations.flask_client import OAuth
 import os
 import requests
@@ -57,6 +58,11 @@ class User(db.Model):
 @app.route("/routes")
 def show_routes():
     return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})
+
+# Serve static files from the docs folder
+@app.route('/docs/<path:filename>')
+def serve_docs_static(filename):
+    return send_from_directory('docs', filename)
 
 # Function to initialize database
 def setup_db():
