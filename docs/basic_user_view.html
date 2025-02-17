@@ -22,6 +22,11 @@
     <script>
         function redirectToBasicHome() {
             window.location.href = "/basic_user_home";
+        }
+        function redirectToBasicEdit() {
+            window.location.href = "/basic_user_edit";
+        }
+        
     </script>
 
     <script src="script.js" defer></script>
@@ -34,8 +39,8 @@
         <p>Email: <span id="userEmail"></span></p>
         <p>Role: <span id="userRole"></span></p>
         <p>Status: <span id="userStatus"></span></p><br>
-        <a class="login-btn" href="basic_user_edit.html">Edit Profile</a>
-        <button class="admin-btn" onclick="redirectToBasicHome()">Back to Home</button>
+        <button class="back" onclick="redirectToBasicEdit()">Edit Profile</a>
+        <button class="back" onclick="redirectToBasicHome()">Back to Home</button>
     </div>
 
     <script>
