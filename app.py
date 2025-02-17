@@ -107,13 +107,25 @@ def admin_home():
     return render_template('admin.html', user_name=user_name)
 
 # Basic user home page
-@app.route('/basic_user_home')
-def basic_user_home():
-    print("Basic user home route called")  # Debugging
+@app.route('/basic_user_view')
+def basic_user_view():
     if not session.get('user'):
         return redirect(url_for('index'))
-    user_name = session['user']['displayName']
-    return render_template('basic_user_home.html', user_name=user_name)
+
+    # Fetch user info from the session or database
+    user_info = session.get('user')
+
+    # Example: Fetch user details from the database (if stored there)
+    user = User.query.filter_by(email=user_info.get('mail')).first()
+    if not user:
+        return redirect(url_for('index'))
+
+    # Pass user data to the template
+    return render_template('basic_user_view.html', 
+                          user_name=user.name, 
+                          user_email=user.email, 
+                          user_role=user.role, 
+                          user_status=user.status)
     
 # New routes for basic user functionalities
 @app.route('/basic_user_view')
