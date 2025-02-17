@@ -109,15 +109,16 @@ def admin_home():
 # Basic user home page
 @app.route('/basic_user_home')
 def basic_user_home():
+    print("Basic user home route called")  # Debugging
     if not session.get('user'):
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
     return render_template('basic_user_home.html', user_name=user_name)
 
-# Basic user view profile page
+# New routes for basic user functionalities
 @app.route('/basic_user_view')
 def basic_user_view():
-        if not session.get('user'):
+    if not session.get('user'):
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
     return render_template('basic_user_view.html', user_name=user_name)
