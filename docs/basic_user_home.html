@@ -20,7 +20,14 @@
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 
     <script src="auth.js"></script> <!-- Link to auth.js -->
-<script>
+    <script>
+        function redirectToBasicView() {
+            window.location.href = "/basic_user_view";
+        }
+        function redirectToBasicEditView() {
+            window.location.href = "/basic_user_edit";
+        }
+    </script>
     checkAuth(); // Ensure user is logged in before accessing page
 </script>
 </head>
@@ -28,9 +35,9 @@
 <body class="normal">
     <div class="welcome">
         <h1>Profile Home</h1>
-        <a class="login-btn" href="basic_user_view.html">View Profile</a>
+        <button class="back" onclick="redirectToBasicView()">View Profile</button>
         <br>
-        <a class="login-btn" href="basic_user_edit.html">Edit Profile</a>
+        <button class="back" onclick="redirectToBasicEditView()">Edit Profile</a>
     </div>
 
 </body>
