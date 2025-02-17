@@ -117,7 +117,7 @@ def authorized():
         return redirect(url_for('index'))
 
 # Success page after login
-@app.route('/success')
+'''@app.route('/success')
 def success():
     logger.info("Success route called")  # Logging
     if not session.get('user'):
@@ -138,7 +138,16 @@ def success():
         new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
         db.session.add(new_user)
         db.session.commit()
-        return redirect(url_for('basic_user_home'))  # Redirect to basic user home after creating the user
+        return redirect(url_for('basic_user_home'))  # Redirect to basic user home after creating the user'''
+
+# Success page after login
+@app.route('/success')
+def success():
+    print("Success route called")  # Debugging
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('admin.html', user_name=user_name)
 
 # Admin home page
 @app.route('/admin')
