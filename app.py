@@ -101,8 +101,7 @@ def authorized():
 # Admin home page
 @app.route('/admin_home')
 def admin_home():
-    print("Admin home route called")  # Debugging
-    if not session.get('user'):
+    if not session.get('user') or 'admin' not in session['user'].get('roles', []):
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
     return render_template('admin.html', user_name=user_name)
