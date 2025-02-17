@@ -1,7 +1,8 @@
 Flask
 Flask-SQLAlchemy
 Flask-Session
-authlib
+Authlib
 requests
+msal
 pyodbc
 gunicorn
