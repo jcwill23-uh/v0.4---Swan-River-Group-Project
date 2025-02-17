@@ -18,6 +18,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <script>
+        function redirectToLoginPage() {
+            window.location.href = "/login";
+        }
+    </script>
 
     <script src="script.js" defer></script>
 </head>
@@ -27,24 +32,9 @@
         <h1>Swan River Group Project</h1>
     </header>
     <div class="container">
-        <a href="{{ url_for('static', filename='login.html') }}" class="login-button">Get Started</a>
+        <button class="back" onclick="redirectToLoginPage()">Get Started5</button>
+
     </div>
 
-<script>
-        async function checkLogin() {
-            const response = await fetch('/check_session');
-            const data = await response.json();
-
-            if (data.logged_in) {
-                if (data.role === "admin") {
-                    window.location.href = "admin.html";
-                } else {
-                    window.location.href = "basic_user_home.html";
-                }
-            }
-        }
-
-        checkLogin();
-    </script>
     </body> 
 </html> 
