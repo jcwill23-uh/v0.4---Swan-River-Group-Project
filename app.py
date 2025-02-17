@@ -22,7 +22,7 @@ SCOPE = ['User.Read']
 app.config['SESSION_TYPE'] = 'filesystem'  # Prevents session loss in Azure
 app.config['SESSION_COOKIE_SECURE'] = True  # Forces HTTPS session cookies
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevents JavaScript from accessing cookies
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication'''
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://jcwill23@cougarnet.uh.edu@swan-river-user-information.database.windows.net/User%20Information?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
@@ -47,7 +47,7 @@ class User(db.Model):
 # Function to initialize database
 def setup_db():
     with app.app_context():
-        db.create_all()'''
+        db.create_all()
 
 # Home page
 @app.route('/')
