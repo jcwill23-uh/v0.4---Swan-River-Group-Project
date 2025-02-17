@@ -107,6 +107,14 @@ def admin_home():
     return render_template('admin.html', user_name=user_name)
 
 # Basic user home page
+@app.route('/basic_user_home')
+def basic_user_home():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('basic_user_home.html', user_name=user_name)
+
+# Basic user view profile page
 @app.route('/basic_user_view')
 def basic_user_view():
     if not session.get('user'):
@@ -126,14 +134,6 @@ def basic_user_view():
                           user_email=user.email, 
                           user_role=user.role, 
                           user_status=user.status)
-    
-# New routes for basic user functionalities
-@app.route('/basic_user_view')
-def basic_user_view():
-    if not session.get('user'):
-        return redirect(url_for('index'))
-    user_name = session['user']['displayName']
-    return render_template('basic_user_view.html', user_name=user_name)
 
 @app.route('/basic_user_edit')
 def basic_user_edit():
