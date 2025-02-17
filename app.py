@@ -96,22 +96,39 @@ def authorized():
 
         # Store user info in session
         session['user'] = user_info
-        return redirect(url_for('success'))
+
+        # Check if the user is an admin using the database
+        user_record = User.query.filter_by(email=user_info['mail']).first()
+
+        # Redirect based on user role
+        if user_record and user_record.role == 'admin':
+            return redirect(url_for('admin_home'))
+        else:
+            return redirect(url_for('basic_user_home'))
 
     except Exception as e:
         print(f"Error in callback route: {e}")  # Debugging
         return redirect(url_for('index'))
 
-# Success page after login
-@app.route('/success')
-def success():
-    print("Success route called")  # Debugging
+# Admin home page
+@app.route('/admin_home')
+def admin_home():
+    print("Admin home route called")  # Debugging
     if not session.get('user'):
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
     return render_template('admin.html', user_name=user_name)
 
-# Admin view profile page
+# Basic user home page
+@app.route('/basic_user_home')
+def basic_user_home():
+    print("Basic user home route called")  # Debugging
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('basic_user_home.html', user_name=user_name)
+
+# Other routes for admin functionalities
 @app.route('/admin-view-profile')
 def admin_view_profile():
     if not session.get('user'):
@@ -193,10 +210,10 @@ def _get_token_from_code(code):
 def _get_user_info(token):
     graph_data = requests.get(
         'https://graph.microsoft.com/v1.0/me',
-        headers={'Authorization': 'Bearer ' + token}).json()
+        headers={'Authorization': 'Bearer '
     return graph_data
 
 if __name__ == '__main__':
-   # setup_db()  # Initialize database tables
+    setup_db()  # Initialize database tables
     app.run(host='0.0.0.0', port=5000)
 
