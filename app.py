@@ -210,7 +210,7 @@ def _get_token_from_code(code):
 def _get_user_info(token):
     graph_data = requests.get(
         'https://graph.microsoft.com/v1.0/me',
-        headers={'Authorization': 'Bearer '
+        headers={'Authorization': 'Bearer ' + token}).json()
     return graph_data
 
 if __name__ == '__main__':
