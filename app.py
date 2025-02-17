@@ -149,22 +149,6 @@ def success():
     user_name = session['user']['displayName']
     return render_template('admin.html', user_name=user_name)
 
-# Admin home page
-@app.route('/admin')
-def admin():
-    if not session.get('user'):
-        return redirect(url_for('index'))
-    user_name = session['user']['displayName']
-    return render_template('admin.html', user_name=user_name)
-
-# Basic user home page
-@app.route('/basic-user-home')
-def basic_user_home():
-    if not session.get('user'):
-        return redirect(url_for('index'))
-    user_name = session['user']['displayName']
-    return render_template('basic_user_home.html', user_name=user_name)
-
 # Admin view profile page
 @app.route('/admin-view-profile')
 def admin_view_profile():
