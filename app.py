@@ -209,7 +209,6 @@ def _get_token_from_code(code):
         print(f"Error acquiring token: {e}")  # Debugging
         return None
 
-# Helper function to get user info from Microsoft Graph
 def _get_user_info(token):
     # Fetch basic user info
     graph_data = requests.get(
@@ -217,16 +216,18 @@ def _get_user_info(token):
         headers={'Authorization': 'Bearer ' + token}
     ).json()
 
-    # Fetch user roles (app roles assigned in Azure AD)
+    # Fetch app roles assigned to the user
     roles_response = requests.get(
         'https://graph.microsoft.com/v1.0/me/appRoleAssignments',
         headers={'Authorization': 'Bearer ' + token}
     ).json()
 
-    # Extract roles
-    roles = [assignment['appRoleId'] for assignment in roles_response.get('value', [])]
-    graph_data['roles'] = roles  # Add roles to user info
+    # Extract role values
+    roles = []
+    for assignment in roles_response.get('value', []):
+        roles.append(assignment['appRoleId'])  # Use the role value (e.g., 'admin')
 
+    graph_data['roles'] = roles  # Add roles to user info
     return graph_data
 
 if __name__ == '__main__':
