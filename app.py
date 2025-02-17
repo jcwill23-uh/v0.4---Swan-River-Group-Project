@@ -7,13 +7,14 @@ import requests
 from dotenv import load_dotenv
 import os
 import traceback
+import logging
 
 # Load environment variables
 load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='docs', static_folder='docs')
-app.secret_key = os.getenv('SECRET_KEY')  # Required for session management
+app.secret_key = "sWanRivEr"  # Required for session management
 
 # Azure AD configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
@@ -30,16 +31,16 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevents JavaScript from accessi
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL',
-    'mssql+pyodbc://jcwill23@cougarnet.uh.edu@swan-river-user-information.database.windows.net/User%20Information'
-    '?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
-)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://jcwill23@cougarnet.uh.edu@swan-river-user-information.database.windows.net/User%20Information?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and session
 db = SQLAlchemy(app)
 Session(app)
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # User Model
 class User(db.Model):
@@ -65,38 +66,38 @@ def login():
     return render_template('login.html')
 
 # Initiate Microsoft 365 login
-@app.route('/mic365_login')
+@app.route('/azure_login')
 def azure_login():
     session['state'] = 'random_state'  # Use a random state for security
     auth_url = _build_auth_url(scopes=SCOPE, state=session['state'])
-    print("Authorization URL:", auth_url)  # Debugging
+    logger.info(f"Authorization URL: {auth_url}")  # Logging
     return redirect(auth_url)
 
 # Callback route after Microsoft 365 login
 @app.route('/auth/callback')
 def authorized():
-    print("Callback route called")  # Debugging
+    logger.info("Callback route called")  # Logging
     try:
         if request.args.get('state') != session.get('state'):
-            print("State mismatch")  # Debugging
+            logger.error("State mismatch")  # Logging
             return redirect(url_for('index'))  # Prevent CSRF attacks
 
         # Get the authorization code from the request
         code = request.args.get('code')
         if not code:
-            print("Authorization code not found")  # Debugging
+            logger.error("Authorization code not found")  # Logging
             return redirect(url_for('index'))
 
         # Get the access token
         token = _get_token_from_code(code)
         if not token:
-            print("Failed to get access token")  # Debugging
+            logger.error("Failed to get access token")  # Logging
             return redirect(url_for('index'))
 
         # Get user info from Microsoft Graph
         user_info = _get_user_info(token)
         if not user_info:
-            print("Failed to get user info")  # Debugging
+            logger.error("Failed to get user info")  # Logging
             return redirect(url_for('index'))
 
         # Store user info in session
@@ -112,23 +113,28 @@ def authorized():
             db.session.commit()
             user = new_user
 
-        # Check user role and redirect accordingly
+        # Redirect based on role
         if user.role == 'admin':
             return redirect(url_for('admin_home'))
         return redirect(url_for('basic_user_home'))
 
     except Exception as e:
-        print(f"Error in callback route: {e}")  # Debugging
+        logger.error(f"Error in callback route: {e}")  # Logging
         return redirect(url_for('index'))
 
 # Success page after login
 @app.route('/success')
 def success():
-    print("Success route called")  # Debugging
+    logger.info("Success route called")  # Logging
     if not session.get('user'):
         return redirect(url_for('index'))
-    user_name = session['user']['displayName']
-    return render_template('admin.html', user_name=user_name)
+
+    user_email = session['user'].get('mail') or session['user'].get('userPrincipalName')
+    user = User.query.filter_by(email=user_email).first()
+    
+    if user.role == 'admin':
+        return render_template('admin.html', user_name=user.name)
+    return render_template('basic-user-home.html', user_name=user.name)
 
 # Admin home page
 @app.route('/admin/home')
@@ -139,12 +145,12 @@ def admin_home():
     return render_template('admin.html', user_name=user_name)
 
 # Basic user home page
-@app.route('/basic-user-home')
+@app.route('/basic_user_home')
 def basic_user_home():
     if not session.get('user'):
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
-    return render_template('basic-user-home.html', user_name=user_name)
+    return render_template('basic_user_home.html', user_name=user_name)
 
 # Admin view profile page
 @app.route('/admin-view-profile')
@@ -214,14 +220,14 @@ def _get_token_from_code(code):
 
         # Check if the token was acquired successfully
         if "access_token" in result:
-            print("Access token acquired successfully")  # Debugging
+            logger.info("Access token acquired successfully")  # Logging
             return result["access_token"]
         else:
-            print("Failed to acquire access token. Response:", result)  # Debugging
+            logger.error(f"Failed to acquire access token. Response: {result}")  # Logging
             return None
 
     except Exception as e:
-        print(f"Error acquiring token: {e}")  # Debugging
+        logger.error(f"Error acquiring token: {e}")  # Logging
         return None
 
 # Helper function to get user info from Microsoft Graph
@@ -233,4 +239,4 @@ def _get_user_info(token):
 
 if __name__ == '__main__':
     setup_db()  # Initialize database tables
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000)
