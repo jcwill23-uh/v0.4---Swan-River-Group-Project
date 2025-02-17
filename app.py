@@ -70,66 +70,152 @@ def setup_db():
     with app.app_context():
         db.create_all()
 
-# Home route (Index Page)
+# Home page
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Route for login page
-@app.route('/login_page')
-def login_page():
+# Login page
+@app.route('/login')
+def login():
     return render_template('login.html')
 
-# OAuth Login Route
-@app.route('/login', methods=['GET'])
-def login():
-    redirect_uri = url_for('auth_callback', _external=True)
-    return oauth.microsoft.authorize_redirect(redirect_uri)
+# Initiate Microsoft 365 login
+@app.route('/mic365_login')
+def azure_login():
+    session['state'] = 'random_state'  # Use a random state for security
+    auth_url = _build_auth_url(scopes=SCOPE, state=session['state'])
+    print("Authorization URL:", auth_url)  # Debugging
+    return redirect(auth_url)
 
+# Callback route after Microsoft 365 login
 @app.route('/auth/callback')
-def auth_callback():
+def authorized():
+    print("Callback route called")  # Debugging
     try:
-        token = oauth.microsoft.authorize_access_token()
-        user_info = requests.get(
-            'https://graph.microsoft.com/v1.0/me',
-            headers={'Authorization': f'Bearer {token["access_token"]}'}
-        ).json()
+        if request.args.get('state') != session.get('state'):
+            print("State mismatch")  # Debugging
+            return redirect(url_for('index'))  # Prevent CSRF attacks
 
-        user_email = user_info.get('mail') or user_info.get('userPrincipalName')
-        user_name = user_info.get('displayName')
+        # Get the authorization code from the request
+        code = request.args.get('code')
+        if not code:
+            print("Authorization code not found")  # Debugging
+            return redirect(url_for('index'))
 
-        if not user_email:
-            return jsonify({"error": "Unable to retrieve email from Office365"}), 400
+        # Get the access token
+        token = _get_token_from_code(code)
+        if not token:
+            print("Failed to get access token")  # Debugging
+            return redirect(url_for('index'))
 
-        user = User.query.filter_by(email=user_email).first()
-        if not user:
-            new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
-            db.session.add(new_user)
-            db.session.commit()
-            user = new_user
+        # Get user info from Microsoft Graph
+        user_info = _get_user_info(token)
+        if not user_info:
+            print("Failed to get user info")  # Debugging
+            return redirect(url_for('index'))
 
-        session['user'] = {
-            'name': user.name,
-            'email': user.email,
-            'role': user.role,
-            'status': user.status
-        }
-        session.modified = True  
-
-        # Redirect based on role
-        if user.role == "admin":
-            return redirect("admin.html")
-        return redirect("basic-user-home.html")
+        # Store user info in session
+        session['user'] = user_info
+        return redirect(url_for('success'))
 
     except Exception as e:
-        return jsonify({"error": "Authentication failed", "details": str(e)}), 400
+        print(f"Error in callback route: {e}")  # Debugging
+        return redirect(url_for('index'))
 
-# Logout Route
+# Success page after login
+@app.route('/success')
+def success():
+    print("Success route called")  # Debugging
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('admin.html', user_name=user_name)
+
+# Admin view profile page
+@app.route('/admin-view-profile')
+def admin_view_profile():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('admin-view-profile.html', user_name=user_name)
+
+@app.route('/admin-edit-profile')
+def admin_edit_profile():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('admin-edit-profile.html', user_name=user_name)
+
+@app.route('/admin-create-user')
+def admin_create_user():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('admin-create-user.html', user_name=user_name)
+
+@app.route('/admin-view-user')
+def admin_view_user():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('admin-view-user.html', user_name=user_name)
+
+@app.route('/admin-update-user')
+def admin_update_user():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('admin-update-user.html', user_name=user_name)
+
+@app.route('/admin-delete-user')
+def admin_delete_user():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('admin-delete-user.html', user_name=user_name)
+
+# Logout route
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
 
+# Helper function to build the authorization URL
+def _build_auth_url(scopes=None, state=None):
+    return msal.PublicClientApplication(
+        CLIENT_ID, authority=AUTHORITY).get_authorization_request_url(
+        scopes, state=state, redirect_uri=REDIRECT_URI)
+
+# Helper function to get the access token
+def _get_token_from_code(code):
+    try:
+        # Initialize the MSAL client
+        client = msal.ConfidentialClientApplication(
+            CLIENT_ID, authority=AUTHORITY, client_credential=CLIENT_SECRET)
+
+        # Acquire the token using the authorization code
+        result = client.acquire_token_by_authorization_code(
+            code, scopes=SCOPE, redirect_uri=REDIRECT_URI)
+
+        # Check if the token was acquired successfully
+        if "access_token" in result:
+            print("Access token acquired successfully")  # Debugging
+            return result["access_token"]
+        else:
+            print("Failed to acquire access token. Response:", result)  # Debugging
+            return None
+
+    except Exception as e:
+        print(f"Error acquiring token: {e}")  # Debugging
+        return None
+
+# Helper function to get user info from Microsoft Graph
+def _get_user_info(token):
+    graph_data = requests.get(
+        'https://graph.microsoft.com/v1.0/me',
+        headers={'Authorization': 'Bearer ' + token}).json()
+    return graph_data
 # Run the app
 if __name__ == '__main__':
     setup_db()  # Initialize database tables
