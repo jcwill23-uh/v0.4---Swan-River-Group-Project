@@ -35,10 +35,10 @@
 <body class="normal">
     <div class="user-info">
         <h2><u>Profile Information</u></h2>
-        <p>Name: <span id="userName"></span></p>
-        <p>Email: <span id="userEmail"></span></p>
-        <p>Role: <span id="userRole"></span></p>
-        <p>Status: <span id="userStatus"></span></p><br>
+        <p>Name: <span id="userName">{{ user_name }}</span></p>
+        <p>Email: <span id="userEmail">{{ user_email }}</span></p>
+        <p>Role: <span id="userRole">{{ user_role }}</span></p>
+        <p>Status: <span id="userStatus">{{ user_status }}</span></p><br>
         <button class="back" onclick="redirectToBasicEdit()">Edit Profile</a>
         <button class="back" onclick="redirectToBasicHome()">Back to Home</button>
     </div>
