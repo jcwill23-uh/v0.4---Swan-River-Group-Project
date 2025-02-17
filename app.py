@@ -70,45 +70,33 @@ def azure_login():
 # Callback route after Microsoft 365 login
 @app.route('/auth/callback')
 def authorized():
-    print("Callback route called")  # Debugging
     try:
-        if request.args.get('state') != session.get('state'):
-            print("State mismatch")  # Debugging
-            return redirect(url_for('index'))  # Prevent CSRF attacks
-
-        # Get the authorization code from the request
-        code = request.args.get('code')
-        if not code:
-            print("Authorization code not found")  # Debugging
-            return redirect(url_for('index'))
-
         # Get the access token
-        token = _get_token_from_code(code)
+        token = _get_token_from_code(request.args.get('code'))
         if not token:
-            print("Failed to get access token")  # Debugging
             return redirect(url_for('index'))
 
         # Get user info from Microsoft Graph
         user_info = _get_user_info(token)
         if not user_info:
-            print("Failed to get user info")  # Debugging
             return redirect(url_for('index'))
 
         # Store user info in session
         session['user'] = user_info
 
-        # Check if the user is an admin using the database
-        user_record = User.query.filter_by(email=user_info['mail']).first()
+        # Check if the user is an admin
+        is_admin = 'admin' in user_info.get('roles', [])
 
         # Redirect based on user role
-        if user_record and user_record.role == 'admin':
+        if is_admin:
             return redirect(url_for('admin_home'))
         else:
             return redirect(url_for('basic_user_home'))
 
     except Exception as e:
-        print(f"Error in callback route: {e}")  # Debugging
+        print(f"Error in callback route: {e}")
         return redirect(url_for('index'))
+
 
 # Admin home page
 @app.route('/admin_home')
@@ -208,9 +196,22 @@ def _get_token_from_code(code):
 
 # Helper function to get user info from Microsoft Graph
 def _get_user_info(token):
+    # Fetch basic user info
     graph_data = requests.get(
         'https://graph.microsoft.com/v1.0/me',
-        headers={'Authorization': 'Bearer ' + token}).json()
+        headers={'Authorization': 'Bearer ' + token}
+    ).json()
+
+    # Fetch user roles (app roles assigned in Azure AD)
+    roles_response = requests.get(
+        'https://graph.microsoft.com/v1.0/me/appRoleAssignments',
+        headers={'Authorization': 'Bearer ' + token}
+    ).json()
+
+    # Extract roles
+    roles = [assignment['appRoleId'] for assignment in roles_response.get('value', [])]
+    graph_data['roles'] = roles  # Add roles to user info
+
     return graph_data
 
 if __name__ == '__main__':
