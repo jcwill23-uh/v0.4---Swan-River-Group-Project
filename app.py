@@ -1,11 +1,9 @@
-from flask import Flask, redirect, url_for, session, request, render_template, jsonify
+from flask import Flask, redirect, url_for, session, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
-from flask import send_from_directory
 import msal
 import requests
 import os
-import traceback
 import logging
 
 # Initialize Flask app
@@ -18,7 +16,7 @@ CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
 TENANT_ID = "170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 REDIRECT_URI = 'https://swan-river-group-project.azurewebsites.net/auth/callback'
-SCOPE = ['User.Read']
+SCOPE = ['User .Read']
 
 # Secure configuration settings
 app.config['SESSION_TYPE'] = 'filesystem'  # Prevents session loss in Azure
@@ -128,11 +126,19 @@ def success():
     user_email = session['user'].get('mail') or session['user'].get('userPrincipalName')
     user = User.query.filter_by(email=user_email).first()
     
-    if user.role == 'admin':
-        #return render_template('admin.html', user_name=user.name)
-        return redirect(url_for('admin'))
-    #return render_template('basic-user-home.html', user_name=user.name)
-return redirect(url_for('basic_user_home'))
+    if user:
+        # User exists in the database
+        if user.role == 'admin':
+            return render_template('admin.html', user_name=user.name)
+        else:
+            return redirect(url_for('basic_user_home'))  # Redirect to basic user home
+    else:
+        # User does not exist in the database, create a new user
+        user_name = session['user'].get('displayName')
+        new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect(url_for('basic_user_home'))  # Redirect to basic user home after creating the user
 
 # Admin home page
 @app.route('/admin')
@@ -143,7 +149,7 @@ def admin():
     return render_template('admin.html', user_name=user_name)
 
 # Basic user home page
-@app.route('/basic_user_home')
+@app.route('/basic-user-home')
 def basic_user_home():
     if not session.get('user'):
         return redirect(url_for('index'))
