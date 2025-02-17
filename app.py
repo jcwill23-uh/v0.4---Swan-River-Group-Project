@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask import send_from_directory
 from authlib.integrations.flask_client import OAuth
+import msal
 import os
 import requests
 import traceback
@@ -117,7 +118,13 @@ def authorized():
 
         # Store user info in session
         session['user'] = user_info
-        return redirect(url_for('success'))
+
+        # Check user role and redirect accordingly
+        user_email = user_info.get('mail') or user_info.get('userPrincipalName')
+        user = User.query.filter_by(email=user_email).first()
+        if user and user.role == 'admin':
+            return redirect(url_for('admin_home'))
+        return redirect(url_for('basic_user_home'))
 
     except Exception as e:
         print(f"Error in callback route: {e}")  # Debugging
@@ -131,6 +138,22 @@ def success():
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
     return render_template('admin.html', user_name=user_name)
+
+# Admin home page
+@app.route('/admin/home')
+def admin_home():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('admin.html', user_name=user_name)
+
+# Basic user home page
+@app.route('/basic-user-home')
+def basic_user_home():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    user_name = session['user']['displayName']
+    return render_template('basic-user-home.html', user_name=user_name)
 
 # Admin view profile page
 @app.route('/admin-view-profile')
@@ -216,6 +239,7 @@ def _get_user_info(token):
         'https://graph.microsoft.com/v1.0/me',
         headers={'Authorization': 'Bearer ' + token}).json()
     return graph_data
+
 # Run the app
 if __name__ == '__main__':
     setup_db()  # Initialize database tables
