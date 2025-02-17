@@ -2,14 +2,26 @@ from flask import Flask, redirect, url_for, session, request, render_template, j
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from flask import send_from_directory
-from authlib.integrations.flask_client import OAuth
 import msal
-import os
 import requests
+from dotenv import load_dotenv
+import os
 import traceback
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='docs', static_folder='docs')
+app.secret_key = os.getenv('SECRET_KEY')  # Required for session management
+
+# Azure AD configuration
+CLIENT_ID = os.getenv('CLIENT_ID')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+TENANT_ID = os.getenv('TENANT_ID')
+AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
+REDIRECT_URI = os.getenv('REDIRECT_URI')
+SCOPE = ['User.Read']
 
 # Secure configuration settings
 app.config['SESSION_TYPE'] = 'filesystem'  # Prevents session loss in Azure
@@ -29,25 +41,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 Session(app)
 
-# Azure AD OAuth Configuration
-CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
-CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
-TENANT_ID = "170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259"
-AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-SECRET_KEY = "sWanRivEr"
-REDIRECT_URI = 'https://swan-river-group-project.azurewebsites.net/auth/callback'
-SCOPE = ['User.Read', 'email', 'openid', 'profile']
-
-# Initialize OAuth
-oauth = OAuth(app)
-oauth.register(
-    "microsoft",
-    client_id=CLIENT_ID,
-    client_secret=CLIENT_SECRET,
-    server_metadata_url=f"{AUTHORITY}/v2.0/.well-known/openid-configuration",
-    client_kwargs={"scope": " ".join(SCOPE)},
-)
-
 # User Model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -55,16 +48,6 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
-
-# Debugging Route (DELETE AFTER TESTING)
-@app.route("/routes")
-def show_routes():
-    return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})
-
-# Serve static files from the docs folder
-@app.route('/docs/<path:filename>')
-def serve_docs_static(filename):
-    return send_from_directory('docs', filename)
 
 # Function to initialize database
 def setup_db():
@@ -82,7 +65,7 @@ def login():
     return render_template('login.html')
 
 # Initiate Microsoft 365 login
-@app.route('/mic365_login')
+@app.route('/azure_login')
 def azure_login():
     session['state'] = 'random_state'  # Use a random state for security
     auth_url = _build_auth_url(scopes=SCOPE, state=session['state'])
@@ -119,10 +102,18 @@ def authorized():
         # Store user info in session
         session['user'] = user_info
 
-        # Check user role and redirect accordingly
+        # Check if user exists in database, otherwise create a new user
         user_email = user_info.get('mail') or user_info.get('userPrincipalName')
+        user_name = user_info.get('displayName')
         user = User.query.filter_by(email=user_email).first()
-        if user and user.role == 'admin':
+        if not user:
+            new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
+            db.session.add(new_user)
+            db.session.commit()
+            user = new_user
+
+        # Check user role and redirect accordingly
+        if user.role == 'admin':
             return redirect(url_for('admin_home'))
         return redirect(url_for('basic_user_home'))
 
@@ -240,7 +231,6 @@ def _get_user_info(token):
         headers={'Authorization': 'Bearer ' + token}).json()
     return graph_data
 
-# Run the app
 if __name__ == '__main__':
     setup_db()  # Initialize database tables
-    app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=5000, debug=True)
