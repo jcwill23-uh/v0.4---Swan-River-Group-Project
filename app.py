@@ -68,7 +68,7 @@ def azure_login():
     return redirect(auth_url)
 
 # Callback route after Microsoft 365 login
-@app.route('/auth/callback')
+'''@app.route('/auth/callback')
 def authorized():
     logger.info("Callback route called")  # Logging
     try:
@@ -114,6 +114,41 @@ def authorized():
 
     except Exception as e:
         logger.error(f"Error in callback route: {e}")  # Logging
+        return redirect(url_for('index'))'''
+
+# Callback route after Microsoft 365 login
+@app.route('/auth/callback')
+def authorized():
+    print("Callback route called")  # Debugging
+    try:
+        if request.args.get('state') != session.get('state'):
+            print("State mismatch")  # Debugging
+            return redirect(url_for('index'))  # Prevent CSRF attacks
+
+        # Get the authorization code from the request
+        code = request.args.get('code')
+        if not code:
+            print("Authorization code not found")  # Debugging
+            return redirect(url_for('index'))
+
+        # Get the access token
+        token = _get_token_from_code(code)
+        if not token:
+            print("Failed to get access token")  # Debugging
+            return redirect(url_for('index'))
+
+        # Get user info from Microsoft Graph
+        user_info = _get_user_info(token)
+        if not user_info:
+            print("Failed to get user info")  # Debugging
+            return redirect(url_for('index'))
+
+        # Store user info in session
+        session['user'] = user_info
+        return redirect(url_for('success'))
+
+    except Exception as e:
+        print(f"Error in callback route: {e}")  # Debugging
         return redirect(url_for('index'))
 
 # Success page after login
