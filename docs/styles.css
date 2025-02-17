@@ -15,8 +15,6 @@ body.normal {
     height: 85vh;
     margin: 0;
     text-align: center;
-    padding-top: 50px;
-    padding-bottom: 100px;
 }
 
 #header {
@@ -82,7 +80,6 @@ a.login-btn {
     font-size: 18px;
     width: 300px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 60px;
 }
 
 button.save-btn {
@@ -121,6 +118,23 @@ button.save-btn:hover {
     flex-direction: column;
     margin-top: 10px;
 }
+button.back {
+    display: inline-block;
+    text-align: center;
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 12px 24px;
+    border: none;  /* Remove default button border */
+    border-radius: 4px;
+    font-size: 18px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    text-decoration: none;  /* Remove text decoration */
+}
+
+button.back:hover {
+    background-color: #1d3636;
+}
   
 label.edit {
     margin-bottom: 5px;
@@ -154,7 +168,25 @@ input.box {
 .admin-btn:hover {
     background-color: #1d3636;
 }
+button.admin-btn {
+    display: inline-block;
+    padding: 20px;
+    text-align: center;
+    background-color: var(--secondary-color);
+    color: var(--darker-white);
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 200px;
+    margin-bottom: 10px;
+}
 
+button.admin-btn:hover {
+    background-color: #1d3636;
+}
 body.userList {
     margin: 40px;
     font-family: Arial, sans-serif;
