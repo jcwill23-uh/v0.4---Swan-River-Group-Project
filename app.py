@@ -60,10 +60,6 @@ class User(db.Model):
 def show_routes():
     return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})    
 
-# Serve static files from the docs folder
-@app.route('/docs/<path:filename>')
-def serve_docs_static(filename):
-    return send_from_directory('docs', filename)
 
 # Function to initialize database
 def setup_db():
