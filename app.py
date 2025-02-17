@@ -4,13 +4,9 @@ from flask_session import Session
 from flask import send_from_directory
 import msal
 import requests
-from dotenv import load_dotenv
 import os
 import traceback
 import logging
-
-# Load environment variables
-load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='docs', static_folder='docs')
@@ -115,7 +111,7 @@ def authorized():
 
         # Redirect based on role
         if user.role == 'admin':
-            return redirect(url_for('admin_home'))
+            return redirect(url_for('admin'))
         return redirect(url_for('basic_user_home'))
 
     except Exception as e:
@@ -137,20 +133,20 @@ def success():
     return render_template('basic-user-home.html', user_name=user.name)
 
 # Admin home page
-@app.route('/admin/home')
-def admin_home():
+@app.route('/admin')
+def admin():
     if not session.get('user'):
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
     return render_template('admin.html', user_name=user_name)
 
 # Basic user home page
-@app.route('/basic_user_home')
+@app.route('/basic-user-home')
 def basic_user_home():
     if not session.get('user'):
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
-    return render_template('basic_user_home.html', user_name=user_name)
+    return render_template('basic-user-home.html', user_name=user_name)
 
 # Admin view profile page
 @app.route('/admin-view-profile')
@@ -240,3 +236,4 @@ def _get_user_info(token):
 if __name__ == '__main__':
     setup_db()  # Initialize database tables
     app.run(host='0.0.0.0', port=5000)
+
