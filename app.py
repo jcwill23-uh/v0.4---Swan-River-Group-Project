@@ -33,8 +33,8 @@ CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
 CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
 TENANT_ID = "170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-SECRET_KEY= "sWanRivEr"
-REDIRECT_URI = 'https://swan-river-group-project.azurewebsites.net/login'
+SECRET_KEY = "sWanRivEr"
+REDIRECT_URI = 'https://swan-river-group-project.azurewebsites.net/auth/callback'
 SCOPE = ['User.Read', 'email', 'openid', 'profile']
 
 # Initialize OAuth
@@ -58,14 +58,13 @@ class User(db.Model):
 # Debugging Route (DELETE AFTER TESTING)
 @app.route("/routes")
 def show_routes():
-    return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})    
-
+    return jsonify({rule.rule: rule.endpoint for rule in app.url_map.iter_rules()})
 
 # Serve static files from the docs folder
 @app.route('/docs/<path:filename>')
 def serve_docs_static(filename):
     return send_from_directory('docs', filename)
-    
+
 # Function to initialize database
 def setup_db():
     with app.app_context():
@@ -82,8 +81,13 @@ def login_page():
     return render_template('login.html')
 
 # OAuth Login Route
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET'])
 def login():
+    redirect_uri = url_for('auth_callback', _external=True)
+    return oauth.microsoft.authorize_redirect(redirect_uri)
+
+@app.route('/auth/callback')
+def auth_callback():
     try:
         token = oauth.microsoft.authorize_access_token()
         user_info = requests.get(
