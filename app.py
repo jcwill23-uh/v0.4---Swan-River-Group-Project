@@ -84,7 +84,7 @@ def authorized():
         # Store user info in session
         session['user'] = user_info
 
-        # Check if the user is an admin
+        # Check if the user has the 'admin' role
         is_admin = 'admin' in user_info.get('roles', [])
 
         # Redirect based on user role
