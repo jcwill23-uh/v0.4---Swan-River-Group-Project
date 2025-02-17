@@ -18,11 +18,11 @@ AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 REDIRECT_URI = 'https://swan-river-group-project.azurewebsites.net/auth/callback'
 SCOPE = ['User.Read']
 
-'''# Secure configuration settings
+# Secure configuration settings
 app.config['SESSION_TYPE'] = 'filesystem'  # Prevents session loss in Azure
 app.config['SESSION_COOKIE_SECURE'] = True  # Forces HTTPS session cookies
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevents JavaScript from accessing cookies
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication'''
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://jcwill23@cougarnet.uh.edu@swan-river-user-information.database.windows.net/User%20Information?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
