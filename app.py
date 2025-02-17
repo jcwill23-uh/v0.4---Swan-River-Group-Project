@@ -68,55 +68,6 @@ def azure_login():
     return redirect(auth_url)
 
 # Callback route after Microsoft 365 login
-'''@app.route('/auth/callback')
-def authorized():
-    logger.info("Callback route called")  # Logging
-    try:
-        if request.args.get('state') != session.get('state'):
-            logger.error("State mismatch")  # Logging
-            return redirect(url_for('index'))  # Prevent CSRF attacks
-
-        # Get the authorization code from the request
-        code = request.args.get('code')
-        if not code:
-            logger.error("Authorization code not found")  # Logging
-            return redirect(url_for('index'))
-
-        # Get the access token
-        token = _get_token_from_code(code)
-        if not token:
-            logger.error("Failed to get access token")  # Logging
-            return redirect(url_for('index'))
-
-        # Get user info from Microsoft Graph
-        user_info = _get_user_info(token)
-        if not user_info:
-            logger.error("Failed to get user info")  # Logging
-            return redirect(url_for('index'))
-
-        # Store user info in session
-        session['user'] = user_info
-
-        # Check if user exists in database, otherwise create a new user
-        user_email = user_info.get('mail') or user_info.get('userPrincipalName')
-        user_name = user_info.get('displayName')
-        user = User.query.filter_by(email=user_email).first()
-        if not user:
-            new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
-            db.session.add(new_user)
-            db.session.commit()
-            user = new_user
-
-        # Redirect based on role
-        if user.role == 'admin':
-            return redirect(url_for('admin'))
-        return redirect(url_for('basic_user_home'))
-
-    except Exception as e:
-        logger.error(f"Error in callback route: {e}")  # Logging
-        return redirect(url_for('index'))'''
-
-# Callback route after Microsoft 365 login
 @app.route('/auth/callback')
 def authorized():
     print("Callback route called")  # Debugging
@@ -145,6 +96,20 @@ def authorized():
 
         # Store user info in session
         session['user'] = user_info
+
+        # Check if user exists in database, otherwise create a new user
+        user_email = user_info.get('mail') or user_info.get('userPrincipalName')
+        user_name = user_info.get('displayName')
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
+            db.session.add(new_user)
+            db.session.commit()
+            user = new_user
+
+        # Store user role in session
+        session['user_role'] = user.role
+
         return redirect(url_for('success'))
 
     except Exception as e:
@@ -152,37 +117,18 @@ def authorized():
         return redirect(url_for('index'))
 
 # Success page after login
-'''@app.route('/success')
-def success():
-    logger.info("Success route called")  # Logging
-    if not session.get('user'):
-        return redirect(url_for('index'))
-
-    user_email = session['user'].get('mail') or session['user'].get('userPrincipalName')
-    user = User.query.filter_by(email=user_email).first()
-    
-    if user:
-        # User exists in the database
-        if user.role == 'admin':
-            return render_template('admin.html', user_name=user.name)
-        else:
-            return redirect(url_for('basic_user_home'))  # Redirect to basic user home
-    else:
-        # User does not exist in the database, create a new user
-        user_name = session['user'].get('displayName')
-        new_user = User(name=user_name, email=user_email, role="basicuser", status="active")
-        db.session.add(new_user)
-        db.session.commit()
-        return redirect(url_for('basic_user_home'))  # Redirect to basic user home after creating the user'''
-
-# Success page after login
 @app.route('/success')
 def success():
     print("Success route called")  # Debugging
     if not session.get('user'):
         return redirect(url_for('index'))
-    user_name = session['user']['displayName']
-    return render_template('admin.html', user_name=user_name)
+
+    user_role = session.get('user_role', 'basicuser')  # Default to 'basicuser' if role is not set
+
+    if user_role == 'admin':
+        return render_template('admin.html', user_name=session['user']['displayName'])
+    else:
+        return render_template('basic_user_home.html', user_name=session['user']['displayName'])
 
 # Admin view profile page
 @app.route('/admin-view-profile')
