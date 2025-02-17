@@ -18,6 +18,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <script>
+        function redirectToBasicHome() {
+            window.location.href = "/basic_user_home";
+    </script>
 
 </head>
 
@@ -47,7 +51,7 @@
         <br>
         <button class="save-btn" id="save" type="POST">Save</button>
         
-        <a class="login-btn" href="basic_user_home.html">Back to Home</a>
+        <button class="admin-btn" onclick="redirectToBasicHome()">Back to Home</button>
     </form>
 
     <script>
