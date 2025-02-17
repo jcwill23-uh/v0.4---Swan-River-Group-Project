@@ -110,13 +110,18 @@ def authorized():
         # Store user role in session
         session['user_role'] = user.role
 
-        return redirect(url_for('success'))
+        # Redirect based on user role
+        # Changes made here to redirect to either admin.html or basic_user_home.html
+        if user.role == 'admin':
+            return redirect(url_for('admin'))
+        else:
+            return redirect(url_for('basic_user_home'))
 
     except Exception as e:
         print(f"Error in callback route: {e}")  # Debugging
         return redirect(url_for('index'))
 
-# Success page after login
+'''# Success page after login
 @app.route('/success')
 def success():
     print("Success route called")  # Debugging
@@ -128,8 +133,18 @@ def success():
     if user_role == 'admin':
         return render_template('admin.html', user_name=session['user']['displayName'])
     else:
-        return render_template('basic_user_home.html', user_name=session['user']['displayName'])
+        return render_template('basic_user_home.html', user_name=session['user']['displayName'])'''
+@app.route('/admin')
+def admin():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    return render_template('admin.html', user_name=session['user']['displayName'])
 
+@app.route('/basic_user_home')
+def basic_user_home():
+    if not session.get('user'):
+        return redirect(url_for('index'))
+    return render_template('basic_user_home.html', user_name=session['user']['displayName'])
 # Admin view profile page
 @app.route('/admin-view-profile')
 def admin_view_profile():
