@@ -13,26 +13,47 @@
 
     <title>Swan River Group Project</title>
 
-    <link rel="icon" type="image/png" href="/images/swan.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
-    <script src="auth.js"></script> <!-- Include the auth.js file containing the checkAuth function -->
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     <script>
         // Ensure user is logged in before accessing the page
         checkAuth();
     </script>
+    <script>
+        function redirectToProfileView() {
+            window.location.href = "/admin-view-profile";
+        }
+        function redirectToEditProfile() {
+            window.location.href = "/admin-edit-profile";
+        }
+        function redirectToCreateNewUser() {
+            window.location.href = "/admin-create-user";
+        }
+        function redirectToUserView() {
+            window.location.href = "/admin-view-user";
+        }
+        function redirectToUpdateUser() {
+            window.location.href = "/admin-update-user";
+        }
+        function redirectToDeleteUser() {
+            window.location.href = "/admin-delete-user";
+        }
+    </script>
+
 </head>
 
 <body class="normal">
     <div class="welcome">
         <h1>Admin Home</h1>
-        <a class="admin-btn" href="admin-view-profile.html">View Profile</a><br>
-        <a class="admin-btn" href="admin-edit-profile.html">Edit Profile</a><br>
-        <a class="admin-btn" href="admin-create-user.html">Create New User</a><br>
-        <a class="admin-btn" href="admin-view-user.html">View Users</a><br>
-        <a class="admin-btn" href="admin-update-user.html">Update Users</a><br>
-        <a class="admin-btn" href="admin-delete-user.html">Delete Users</a><br>
+        <button class="admin-btn" onclick="redirectToProfileView()">View Profile</button><br>
+        <button class="admin-btn" onclick="redirectToEditProfile()">Edit Profile</button><br>
+        <button class="admin-btn" onclick="redirectToCreateNewUser()">Create New User</a><br>
+        <button class="admin-btn" onclick="redirectToUserView()">View Users</button><br>
+        <button class="admin-btn" onclick="redirectToUpdateUser()">Update Users</a><br>
+        <button class="admin-btn" onclick="redirectToDeleteUser()">Delete Users</a><br>
     </div>
 
 </body>
