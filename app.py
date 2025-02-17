@@ -129,8 +129,10 @@ def success():
     user = User.query.filter_by(email=user_email).first()
     
     if user.role == 'admin':
-        return render_template('admin.html', user_name=user.name)
-    return render_template('basic-user-home.html', user_name=user.name)
+        #return render_template('admin.html', user_name=user.name)
+        return redirect(url_for('admin'))
+    #return render_template('basic-user-home.html', user_name=user.name)
+return redirect(url_for('basic_user_home'))
 
 # Admin home page
 @app.route('/admin')
@@ -141,12 +143,12 @@ def admin():
     return render_template('admin.html', user_name=user_name)
 
 # Basic user home page
-@app.route('/basic-user-home')
+@app.route('/basic_user_home')
 def basic_user_home():
     if not session.get('user'):
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
-    return render_template('basic-user-home.html', user_name=user_name)
+    return render_template('basic_user_home.html', user_name=user_name)
 
 # Admin view profile page
 @app.route('/admin-view-profile')
