@@ -16,7 +16,7 @@ CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
 TENANT_ID = "170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 REDIRECT_URI = 'https://swan-river-group-project.azurewebsites.net/auth/callback'
-SCOPE = ['User .Read']
+SCOPE = ['User.Read']
 
 # Secure configuration settings
 app.config['SESSION_TYPE'] = 'filesystem'  # Prevents session loss in Azure
