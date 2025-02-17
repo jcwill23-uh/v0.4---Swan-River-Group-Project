@@ -19,6 +19,11 @@
 
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 
+    <script>
+        function redirectToBasicHome() {
+            window.location.href = "/basic_user_home";
+    </script>
+
     <script src="script.js" defer></script>
 </head>
 
@@ -30,7 +35,7 @@
         <p>Role: <span id="userRole"></span></p>
         <p>Status: <span id="userStatus"></span></p><br>
         <a class="login-btn" href="basic_user_edit.html">Edit Profile</a>
-        <a class="login-btn" href="basic_user_home.html">Back to Home</a>
+        <button class="admin-btn" onclick="redirectToBasicHome()">Back to Home</button>
     </div>
 
     <script>
