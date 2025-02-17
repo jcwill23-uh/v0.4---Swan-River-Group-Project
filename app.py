@@ -11,7 +11,6 @@ import traceback
 app = Flask(__name__, template_folder='docs', static_folder='docs')
 
 # Secure configuration settings
-app.secret_key = os.getenv("SECRET_KEY", "swanRiver")  # Secure the secret key
 app.config['SESSION_TYPE'] = 'filesystem'  # Prevents session loss in Azure
 app.config['SESSION_COOKIE_SECURE'] = True  # Forces HTTPS session cookies
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevents JavaScript from accessing cookies
@@ -30,9 +29,10 @@ db = SQLAlchemy(app)
 Session(app)
 
 # Azure AD OAuth Configuration
-CLIENT_ID = os.getenv("CLIENT_ID", "f435d3c1-426e-4490-80c4-ac8ff8c05574")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")  # Ensure it's set as an environment variable
-AUTHORITY = 'https://login.microsoftonline.com/170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259'
+CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
+CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
+TENANT_ID = "170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259"
+SECRET_KEY= "sWanRivEr"
 REDIRECT_URI = 'https://swan-river-group-project.azurewebsites.net/login'
 SCOPE = ['User.Read', 'email', 'openid', 'profile']
 
@@ -69,13 +69,18 @@ def setup_db():
     with app.app_context():
         db.create_all()
 
-# Home route (Login Page)
+# Home route (Index Page)
 @app.route('/')
-def home():
+def index():
+    return render_template('index.html')
+
+# Route for login page
+@app.route('/login_page')
+def login_page():
     return render_template('login.html')
 
 # OAuth Login Route
-@app.route('/login')
+@app.route('/login', methods=['POST'])
 def login():
     try:
         token = oauth.microsoft.authorize_access_token()
@@ -107,8 +112,8 @@ def login():
 
         # Redirect based on role
         if user.role == "admin":
-            return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/admin.html")
-        return redirect("https://jcwill23-uh.github.io/Swan-River-Group-Project/basic-user-home.html")
+            return redirect("admin.html")
+        return redirect("basic-user-home.html")
 
     except Exception as e:
         return jsonify({"error": "Authentication failed", "details": str(e)}), 400
@@ -117,81 +122,9 @@ def login():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('home'))
+    return redirect(url_for('index'))
 
-# Debug Route to Check Session
-@app.route('/debug_session')
-def debug_session():
-    return jsonify(session.get('user', "No user session found"))
-
-# Retrieve User Profile
-@app.route('/user/profile', methods=['GET'])
-def get_user_profile():
-    if 'user' not in session:
-        return jsonify({"error": "User not authenticated"}), 401
-
-    user_email = session['user']['email']
-    user = User.query.filter_by(email=user_email).first()
-
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    return jsonify({
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "role": user.role,
-        "status": user.status
-    })
-
-# Admin Routes
-@app.route('/admin/create_user', methods=['POST'])
-def create_user():
-    if 'user' not in session or session['user']['role'] != 'admin':
-        return jsonify({"error": "Unauthorized"}), 403
-
-    data = request.json
-    new_user = User(
-        name=data['name'],
-        email=data['email'],
-        role=data['role'],
-        status=data['status']
-    )
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({"message": "User created successfully"}), 201
-
-@app.route('/admin/update_user/<int:user_id>', methods=['PUT'])
-def update_user(user_id):
-    if 'user' not in session or session['user']['role'] != 'admin':
-        return jsonify({"error": "Unauthorized"}), 403
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    data = request.json
-    user.name = data.get('name', user.name)
-    user.email = data.get('email', user.email)
-    user.role = data.get('role', user.role)
-    user.status = data.get('status', user.status)
-    db.session.commit()
-    return jsonify({"message": "User updated successfully"}), 200
-
-@app.route('/admin/deactivate_user/<int:user_id>', methods=['PUT'])
-def deactivate_user(user_id):
-    if 'user' not in session or session['user']['role'] != 'admin':
-        return jsonify({"error": "Unauthorized"}), 403
-
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    user.status = 'deactivated'
-    db.session.commit()
-    return jsonify({"message": "User deactivated"}), 200
-
-# **Place this block at the bottom**
+# Run the app
 if __name__ == '__main__':
     setup_db()  # Initialize database tables
     app.run(host='0.0.0.0', port=8000, debug=True, use_reloader=False)
