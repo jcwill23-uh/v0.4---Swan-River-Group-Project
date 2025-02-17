@@ -65,7 +65,7 @@ def login():
     return render_template('login.html')
 
 # Initiate Microsoft 365 login
-@app.route('/azure_login')
+@app.route('/mic365_login')
 def azure_login():
     session['state'] = 'random_state'  # Use a random state for security
     auth_url = _build_auth_url(scopes=SCOPE, state=session['state'])
