@@ -11,8 +11,19 @@
     <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
     <title>View Profile - Admin</title>
 
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <script>
+        function redirectToAdmin() {
+            window.location.href = "/success";
+        }
+        function redirectToEditProfile() {
+        window.location.href = "/admin-edit-profile";
+    }
+    </script>
 </head>
 
 <body class="normal">
@@ -22,8 +33,9 @@
         <p>Email: <span id="userEmail"></span></p>
         <p>Role: <span id="userRole"></span></p>
         <p>Status: <span id="userStatus"></span></p><br>
-        <a class="login-btn" href="admin-edit-profile.html">Edit Profile</a>
-        <a class="login-btn" href="admin.html">Back to Home</a>
+        <button class="back" onclick="redirectToEditProfile()">Edit Profile</button>
+        <button class="back" onclick="redirectToAdmin()">Back to Home</button>
+
     </div>
 
     <script>
