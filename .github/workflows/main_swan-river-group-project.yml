@@ -72,8 +72,9 @@ jobs:
           #tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_589EA075831547DCBD7DE008E84013F8 }}
           #subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3F6A946AE2D94AD083A9A7E623A00291 }}
           subscription-id: 91752863-c2fa-4d1e-944e-262a3c7c5a39
-          client-id: 79124482-d5fc-4a9b-9025-8a28a5b77556
+          #client-id: f435d3c1-426e-4490-80c4-ac8ff8c05574
           tenant-id: 170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259
+          auth-type: IDENTITY
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
