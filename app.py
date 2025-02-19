@@ -1,4 +1,4 @@
-from flask import Flask, redirect, url_for, session, request, render_template
+from flask import Flask, redirect, url_for, session, request, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 from Queries import AddUser
@@ -30,7 +30,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://jcwill23@cougarnet.uh.ed
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and session
-# db = SQLAlchemy(app)
+db = SQLAlchemy(app)
 Session(app)
 
 # Set up logging
@@ -38,12 +38,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # User Model
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(100), nullable=False)
-#     email = db.Column(db.String(100), unique=True, nullable=False)
-#     role = db.Column(db.String(50), default="basicuser")
-#     status = db.Column(db.String(20), default="active")
+class User(db.Model):
+     id = db.Column(db.Integer, primary_key=True)
+     name = db.Column(db.String(100), nullable=False)
+     email = db.Column(db.String(100), unique=True, nullable=False)
+     role = db.Column(db.String(50), default="basicuser")
+     status = db.Column(db.String(20), default="active")
 
 # Function to initialize database
 # def setup_db():
@@ -72,28 +72,39 @@ def azure_login():
 @app.route('/auth/callback')
 def authorized():
     try:
-        # Get the access token
         token = _get_token_from_code(request.args.get('code'))
         if not token:
             return redirect(url_for('index'))
 
-        # Get user info from Microsoft Graph
         user_info = _get_user_info(token)
         if not user_info:
             return redirect(url_for('index'))
 
-        # Store user info in session
-        session['user'] = user_info
+        # Determine email and name
+        user_email = user_info.get('mail') or user_info.get('userPrincipalName')
+        user_name = user_info.get('displayName')
 
-        # Check if the user has the 'admin' role
-        is_admin = 'admin' in user_info.get('roles', [])
+        # Query the database for an existing user
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            # Create a new user if not found
+            user = User(name=user_name, email=user_email, role="basicuser", status="active")
+            db.session.add(user)
+            db.session.commit()
 
-        # Redirect based on user role
-        if is_admin:
+        # Store the user's details in session for later use
+        session['user'] = {
+            'displayName': user.name,
+            'email': user.email,
+            'role': user.role,
+            'status': user.status
+        }
+
+        # Redirect based on role
+        if 'admin' in user_info.get('roles', []):
             return redirect(url_for('admin_home'))
         else:
             return redirect(url_for('basic_user_home'))
-
     except Exception as e:
         print(f"Error in callback route: {e}")
         return redirect(url_for('index'))
@@ -115,6 +126,25 @@ def basic_user_home():
         return redirect(url_for('index'))
     user_name = session['user']['displayName']
     return render_template('basic_user_home.html', user_name=user_name)
+
+# Retrieve user profile
+@app.route(/user/profile', method=['GET'])
+def get_user_profile():
+    if 'user' not in session:
+        return jsonify({"error": "User not authenticated"}), 401
+
+# Use the email from the session to fetch the user record from the database
+    user_email = session['user']['email']
+    user = User.query.filter_by(email=user_email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify({
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+        "status": user.status
+    })
 
 # New routes for basic user functionalities
 @app.route('/basic_user_view')
@@ -240,4 +270,8 @@ def _get_user_info(token):
 if __name__ == '__main__':
 #   setup_db()  # Initialize database tables
     app.run(host='0.0.0.0', port=5000)
+
+# Automatically create tables
+with app.app_contect():
+    db.create_all()
 
