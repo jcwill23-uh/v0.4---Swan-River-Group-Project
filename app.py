@@ -178,7 +178,7 @@ def admin_delete_user():
 def create_user():
     if (request.method == 'POST' and request.headers.get('Content-Type') == 'application/json'):
         AddUser(request.data)
-    return redirect(url_for('/admin-create-user;))
+    return redirect(url_for('admin-create-user'))
     
 
 # Logout route
