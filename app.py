@@ -128,7 +128,7 @@ def basic_user_home():
     return render_template('basic_user_home.html', user_name=user_name)
 
 # Retrieve user profile
-@app.route(/user/profile', method=['GET'])
+@app.route('/user/profile', methods=['GET'])
 def get_user_profile():
     if 'user' not in session:
         return jsonify({"error": "User not authenticated"}), 401
@@ -272,6 +272,6 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
 
 # Automatically create tables
-with app.app_contect():
+with app.app_context():
     db.create_all()
 
