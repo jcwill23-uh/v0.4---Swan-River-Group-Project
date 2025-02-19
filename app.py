@@ -25,8 +25,15 @@ app.config['SESSION_COOKIE_SECURE'] = True  # Forces HTTPS session cookies
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevents JavaScript from accessing cookies
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication
 
+# Debugging: Print the database URL
+database_url = os.getenv('DATABASE_URL')
+if not database_url:
+    logger.error("DATABASE_URL is not set. Ensure it is configured in Azure.")
+else:
+    logger.info(f"Database URL: {database_url}")  # Log it safely without credentials
+
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and session
