@@ -26,7 +26,7 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevents JavaScript from accessi
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allows cross-domain authentication
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://jcwill23%40cougarnet.uh.edu@swan-river-user-information.database.windows.net/User%20Information?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and session
