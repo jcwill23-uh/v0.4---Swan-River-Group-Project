@@ -80,5 +80,5 @@ jobs:
         id: deploy-to-webapp
         with:
           app-name: 'swan-river-group-project'
-          slot-name: 'Production'
+          slot-name: 'production'
           
