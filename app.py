@@ -1,6 +1,7 @@
 from flask import Flask, redirect, url_for, session, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
+from Queries import AddUser
 import msal
 import requests
 import os
@@ -29,7 +30,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mssql+pyodbc://jcwill23@cougarnet.uh.ed
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and session
-db = SQLAlchemy(app)
+# db = SQLAlchemy(app)
 Session(app)
 
 # Set up logging
@@ -37,17 +38,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # User Model
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    role = db.Column(db.String(50), default="basicuser")
-    status = db.Column(db.String(20), default="active")
+# class User(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(100), nullable=False)
+#     email = db.Column(db.String(100), unique=True, nullable=False)
+#     role = db.Column(db.String(50), default="basicuser")
+#     status = db.Column(db.String(20), default="active")
 
 # Function to initialize database
-def setup_db():
-    with app.app_context():
-        db.create_all()
+# def setup_db():
+#     with app.app_context():
+#         db.create_all()
 
 # Home page
 @app.route('/')
@@ -173,6 +174,13 @@ def admin_delete_user():
     user_name = session['user']['displayName']
     return render_template('admin-delete-user.html', user_name=user_name)
 
+@app.route('/admin/create-user', methods=['GET', 'POST'])
+def create_user():
+    if (request.method == 'POST' and request.headers.get('Content-Type') == 'application/json'):
+        AddUser(request.data)
+    return redirect(url_for('/admin-create-user;))
+    
+
 # Logout route
 @app.route('/logout')
 def logout():
@@ -230,6 +238,6 @@ def _get_user_info(token):
     return graph_data
 
 if __name__ == '__main__':
-    setup_db()  # Initialize database tables
+#   setup_db()  # Initialize database tables
     app.run(host='0.0.0.0', port=5000)
 
