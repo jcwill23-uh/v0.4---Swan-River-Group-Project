@@ -74,7 +74,7 @@ jobs:
           subscription-id: 91752863-c2fa-4d1e-944e-262a3c7c5a39
           #client-id: f435d3c1-426e-4490-80c4-ac8ff8c05574
           tenant-id: 170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259
-          auth-type: IDENTITY
+          allow-no-subscriptions: true
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
