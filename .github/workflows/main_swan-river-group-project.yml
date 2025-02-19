@@ -64,6 +64,12 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
+      - name: Try Login
+        uses: azure/cli@v2
+        with:
+          azcliversion: latest
+          inlinescript: |
+            az login
       
       - name: Login to Azure
         uses: azure/login@v2
