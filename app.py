@@ -7,6 +7,10 @@ import requests
 import os
 import logging
 
+# Set up logging **before** using logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Initialize Flask app
 app = Flask(__name__, template_folder='docs', static_folder='docs')
 app.secret_key = "sWanRivEr"  # Required for session management
