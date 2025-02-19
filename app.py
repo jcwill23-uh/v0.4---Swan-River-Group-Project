@@ -14,6 +14,19 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.secret_key = os.getenv('SECRET_KEY', 'sWanRivEr')  # Use environment variable for secret key
 
+# **Fix: Properly Configure Session Storage**
+app.config['SESSION_TYPE'] = 'filesystem'  # Ensures session storage is properly configured
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Set directory for file-based session storage
+app.config['SESSION_FILE_THRESHOLD'] = 100  # Limit session files
+
+# Ensure the session directory exists
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+
+# **Initialize Flask-Session AFTER configuring it**
+Session(app)
+
 # Azure AD configuration
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
