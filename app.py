@@ -179,6 +179,17 @@ def create_user():
     if (request.method == 'POST' and request.headers.get('Content-Type') == 'application/json'):
         AddUser(request.data)
     return redirect(url_for('/admin-create-user;))
+
+                            
+from Queries import GetUsers  # Import the new function
+
+@app.route('/admin-view-users')
+def admin_view_users():
+    if not session.get('user') or 'admin' not in session['user'].get('roles', []):
+        return redirect(url_for('index'))
+    
+    users = GetUsers()  # Fetch users from the database
+    return render_template('admin-view-users.html', users=users)
     
 
 # Logout route
