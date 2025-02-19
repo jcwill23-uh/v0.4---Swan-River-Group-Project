@@ -24,9 +24,6 @@ app.config['SESSION_FILE_THRESHOLD'] = 100  # Limit session files
 # Ensure the session directory exists
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
-# **Initialize Flask-Session AFTER configuring it**
-Session(app)
-
 # Azure AD configuration
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
