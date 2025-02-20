@@ -26,7 +26,6 @@ app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Set directory for file-
 app.config['SESSION_FILE_THRESHOLD'] = 100  # Limit session files
 
 # Ensure the session directory exists
-if 'SESSION_FILE_DIR' in app.config:
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Azure AD configuration
