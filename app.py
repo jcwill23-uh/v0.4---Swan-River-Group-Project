@@ -4,6 +4,10 @@ import logging
 from flask import Flask, redirect, url_for, session, request, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
+# NEXT 3 LINES ARE FOR TESTING... FOR NOW
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+import urllib.parse
 import msal
 import requests
 import pyodbc
@@ -31,7 +35,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Ensure the session directory exists
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
-
 # Azure SQL Database setup
 # Configure Database URI using the new method
 params = urllib.parse.quote_plus(
@@ -40,9 +43,17 @@ params = urllib.parse.quote_plus(
     "DATABASE=pythonSQL;"
     "UID=jcwill23@cougarnet.uh.edu;"
     "PWD=H1ghLander"
+    "Connection Timeout=30"
 )
-app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc:///?odbc_connect=%s" % params
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+# Configure SQLAlchemy engine with pool pre-ping enabled
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mssql+pyodbc:///?odbc_connect={params}"
+engine = create_engine(
+    f"mssql+pyodbc:///?odbc_connect={params}",
+    pool_pre_ping=True,       # Ensures stale connections are removed
+    pool_recycle=1800,        # Recycles connections after 30 minutes
+    pool_size=5,              # Maximum connections in the pool
+    max_overflow=10           # Allow temporary extra connections
+)
 
 # Initialize database and session
 db = SQLAlchemy(app)
