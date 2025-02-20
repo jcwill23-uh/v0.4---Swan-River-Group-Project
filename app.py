@@ -6,6 +6,9 @@ from flask_session import Session
 import msal
 import requests
 from dotenv import load_dotenv
+from routes import user_bp
+
+app.register_blueprint(user_bp)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
