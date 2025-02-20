@@ -77,23 +77,48 @@ def azure_login():
 
 @app.route('/auth/callback')
 def authorized():
-    code = request.args.get('code')
-    if not code:
-        return redirect(url_for('index'))
-    token = _get_token_from_code(code)
-    user_info = _get_user_info(token)
-    
-    # Check if the user exists in the database
-    user = User.query.filter_by(email=user_info['mail']).first()
-    if not user:
-        # Create a new user if not found
-        user = User(name=user_info['displayName'], email=user_info['mail'] or user_info.get('userPrincipalName'), role='basicuser')
-    user.status = "active"  # Set the status to active
-    db.session.add(user)
-    db.session.commit()
-    
-    session['user'] = user_info
-    return redirect(url_for('basic_user_home'))
+    try:
+        code = request.args.get('code')
+        if not code:
+            return redirect(url_for('index'))
+        
+        token = _get_token_from_code(code)
+        if not token:
+            return "Error: Failed to retrieve access token", 500
+
+        user_info = _get_user_info(token)
+        if not user_info:
+            return "Error: Failed to retrieve user info", 500
+
+        # Ensure a valid email is present
+        email = user_info.get('mail') or user_info.get('userPrincipalName')
+        if not email:
+            return "Error: User email not found in authentication response", 500
+
+        # Check if user exists
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User(
+                name=user_info.get('displayName', 'Unknown'),
+                email=email,
+                role='basicuser'
+            )
+            db.session.add(user)  # Add new user only if not found
+
+        user.status = "active"  # Update user status
+        db.session.commit()  # Save changes
+
+        # Store user info in session
+        session['user'] = {'name': user.name, 'email': user.email, 'role': user.role}
+
+        # Redirect based on role
+        if user.role == "admin":
+            return redirect(url_for('admin_home'))
+        return redirect(url_for('basic_user_home'))
+
+    except Exception as e:
+        logger.error(f"Internal Server Error: {str(e)}")
+        return f"Internal Server Error: {str(e)}", 500
 
 @app.route('/logout')
 def logout():
