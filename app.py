@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
-app = Flask(__name__, template_folder='templates', static_folder='static')
+app = Flask(__name__, template_folder='docs', static_folder='static')
 app.secret_key = os.getenv('SECRET_KEY', 'sWanRivEr')  # Use environment variable for secret key
 
 # **Fix: Properly Configure Session Storage**
