@@ -36,7 +36,7 @@ os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 # Configure Database URI using the new method
 params = urllib.parse.quote_plus(
     "DRIVER={ODBC Driver 18 for SQL Server};"
-    "SERVER=sqlhost.database.windows.net;"
+    "SERVER=sqlhost.database.windows.net,1433;"
     "DATABASE=pythonSQL;"
     "UID=jcwill23@cougarnet.uh.edu;"
     "PWD=H1ghLander"
