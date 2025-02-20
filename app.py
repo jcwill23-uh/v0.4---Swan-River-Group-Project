@@ -18,7 +18,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'sWanRivEr')  # Use environment variabl
 app.config['SESSION_TYPE'] = 'filesystem'  # Ensures session storage is properly configured
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
-#app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Set directory for file-based session storage
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Set directory for file-based session storage
 app.config['SESSION_FILE_THRESHOLD'] = 100  # Limit session files
 
 # Ensure the session directory exists
@@ -80,25 +80,31 @@ def azure_login():
 @app.route('/auth/callback')
 def authorized():
     try:
+        # Get the token from the authorization code
         token = _get_token_from_code(request.args.get('code'))
         if not token:
             logger.error("Failed to acquire token.")
             return redirect(url_for('index'))
 
+        # Fetch user information from Microsoft Graph API
         user_info = _get_user_info(token)
         if not user_info:
             logger.error("Failed to fetch user info.")
             return redirect(url_for('index'))
 
+        # Extract user email and name
         user_email = user_info.get('mail') or user_info.get('userPrincipalName')
         user_name = user_info.get('displayName')
 
+        # Check if the user already exists in the database
         user = User.query.filter_by(email=user_email).first()
         if not user:
+            # If the user does not exist, create a new user with default role and status
             user = User(name=user_name, email=user_email, role="basicuser", status="active")
             db.session.add(user)
             db.session.commit()
 
+        # Store user information in the session
         session['user'] = {
             'displayName': user.name,
             'email': user.email,
@@ -106,10 +112,8 @@ def authorized():
             'status': user.status
         }
 
-        if 'admin' in user_info.get('roles', []):
-            return redirect(url_for('admin_home'))
-        else:
-            return redirect(url_for('basic_user_home'))
+        # Redirect all users to the basic user home page
+        return redirect(url_for('basic_user_home'))
 
     except Exception as e:
         logger.error(f"Error in callback route: {e}")
