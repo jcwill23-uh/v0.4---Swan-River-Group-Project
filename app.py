@@ -5,14 +5,18 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 import msal
 import requests
+from dotenv import load_dotenv
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Load environment variables
+load_dotenv()
+
 # Initialize Flask app
-app = Flask(__name__, template_folder='docs', static_folder='docs', static_url_path='')
-app.secret_key = os.getenv('SECRET_KEY', 'sWanRivEr')  # Use environment variable for secret key
+app = Flask(__name__, template_folder='docs', static_folder='docs')
+app.secret_key = os.getenv('SECRET_KEY')  # Required for session management
 
 # **Fix: Properly Configure Session Storage**
 app.config['SESSION_TYPE'] = 'filesystem'  # Ensures session storage is properly configured
@@ -30,7 +34,7 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 TENANT_ID = os.getenv('TENANT_ID')
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://swan-river-group-project.azurewebsites.net/auth/callback')
+REDIRECT_URI = os.getenv('REDIRECT_URI')
 SCOPE = ['User.Read']
 
 # Database configuration
@@ -80,44 +84,36 @@ def azure_login():
 # Callback route after Microsoft 365 login
 @app.route('/auth/callback')
 def authorized():
+    print("Callback route called")  # Debugging
     try:
-        # Get the token from the authorization code
-        token = _get_token_from_code(request.args.get('code'))
-        if not token:
-            logger.error("Failed to acquire token.")
+        if request.args.get('state') != session.get('state'):
+            print("State mismatch")  # Debugging
+            return redirect(url_for('index'))  # Prevent CSRF attacks
+
+        # Get the authorization code from the request
+        code = request.args.get('code')
+        if not code:
+            print("Authorization code not found")  # Debugging
             return redirect(url_for('index'))
 
-        # Fetch user information from Microsoft Graph API
+        # Get the access token
+        token = _get_token_from_code(code)
+        if not token:
+            print("Failed to get access token")  # Debugging
+            return redirect(url_for('index'))
+
+        # Get user info from Microsoft Graph
         user_info = _get_user_info(token)
         if not user_info:
-            logger.error("Failed to fetch user info.")
+            print("Failed to get user info")  # Debugging
             return redirect(url_for('index'))
 
-        # Extract user email and name
-        user_email = user_info.get('mail') or user_info.get('userPrincipalName')
-        user_name = user_info.get('displayName')
-
-        # Check if the user already exists in the database
-        user = User.query.filter_by(email=user_email).first()
-        if not user:
-            # If the user does not exist, create a new user with default role and status
-            user = User(name=user_name, email=user_email, role="basicuser", status="active")
-            db.session.add(user)
-            db.session.commit()
-
-        # Store user information in the session
-        session['user'] = {
-            'displayName': user.name,
-            'email': user.email,
-            'role': user.role,
-            'status': user.status
-        }
-
-        # Redirect all users to the basic user home page
+        # Store user info in session
+        session['user'] = user_info
         return redirect(url_for('basic_user_home'))
 
     except Exception as e:
-        logger.error(f"Error in callback route: {e}")
+        print(f"Error in callback route: {e}")  # Debugging
         return redirect(url_for('index'))
 
 # Admin home page
@@ -151,31 +147,30 @@ def _build_auth_url(scopes=None, state=None):
 # Helper function to get the access token
 def _get_token_from_code(code):
     try:
+        # Initialize the MSAL client
         client = msal.ConfidentialClientApplication(
             CLIENT_ID, authority=AUTHORITY, client_credential=CLIENT_SECRET)
+
+        # Acquire the token using the authorization code
         result = client.acquire_token_by_authorization_code(
             code, scopes=SCOPE, redirect_uri=REDIRECT_URI)
+
+        # Check if the token was acquired successfully
         if "access_token" in result:
-            logger.info("Access token acquired successfully")
+            print("Access token acquired successfully")  # Debugging
             return result["access_token"]
         else:
-            logger.error(f"Failed to acquire access token. Response: {result}")
+            print("Failed to acquire access token. Response:", result)  # Debugging
             return None
+
     except Exception as e:
-        logger.error(f"Error acquiring token: {e}")
+        print(f"Error acquiring token: {e}")  # Debugging
         return None
 
 def _get_user_info(token):
     graph_data = requests.get(
         'https://graph.microsoft.com/v1.0/me',
-        headers={'Authorization': 'Bearer ' + token}
-    ).json()
-    roles_response = requests.get(
-        'https://graph.microsoft.com/v1.0/me/appRoleAssignments',
-        headers={'Authorization': 'Bearer ' + token}
-    ).json()
-    roles = [assignment['appRoleId'] for assignment in roles_response.get('value', [])]
-    graph_data['roles'] = roles
+        headers={'Authorization': 'Bearer ' + token}).json()
     return graph_data
 
 if __name__ == '__main__':
