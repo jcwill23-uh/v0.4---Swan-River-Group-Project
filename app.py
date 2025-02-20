@@ -38,7 +38,8 @@ DB_NAME = os.getenv('DB_NAME', 'UserDatabase')
 DB_UID = os.getenv('DB_UID', 'jcwill23@cougarnet.uh.edu')
 DB_PWD = os.getenv('DB_PWD', 'H1ghLander')
 
-database_url = f"Driver={{ODBC Driver 18 for SQL Server}};Server=tcp:{DB_SERVER},1433;Database={DB_NAME};Uid={DB_UID};Pwd={DB_PWD};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+# Correct SQLAlchemy database URL format
+database_url = f"mssql+pyodbc://{DB_UID}:{DB_PWD}@{DB_SERVER}:1433/{DB_NAME}?driver=ODBC+Driver+18+for+SQL+Server"
 if not database_url:
     logger.error("DATABASE_URL is not set. Ensure it is configured in Azure.")
     raise ValueError("DATABASE_URL is not set.")
@@ -56,6 +57,7 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
+
 # Home page
 @app.route('/')
 def index():
