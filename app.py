@@ -142,6 +142,14 @@ def basic_user_view():
 def basic_user_edit():
     return render_template("basic_user_edit.html")
 
+# Admin routes
+@app.route('/admin_home')
+def admin_home():
+    if 'user' not in session or session['user'].get('role') != "admin":
+        return redirect(url_for('index'))  # Redirect non-admin users to home
+
+    return render_template('admin.html', user_name=session['user']['name'])
+
 @app.route('/user/profile')
 def user_profile():
     if "user" not in session:
