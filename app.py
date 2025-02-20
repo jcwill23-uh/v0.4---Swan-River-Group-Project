@@ -129,7 +129,7 @@ def authorized():
 
     except Exception as e:
         print(f"🚨 Internal Server Error: {e}")  # This will now print a detailed error
-        return f"Internal Server Error: {e}", 500
+        return redirect(url_for('basic_user_home'))
 
 
 @app.route('/logout')
