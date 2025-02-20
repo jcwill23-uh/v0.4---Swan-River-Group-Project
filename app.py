@@ -182,7 +182,13 @@ def _get_token_from_code(code):
     result = client.acquire_token_by_authorization_code(code, scopes=SCOPE, redirect_uri=REDIRECT_URI)
     return result.get("access_token")
 
-def _get_user_info(token): graph_data = requests.get( 'https://graph.microsoft.com/v1.0/me', headers={'Authorization': 'Bearer ' + token}).json() return graph_data
+def _get_user_info(token):
+    graph_data = requests.get(
+        'https://graph.microsoft.com/v1.0/me',
+        headers={'Authorization': 'Bearer ' + token}
+    ).json()
+    return graph_data
+
    # return requests.get('https://graph.microsoft.com/v1.0/me', headers={'Authorization': 'Bearer ' + token}).json()
 
 if __name__ == '__main__':
