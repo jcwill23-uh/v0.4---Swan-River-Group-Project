@@ -76,28 +76,41 @@ def azure_login():
 @app.route('/auth/callback')
 def authorized():
     try:
+        print("🔄 Starting authentication callback...")
+
+        # Step 1: Get the authorization code
         code = request.args.get('code')
         if not code:
-            return redirect(url_for('index'))
+            print("🚨 No authorization code received")
+            return "Error: No authorization code received", 400
 
+        print(f"🔑 Received authorization code: {code}")
+
+        # Step 2: Exchange code for an access token
         token = _get_token_from_code(code)
         if not token:
-            print("🚨 Error: Failed to retrieve access token")
-            return redirect(url_for('index'))
+            print("🚨 Failed to retrieve access token")
+            return "Error: Failed to retrieve access token", 400
 
+        print(f"🔑 Received access token: {token}")
+
+        # Step 3: Retrieve user information from Microsoft Graph API
         user_info = _get_user_info(token)
         if not user_info:
-            print("🚨 Error: Failed to retrieve user info")
-            return redirect(url_for('index'))
+            print("🚨 Failed to retrieve user info")
+            return "Error: Failed to retrieve user info", 400
 
-        session['user'] = user_info
+        print(f"👤 Received user info: {user_info}")
 
-        # Check if user exists in the database
+        # Step 4: Extract email and ensure it's valid
         email = user_info.get('mail') or user_info.get('userPrincipalName')
         if not email:
             print("🚨 Error: Email not found in user_info")
-            return redirect(url_for('index'))
+            return "Error: Email not found in user_info", 400
 
+        print(f"📧 Extracted email: {email}")
+
+        # Step 5: Check if the user exists in the database
         existing_user = User.query.filter_by(email=email).first()
         if not existing_user:
             new_user = User(
@@ -115,8 +128,9 @@ def authorized():
         return redirect(url_for('basic_user_home'))
 
     except Exception as e:
-        print(f"🚨 Internal Server Error: {e}")
-        return "Internal Server Error", 500  # Return an error page
+        print(f"🚨 Internal Server Error: {e}")  # This will now print a detailed error
+        return f"Internal Server Error: {e}", 500
+
 
 @app.route('/logout')
 def logout():
