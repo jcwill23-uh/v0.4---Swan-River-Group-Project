@@ -41,9 +41,9 @@ params = urllib.parse.quote_plus(
     "DRIVER={ODBC Driver 18 for SQL Server};"
     "SERVER=tcp:swan-river-user-information.database.windows.net,1433;"
     "DATABASE=UserDatabase;"
-    "UID=jcwill23@cougarnet.uh.edu;"
+    "UID=jcwill23@cougarnet.uh.edu@swan-river-user-information;"
     "PWD=H1ghLander;"
-    "TrustServerCertificate=yes;"
+    "TrustServerCertificate=no;"
     "Connection Timeout=30"
 )
 # Configure SQLAlchemy engine with pool pre-ping enabled
