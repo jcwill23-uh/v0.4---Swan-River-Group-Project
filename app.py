@@ -30,7 +30,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Ensure the session directory exists
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
-# Database setup
+'''# Database setup
 DB_SERVER = os.getenv('DB_SERVER', 'swan-river-user-information.database.windows.net')
 DB_NAME = os.getenv('DB_NAME', 'UserDatabase')
 DB_UID = os.getenv('DB_UID', 'jcwill23%40cougarnet.uh.edu')
@@ -41,7 +41,19 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
 # Initialize database and session
 db = SQLAlchemy(app)
-#Session(app)
+#Session(app)'''
+
+# Azure SQL Database setup
+driver = '{ODBC Driver 18 for SQL Server}'
+server = 'swan-river-user-information.database.windows.net'
+database = 'UserDatabase'
+username = 'jcwill23@cougarnet.uh.edu'
+password = 'H1ghLander'
+
+connection_string = f'mssql+pyodbc://{username}:{password}@{server}:1433/{database}?driver={driver}&Encrypt=yes&TrustServerCertificate=no&Connection Timeout=30'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = connection_string
+db = SQLAlchemy(app)
 
 # User Model
 class User(db.Model):
