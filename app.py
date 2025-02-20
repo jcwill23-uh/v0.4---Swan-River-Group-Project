@@ -18,7 +18,7 @@ app.secret_key = os.getenv('SECRET_KEY', 'sWanRivEr')  # Use environment variabl
 app.config['SESSION_TYPE'] = 'filesystem'  # Ensures session storage is properly configured
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Set directory for file-based session storage
+#app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Set directory for file-based session storage
 app.config['SESSION_FILE_THRESHOLD'] = 100  # Limit session files
 
 # Ensure the session directory exists
