@@ -32,7 +32,7 @@ os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 # Database setup
 DB_SERVER = os.getenv('DB_SERVER', 'swan-river-user-information.database.windows.net')
 DB_NAME = os.getenv('DB_NAME', 'UserDatabase')
-DB_UID = os.getenv('DB_UID', 'jcwill23@cougarnet.uh.edu')
+DB_UID = os.getenv('DB_UID', 'jcwill23%40cougarnet.uh.edu')
 DB_PWD = os.getenv('DB_PWD', 'H1ghLander')
 
 database_url = f"mssql+pyodbc://{DB_UID}:{DB_PWD}@{DB_SERVER}:1433/{DB_NAME}?driver=ODBC+Driver+18+for+SQL+Server"
