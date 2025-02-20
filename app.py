@@ -78,9 +78,30 @@ def authorized():
     code = request.args.get('code')
     if not code:
         return redirect(url_for('index'))
+
     token = _get_token_from_code(code)
     user_info = _get_user_info(token)
+
+    if not user_info:
+        return redirect(url_for('index'))
+
     session['user'] = user_info
+
+    # **Check if user is already in DB**
+    existing_user = User.query.filter_by(email=user_info['mail']).first()
+    if not existing_user:
+        new_user = User(
+            name=user_info.get('displayName', 'Unknown'),
+            email=user_info['mail'],
+            role='basicuser',
+            status='active'
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        print(f"✅ New user added: {new_user.name}, {new_user.email}")  # Debugging
+    else:
+        print(f"🔹 User already exists: {existing_user.email}")
+
     return redirect(url_for('basic_user_home'))
 
 @app.route('/logout')
