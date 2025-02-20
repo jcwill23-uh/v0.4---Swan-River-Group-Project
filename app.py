@@ -129,7 +129,7 @@ def authorized():
 
     except Exception as e:
         print(f"🚨 Internal Server Error: {e}")  # This will now print a detailed error
-        return redirect(url_for('basic_user_home'))
+        return f"Internal Server Error: {e}", 500
 
 
 @app.route('/logout')
@@ -182,8 +182,8 @@ def _get_token_from_code(code):
     result = client.acquire_token_by_authorization_code(code, scopes=SCOPE, redirect_uri=REDIRECT_URI)
     return result.get("access_token")
 
-def _get_user_info(token):
-    return requests.get('https://graph.microsoft.com/v1.0/me', headers={'Authorization': 'Bearer ' + token}).json()
+def _get_user_info(token): graph_data = requests.get( 'https://graph.microsoft.com/v1.0/me', headers={'Authorization': 'Bearer ' + token}).json() return graph_data
+   # return requests.get('https://graph.microsoft.com/v1.0/me', headers={'Authorization': 'Bearer ' + token}).json()
 
 if __name__ == '__main__':
     with app.app_context():
