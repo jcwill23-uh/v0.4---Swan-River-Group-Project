@@ -34,7 +34,13 @@ os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Azure SQL Database setup
 # Configure Database URI using the new method
-params = urllib.parse.quote_plus("DRIVER={SQL Server};SERVER=sqlhost.database.windows.net;DATABASE=pythonSQL;UID=jcwill23@cougarnet.uh.edu;PWD=H1ghLander")
+params = urllib.parse.quote_plus(
+    "DRIVER={ODBC Driver 18 for SQL Server};"
+    "SERVER=sqlhost.database.windows.net;"
+    "DATABASE=pythonSQL;"
+    "UID=jcwill23@cougarnet.uh.edu;"
+    "PWD=H1ghLander"
+)
 app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc:///?odbc_connect=%s" % params
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 
