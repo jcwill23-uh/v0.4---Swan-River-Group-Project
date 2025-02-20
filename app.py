@@ -87,7 +87,7 @@ def authorized():
     user = User.query.filter_by(email=user_info['mail']).first()
     if not user:
         # Create a new user if not found
-        user = User(name=user_info['displayName'], email=user_info['mail'])
+        user = User(name=user_info['displayName'], email=user_info['mail'] or user_info.get('userPrincipalName'), role='basicuser')
     user.status = "active"  # Set the status to active
     db.session.add(user)
     db.session.commit()
