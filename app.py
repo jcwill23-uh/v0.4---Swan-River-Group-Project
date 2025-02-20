@@ -42,8 +42,9 @@ params = urllib.parse.quote_plus(
     "SERVER=tcp:swan-river-user-information.database.windows.net,1433;"
     "DATABASE=UserDatabase;"
     "UID=jcwill23@cougarnet.uh.edu@swan-river-user-information;"
-    "PWD=H1ghLander;"
-    "TrustServerCertificate=no;"
+    "PWD=H1ghLander;" 
+    "Encrypt=yes;"  # Enables encryption
+    "TrustServerCertificate=no;"  # Requires valid SSL cert
     "Connection Timeout=30"
 )
 # Configure SQLAlchemy engine with pool pre-ping enabled
