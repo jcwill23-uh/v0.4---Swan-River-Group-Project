@@ -48,7 +48,7 @@ params = urllib.parse.quote_plus(
     "Connection Timeout=30"
 )
 # Configure SQLAlchemy engine with pool pre-ping enabled
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mssql+pyodbc:///?odbc_connect={params}"
+# app.config['SQLALCHEMY_DATABASE_URI'] = f"mssql+pyodbc:///?odbc_connect={params}"
 engine = create_engine(
     f"mssql+pyodbc:///?odbc_connect={params}",
     pool_pre_ping=True,       # Ensures stale connections are removed
@@ -56,7 +56,8 @@ engine = create_engine(
     pool_size=5,              # Maximum connections in the pool
     max_overflow=10           # Allow temporary extra connections
 )
-
+# Bind the engine to Flask-SQLAlchemy
+app.config['SQLALCHEMY_DATABASE_URI'] = engine.url
 # Initialize database and session
 db = SQLAlchemy(app)
 
