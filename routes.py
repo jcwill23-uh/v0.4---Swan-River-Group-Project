@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template
+from flask import request
 from app import db, User
 
 # Create a Blueprint for basic user routes
@@ -31,3 +32,20 @@ def user_profile():
         "role": user.role,
         "status": user.status
     })
+
+@user_bp.route("/user/profile/update", methods=["PUT"])
+def update_user_profile():
+    if "user" not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    email = session["user"].get("email")
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json()
+    user.name = data.get("name", user.name)
+    db.session.commit()
+
+    return jsonify({"message": "Profile updated successfully!"})
