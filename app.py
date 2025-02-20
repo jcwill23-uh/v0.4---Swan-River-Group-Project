@@ -3,6 +3,7 @@ import logging
 from flask import Flask, redirect, url_for, session, request, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
+from models import db
 import msal
 import requests
 from dotenv import load_dotenv
@@ -27,6 +28,12 @@ app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'  # Set directory for file-based session storage
 app.config['SESSION_FILE_THRESHOLD'] = 100  # Limit session files
+app.config['SQALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
+
+from routes import user_bp
+app.register_blueprint(user_bp)
 
 # Ensure the session directory exists
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
