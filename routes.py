@@ -1,6 +1,5 @@
-from flask import Blueprint, render_template
-from flask import request
-from app import db, User
+from flask import Blueprint, render_template, session, jsonify, request
+from models import db, User
 
 # Create a Blueprint for basic user routes
 basic_user_bp = Blueprint("basic_user", __name__)
