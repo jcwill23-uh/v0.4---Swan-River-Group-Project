@@ -1,4 +1,5 @@
 import os
+import urlib.parse
 import logging
 from flask import Flask, redirect, url_for, session, request, render_template, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -44,15 +45,12 @@ db = SQLAlchemy(app)
 #Session(app)'''
 
 # Azure SQL Database setup
-driver = '{ODBC Driver 18 for SQL Server}'
-server = 'swan-river-user-information.database.windows.net'
-database = 'UserDatabase'
-username = 'jcwill23@cougarnet.uh.edu'
-password = 'H1ghLander'
+# Configure Database URI using the new method
+params = urllib.parse.quote_plus("DRIVER={SQL Server};SERVER=sqlhost.database.windows.net;DATABASE=pythonSQL;UID=jcwill23@cougarnet.uh.edu;PWD=H1ghLander")
+app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc:///?odbc_connect=%s" % params
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 
-connection_string = f'mssql+pyodbc://{username}:{password}@{server}:1433/{database}?driver={driver}&Encrypt=yes&TrustServerCertificate=no&Connection Timeout=30'
-
-app.config['SQLALCHEMY_DATABASE_URI'] = connection_string
+# Initialize database and session
 db = SQLAlchemy(app)
 
 # User Model
@@ -262,7 +260,6 @@ def basic_user_view():
     user = session['user']
     return render_template("basic_user_view.html", user=user)
 
-
 @app.route('/basic_user_edit')
 def basic_user_edit():
     return render_template("basic_user_edit.html")
@@ -275,7 +272,6 @@ def user_profile():
     if not user:
         return jsonify({"error": "User not found"}), 404
     return jsonify({"name": user.name, "email": user.email, "role": user.role, "status": user.status})
-
 
 @app.route('/user/profile/update', methods=['PUT'])
 def update_user_profile():
@@ -305,8 +301,7 @@ def _get_user_info(token):
     user_info['status'] = 'active'
     return user_info
 
-
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=
