@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_session import Session
 import msal
 import requests
+import pyodbc
 from dotenv import load_dotenv
 
 # Set up logging
@@ -35,7 +36,7 @@ DB_NAME = os.getenv('DB_NAME', 'UserDatabase')
 DB_UID = os.getenv('DB_UID', 'jcwill23%40cougarnet.uh.edu')
 DB_PWD = os.getenv('DB_PWD', 'H1ghLander')
 
-database_url = f"mssql+pyodbc://{DB_UID}:{DB_PWD}@{DB_SERVER}:1433/{DB_NAME}?driver=ODBC+Driver+17+for+SQL+Server"
+database_url = f"mssql+pyodbc://{DB_UID}:{DB_PWD}@{DB_SERVER}:1433/{DB_NAME}?driver=ODBC+Driver+18+for+SQL+Server"
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
 # Initialize database and session
