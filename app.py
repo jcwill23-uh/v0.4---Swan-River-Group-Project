@@ -75,34 +75,48 @@ def azure_login():
 
 @app.route('/auth/callback')
 def authorized():
-    code = request.args.get('code')
-    if not code:
-        return redirect(url_for('index'))
+    try:
+        code = request.args.get('code')
+        if not code:
+            return redirect(url_for('index'))
 
-    token = _get_token_from_code(code)
-    user_info = _get_user_info(token)
+        token = _get_token_from_code(code)
+        if not token:
+            print("🚨 Error: Failed to retrieve access token")
+            return redirect(url_for('index'))
 
-    if not user_info:
-        return redirect(url_for('index'))
+        user_info = _get_user_info(token)
+        if not user_info:
+            print("🚨 Error: Failed to retrieve user info")
+            return redirect(url_for('index'))
 
-    session['user'] = user_info
+        session['user'] = user_info
 
-    # **Check if user is already in DB**
-    existing_user = User.query.filter_by(email=user_info['mail']).first()
-    if not existing_user:
-        new_user = User(
-            name=user_info.get('displayName', 'Unknown'),
-            email=user_info['mail'],
-            role='basicuser',
-            status='active'
-        )
-        db.session.add(new_user)
-        db.session.commit()
-        print(f"✅ New user added: {new_user.name}, {new_user.email}")  # Debugging
-    else:
-        print(f"🔹 User already exists: {existing_user.email}")
+        # Check if user exists in the database
+        email = user_info.get('mail') or user_info.get('userPrincipalName')
+        if not email:
+            print("🚨 Error: Email not found in user_info")
+            return redirect(url_for('index'))
 
-    return redirect(url_for('basic_user_home'))
+        existing_user = User.query.filter_by(email=email).first()
+        if not existing_user:
+            new_user = User(
+                name=user_info.get('displayName', 'Unknown'),
+                email=email,
+                role='basicuser',
+                status='active'
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            print(f"✅ New user added: {new_user.name}, {new_user.email}")
+        else:
+            print(f"🔹 User already exists: {existing_user.email}")
+
+        return redirect(url_for('basic_user_home'))
+
+    except Exception as e:
+        print(f"🚨 Internal Server Error: {e}")
+        return "Internal Server Error", 500  # Return an error page
 
 @app.route('/logout')
 def logout():
