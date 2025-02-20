@@ -55,7 +55,7 @@ db = SQLAlchemy(app)
 
 # User Model
 class User(db.Model):
-    __tablename__ = 'Users' # Explicitly sets table name to match table in Azure database
+    __tablename__ = 'User' # Explicitly sets table name to match table in Azure database
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
