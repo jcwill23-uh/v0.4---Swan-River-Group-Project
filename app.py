@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='docs', static_folder='static')
-app.secret_key = os.getenv('SECRET_KEY', 'sWanRivEr')  # Use environment variable for secret key
+app.secret_key = os.getenv('SECRET_KEY'))  
 
 # **Fix: Properly Configure Session Storage**
 app.config['SESSION_TYPE'] = 'filesystem'  # Ensures session storage is properly configured
@@ -29,11 +29,16 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 TENANT_ID = os.getenv('TENANT_ID')
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://swan-river-group-project.azurewebsites.net/auth/callback')
+REDIRECT_URI = os.getenv('REDIRECT_URI')
 SCOPE = ['User.Read']
 
 # Database configuration
-database_url = os.getenv('DATABASE_URL')
+DB_SERVER = os.getenv('DB_SERVER')
+DB_NAME = os.getenv('DB_NAME')
+DB_UID = os.getenv('DB_UID')
+DB_PWD = os.getenv('DB_PWD')
+
+database_url = f"Driver={{ODBC Driver 18 for SQL Server}};Server=tcp:{DB_SERVER},1433;Database={DB_NAME};Uid={DB_UID};Pwd={DB_PWD};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
 if not database_url:
     logger.error("DATABASE_URL is not set. Ensure it is configured in Azure.")
     raise ValueError("DATABASE_URL is not set.")
@@ -50,7 +55,7 @@ class User(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     role = db.Column(db.String(50), default="basicuser")
-    status = db.Column(db.String(20), default="active")
+    status = db.Column(db.String(20), 
 
 # Home page
 @app.route('/')
