@@ -11,8 +11,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Initialize Flask app
-app = Flask(__name__, template_folder='docs', static_folder='static')
-app.secret_key = os.getenv('SECRET_KEY'))  
+app = Flask(__name__, template_folder='docs', static_folder='docs')
+app.secret_key = os.getenv('SECRET_KEY', 'sWanRivEr')  # Use environment variable for secret key
 
 # **Fix: Properly Configure Session Storage**
 app.config['SESSION_TYPE'] = 'filesystem'  # Ensures session storage is properly configured
@@ -29,14 +29,14 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 TENANT_ID = os.getenv('TENANT_ID')
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-REDIRECT_URI = os.getenv('REDIRECT_URI')
+REDIRECT_URI = os.getenv('REDIRECT_URI', 'https://swan-river-group-project.azurewebsites.net/auth/callback')
 SCOPE = ['User.Read']
 
 # Database configuration
-DB_SERVER = os.getenv('DB_SERVER')
-DB_NAME = os.getenv('DB_NAME')
-DB_UID = os.getenv('DB_UID')
-DB_PWD = os.getenv('DB_PWD')
+DB_SERVER = os.getenv('DB_SERVER', 'swan-river-user-information.database.windows.net')
+DB_NAME = os.getenv('DB_NAME', 'UserDatabase')
+DB_UID = os.getenv('DB_UID', 'jcwill23@cougarnet.uh.edu')
+DB_PWD = os.getenv('DB_PWD', 'H1ghLander')
 
 database_url = f"Driver={{ODBC Driver 18 for SQL Server}};Server=tcp:{DB_SERVER},1433;Database={DB_NAME};Uid={DB_UID};Pwd={DB_PWD};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
 if not database_url:
