@@ -61,13 +61,22 @@ class User(db.Model):
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
 
-# Azure AD configuration
+'''# Azure AD configuration
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 TENANT_ID = os.getenv('TENANT_ID')
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 REDIRECT_URI = "https://swan-river-group-project.azurewebsites.net/auth/callback"
+SCOPE = ['User.Read']'''
+
+# Azure AD configuration
+CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
+CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
+TENANT_ID = "170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259"
+AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
+REDIRECT_URI = "https://swan-river-group-project.azurewebsites.net/auth/callback"
 SCOPE = ['User.Read']
+
 
 '''# Routes
 @app.route('/')
