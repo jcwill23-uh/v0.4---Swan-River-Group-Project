@@ -1,4 +1,4 @@
-import simplejson as json
+'''import simplejson as json
 import pyodbc as db
 
 def AddUser(string):
@@ -15,3 +15,4 @@ def AddUser(string):
     conn.close()
   if (not e is None):
     return e
+'''
