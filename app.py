@@ -1,4 +1,4 @@
-import os
+'''import os
 import urllib.parse
 import logging
 from flask import Flask, redirect, url_for, session, request, render_template, jsonify
@@ -210,4 +210,27 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run()
+    app.run()'''
+
+from flask import Flask, jsonify
+import pyodbc
+
+app = Flask(__name__)
+
+# Your database connection string
+conn_string = "Driver={ODBC Driver 18 for SQL Server};Server=tcp:swan-river-user-information.database.windows.net,1433;Database=UserDatabase;Uid=jcwill23@cougarnet.uh.edu@swan-river-user-information;Pwd=H1ghLander;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+
+@app.route('/')
+def test_db_connection():
+    try:
+        with pyodbc.connect(conn_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            result = cursor.fetchone()
+            if result:
+                return jsonify({'message': 'Database connection successful', 'result': result[0]})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+if __name__ == '__main__':
+    app.run(debug=True)
