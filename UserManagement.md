@@ -16,11 +16,17 @@ Admin Functionalities
 
 System Implementation
 
-  Backend: Flask with SQLAlchemy for database management.
-  Frontend: Likely HTML/CSS/JavaScript, potentially using Flask templates or React.
-  Authentication: OAuth2.0 via Microsoft Graph API.
-  Database Schema (SQLAlchemy Models):
-  Users Table: Stores user information, roles, and active status.
+  - Backend: Flask with SQLAlchemy for database management.
+  - Frontend: Likely HTML/CSS/JavaScript, potentially using Flask templates or React.
+  - Authentication: OAuth2.0 via Microsoft Graph API.
+  - Database Schema (SQLAlchemy Models):
+  - Users Table: Stores user information, roles, and active status.
+
+Security Considerations
+
+  - Role-Based Access Control (RBAC) ensures only admins can manage users.
+  - OAuth2.0 Authentication via Microsoft for secure login.
+  - Data Protection: Proper encryption and security measures for user data.
 
 
 
