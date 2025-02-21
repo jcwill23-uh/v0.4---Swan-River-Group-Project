@@ -78,12 +78,12 @@
             onchange="updateUser(${index}, 'role', 'basicuser')"> Basic User</label>
           </td>
           <td>
-            <select id="status-${user.id}">
+            <select id="status-${index}">
               <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
-              <option value="deactivated" ${user.status !== 'active' ? 'selected' : ''}>Deactivated</option>
+              <option value="deactivated" ${user.status === 'deactivated' ? 'selected' : ''}>Deactivated</option>
             </select>
           </td>
-          <td><button class="save-btn" onclick="openModal(${index})">Save Changes</button></td>
+          <td><button class="save-btn" onclick="confirmChanges(${index})">Save Changes</button></td>
         </tr>
       `).join('');
     }
