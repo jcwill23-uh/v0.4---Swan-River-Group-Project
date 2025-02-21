@@ -37,14 +37,16 @@ os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Azure SQL Database setup
 # Configure Database URI using the new method
-params = "DRIVER={ODBC Driver 18 for SQL Server};" \
-    "SERVER=tcp:swan-river-user-information.database.windows.net,1433;" \
-    "DATABASE=UserDatabase;" \
-    "UID=jcwill23@cougarnet.uh.edu@swan-river-user-information;" \
-    "PWD=H1ghLander;" \
-    "Encrypt=yes;" \
-    "TrustServerCertificate=no;" \
+params = urllib.parse.quote_plus(
+    "DRIVER={ODBC Driver 18 for SQL Server};"
+    "SERVER=tcp:swan-river-user-information.database.windows.net,1433;"
+    "DATABASE=UserDatabase;"
+    "UID=jcwill23@cougarnet.uh.edu@swan-river-user-information;"
+    "PWD=H1ghLander;"
+    "Encrypt=yes;"
+    "TrustServerCertificate=no;"
     "Connection Timeout=30"
+)
 # Configure SQLAlchemy engine with pool pre-ping enabled
 # app.config['SQLALCHEMY_DATABASE_URI'] = f"mssql+pyodbc:///?odbc_connect={params}"
 engine = create_engine(
