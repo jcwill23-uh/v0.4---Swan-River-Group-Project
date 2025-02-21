@@ -419,10 +419,10 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run()'''
+    app.run()
 
-# ROHAN'S CODE BELOW HERE (line 216-360)
-'''from flask import Flask, jsonify
+# ROHAN'S CODE BELOW HERE (line 425-END)
+from flask import Flask, jsonify
 import pyodbc
 
 app = Flask(__name__)
