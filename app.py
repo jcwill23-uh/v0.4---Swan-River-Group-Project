@@ -253,6 +253,34 @@ def update_user_profile():
 
     return jsonify({"message": "Profile updated successfully!"})
 
+@app.route('/admin/create_user', methods=['POST'])
+def create_user():
+    if "user" not in session or session["user"]["role"] != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip()
+    role = data.get("role", "basicuser").strip().lower()
+    status = data.get("status", "active").strip().lower()
+
+    if not name or not email:
+        return jsonify({"error": "Name and email are required"}), 400
+
+    # Check if the email already exists
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({"error": "User with this email already exists"}), 400
+
+    # Create new user
+    new_user = User(name=name, email=email, role=role, status=status)
+    db.session.add(new_user)
+    db.session.commit()
+
+    logger.info(f"Admin {session['user']['email']} created new user {email} with role {role}")
+
+    return jsonify({"message": "User created successfully!"}), 201
+
 # Fetch all users in database
 @app.route('/admin/all_users')
 def all_users():
