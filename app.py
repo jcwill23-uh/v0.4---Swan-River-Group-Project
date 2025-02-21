@@ -146,6 +146,7 @@ def basic_user_edit():
     return render_template("basic_user_edit.html", user=session['user'])
 
 # Admin-Only Decorator
+'''
 def admin_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -154,40 +155,34 @@ def admin_required(func):
             return redirect(url_for('index'))
         return func(*args, **kwargs)
     return wrapper
+'''
 
 # Admin Routes
 @app.route('/admin_home')
-@admin_required
 def admin_home():
     return render_template('admin.html', user_name=session['user']['name'])
 
 @app.route('/admin/create-user')
-@admin_required
 def admin_create_user():
     return render_template('admin-create-user.html')
 
 @app.route('/admin/delete-user')
-@admin_required
 def admin_delete_user():
     return render_template('admin-delete-user.html')
 
 @app.route('/admin/edit-profile')
-@admin_required
 def admin_edit_profile():
     return render_template('admin-edit-profile.html', user=session['user'])
 
 @app.route('/admin/update-user')
-@admin_required
 def admin_update_user():
     return render_template('admin-update-user.html')
 
 @app.route('/admin/view-profile')
-@admin_required
 def admin_view_profile():
     return render_template('admin-view-profile.html', user=session['user'])
 
 @app.route('/admin/view-users')
-@admin_required
 def admin_view_users():
     return render_template('admin-view-user.html')
 
