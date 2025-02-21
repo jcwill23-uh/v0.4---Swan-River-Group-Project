@@ -104,14 +104,29 @@ def authorized():
         email = user_info.get('mail') or user_info.get('userPrincipalName')
 
         user = User.query.filter_by(email=email).first()
-        if not user:
-            user = User(name=user_info.get('displayName', 'Unknown'), email=email, role='basicuser')
-            db.session.add(user)
 
-        user.status = "active"
+        if not user:
+            user = User(name=user_info.get('displayName', 'Unknown'), email=email, role='basicuser', status='active')
+            db.session.add(user)
+        
         db.session.commit()
 
-        session['user'] = {'name': user.name, 'email': user.email, 'role': user.role, 'status': user.status}
+        # Explicitly refresh the user object to get updated values
+        db.session.refresh(user)
+
+        # Check if the user is suspended
+        if user.status.lower() != "active":
+            flash("Account suspended. Please contact support.", "error")
+            return redirect(url_for('login'))
+
+        session['user'] = {
+            'name': user.name,
+            'email': user.email,
+            'role': user.role,
+            'status': user.status
+        }
+
+        logger.info(f"User {user.email} logged in with role: {user.role} and status: {user.status}")
 
         if user.role == "admin":
             return redirect(url_for('admin_home'))
@@ -119,7 +134,8 @@ def authorized():
 
     except Exception as e:
         logger.error(f"Internal Server Error: {str(e)}")
-        return f"Internal Server Error: {str(e)}", 500
+        flash("An error occurred while logging in. Please try again.", "error")
+        return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():
