@@ -162,27 +162,27 @@ def admin_required(func):
 def admin_home():
     return render_template('admin.html', user_name=session['user']['name'])
 
-@app.route('/admin/create-user')
+@app.route('/admin-create-user')
 def admin_create_user():
     return render_template('admin-create-user.html')
 
-@app.route('/admin/delete-user')
+@app.route('/admin-delete-user')
 def admin_delete_user():
     return render_template('admin-delete-user.html')
 
-@app.route('/admin/edit-profile')
+@app.route('/admin-edit-profile')
 def admin_edit_profile():
     return render_template('admin-edit-profile.html', user=session['user'])
 
-@app.route('/admin/update-user')
+@app.route('/admin-update-user')
 def admin_update_user():
     return render_template('admin-update-user.html')
 
-@app.route('/admin/view-profile')
+@app.route('/admin-view-profile')
 def admin_view_profile():
     return render_template('admin-view-profile.html', user=session['user'])
 
-@app.route('/admin/view-users')
+@app.route('/admin-view-users')
 def admin_view_users():
     return render_template('admin-view-user.html')
 
