@@ -145,10 +145,11 @@ def authorized():
         logger.info(f"Checking role for {user.email}: session['user']['role'] = {session['user']['role']}")
 
         # Redirect based on role
-        if session.get('user', {}).get('role', '').strip().lower() == "basicuser":
-            return redirect(url_for('basic_user_home'))
-        else:
+        if session.get('user', {}).get('role', '').strip().lower() == "admin":
+            logger.info(f"Admin {user.email} is being redirected to admin_home")
             return redirect(url_for('admin_home'))
+        else:
+            return redirect(url_for('basic_user_home'))
 
     except Exception as e:
         logger.error(f"Internal Server Error: {str(e)}", exc_info=True)
