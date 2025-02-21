@@ -191,6 +191,22 @@ def admin_view_profile():
 def admin_view_users():
     return render_template('admin-view-user.html')
 
+
+@app.route('/user/profile/update', methods=['PUT'])
+def update_user_profile():
+    if "user" not in session:
+        return jsonify({"error": "User not logged in"}), 401
+
+    user = User.query.filter_by(email=session['user'].get('email')).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json()
+    user.name = data.get("name", user.name)
+    db.session.commit()
+
+    return jsonify({"message": "Profile updated successfully!"})
+    
 # Helper functions
 def _build_auth_url(scopes=None, state=None):
     return msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY).get_authorization_request_url(
