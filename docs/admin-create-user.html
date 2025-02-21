@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,12 +18,11 @@
 
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 
-    <script src="script.js" defer></script>
     <script>
       function redirectToAdmin() {
-          window.location.href = "/success";
+          window.location.href = "/admin_home";
       }
-      </script>
+    </script>
 </head>
 
 <body class="normal">
@@ -33,43 +31,45 @@
 
         <div class="form-row">
           <label class="edit" for="userName">Name:</label>
-          <input class="box" type="text" id="userName" name="name" value="" required>
+          <input class="box" type="text" id="userName" name="name" required>
         </div>
-      
+
         <div class="form-row">
           <label class="edit" for="userEmail">Email:</label>
-          <input class="box" type="email" id="userEmail" name="email" value="" required>
+          <input class="box" type="email" id="userEmail" name="email" required>
         </div>
-      
+
         <div class="form-row">
           <label class="edit">Role:</label>
           <div>
             <input type="radio" id="basicuser" name="userRole" value="basicuser" required checked>
             <label for="basicuser">Basic User</label>
-            
+
             <input type="radio" id="admin" name="userRole" value="admin" required>
             <label for="admin">Admin</label>
           </div>
         </div>
-      
+
         <div class="form-row">
-          <label class="edit" for="userStatus">Status:</label>
+          <label class="edit">Status:</label>
           <div>
-            <input type="radio" id="userStatus" name="userStatus" value="active" required checked>
-            <label for="basicuser">Active</label>
-            
-            <input type="radio" id="userStatus" name="userStatus" value="deactivated" required>
-            <label for="admin">Deactivated</label>
+            <input type="radio" id="active" name="userStatus" value="active" required checked>
+            <label for="active">Active</label>
+
+            <input type="radio" id="deactivated" name="userStatus" value="deactivated" required>
+            <label for="deactivated">Deactivated</label>
           </div>
         </div>
+
         <br>
         <button class="save-btn" id="save" type="button" onclick="createUser()">Save</button>
-       <script>
+
+        <script>
         async function createUser() {
           const name = document.getElementById('userName').value.trim();
           const email = document.getElementById('userEmail').value.trim();
           const roleInput = document.querySelector('input[name="userRole"]:checked');
-          const status = document.getElementById('userStatus').value;
+          const statusInput = document.querySelector('input[name="userStatus"]:checked');
 
           if (!name || !email) {
               alert("Name and Email are required.");
@@ -81,7 +81,13 @@
               return;
           }
 
+          if (!statusInput) {
+              alert("Please select a status (Active or Deactivated).");
+              return;
+          }
+
           const role = roleInput.value;
+          const status = statusInput.value;
 
           const response = await fetch('/admin/create_user', {
               method: 'POST',
@@ -91,16 +97,14 @@
 
           if (response.ok) {
               alert('User created successfully');
-              window.location.href = 'admin-view-user.html';
+              window.location.href = "/admin_create_user";
           } else {
               alert('Error creating user');
           }
         }
-       </script>
-        
-        <button class="back" onclick="redirectToAdmin()">Back to Home</a>
-    </form>
+        </script>
 
+        <button class="back" type="button" onclick="redirectToAdmin()">Back to Home</button>
+    </form>
 </body>
 </html>
-
