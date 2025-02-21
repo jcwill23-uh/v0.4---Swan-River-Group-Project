@@ -141,6 +141,8 @@ def basic_user_view():
 
 @app.route('/basic_user_edit')
 def basic_user_edit():
+    if 'user' not in session:
+        return redirect(url_for('index'))
     return render_template("basic_user_edit.html", user=session['user'])
 
 # Admin-Only Decorator
