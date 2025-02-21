@@ -41,12 +41,12 @@
       
         <div class="form-row">
             <label class="edit" for="userRole">Role:</label>
-            <input class="box" type="text" id="userRole" name="userRole" value="{{ user.role or 'Not Assigned' }}" disabled>
+            <input class="box" type="text" id="userRole" name="userRole" value="{{ user.role or 'Not Assigned' }}" disabled style="color: black;">
         </div>
       
         <div class="form-row">
             <label class="edit" for="userStatus">Status:</label>
-            <input class="box" type="text" id="userStatus" name="userStatus" value="{{ user.status or 'Not Available' }}" disabled>
+            <input class="box" type="text" id="userStatus" name="userStatus" value="{{ user.status or 'Not Available' }}" disabled style="color: black;">
         </div>
         <br>
         <button class="save-btn" id="save" type="button" onclick="updateUserProfile()">Save</button>
