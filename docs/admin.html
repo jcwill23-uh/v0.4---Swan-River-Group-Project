@@ -11,7 +11,7 @@
     <meta property="og:image" content="/images/swan.jpg">
     <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
 
-    <title>Swan River Group Project</title>
+    <title>Swan River Group Project - Admin</title>
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -19,27 +19,23 @@
 
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     <script>
-        // Ensure user is logged in before accessing the page
-        checkAuth();
-    </script>
-    <script>
         function redirectToProfileView() {
-            window.location.href = "/admin-view-profile";
+            window.location.href = "{{ url_for('admin_view_profile') }}";
         }
         function redirectToEditProfile() {
-            window.location.href = "/admin-edit-profile";
+            window.location.href = "{{ url_for('admin_edit_profile') }}";
         }
         function redirectToCreateNewUser() {
-            window.location.href = "/admin-create-user";
+            window.location.href = "{{ url_for('admin_create_user') }}";
         }
         function redirectToUserView() {
-            window.location.href = "/admin-view-user";
+            window.location.href = "{{ url_for('admin_view_users') }}";
         }
         function redirectToUpdateUser() {
-            window.location.href = "/admin-update-user";
+            window.location.href = "{{ url_for('admin_update_user') }}";
         }
         function redirectToDeleteUser() {
-            window.location.href = "/admin-delete-user";
+            window.location.href = "{{ url_for('admin_delete_user') }}";
         }
     </script>
 
@@ -50,10 +46,10 @@
         <h1>Admin Home</h1>
         <button class="admin-btn" onclick="redirectToProfileView()">View Profile</button><br>
         <button class="admin-btn" onclick="redirectToEditProfile()">Edit Profile</button><br>
-        <button class="admin-btn" onclick="redirectToCreateNewUser()">Create New User</a><br>
+        <button class="admin-btn" onclick="redirectToCreateNewUser()">Create New User</button><br>
         <button class="admin-btn" onclick="redirectToUserView()">View Users</button><br>
-        <button class="admin-btn" onclick="redirectToUpdateUser()">Update Users</a><br>
-        <button class="admin-btn" onclick="redirectToDeleteUser()">Delete Users</a><br>
+        <button class="admin-btn" onclick="redirectToUpdateUser()">Update Users</button><br>
+        <button class="admin-btn" onclick="redirectToDeleteUser()">Delete Users</button><br>
     </div>
 
 </body>
