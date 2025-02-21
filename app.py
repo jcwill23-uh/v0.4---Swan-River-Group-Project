@@ -197,8 +197,21 @@ def update_user_profile():
         return jsonify({"error": "User not found"}), 404
 
     data = request.get_json()
-    user.name = data.get("name", user.name)
+    new_name = data.get("name", user.name)
+    new_email = data.get("email", user.email)
+
+    # Prevent duplicate emails
+    if new_email != user.email:
+        existing_user = User.query.filter_by(email=new_email).first()
+        if existing_user:
+            return jsonify({"error": "Email already in use"}), 400
+
+    user.name = new_name
+    user.email = new_email
     db.session.commit()
+
+    # 🔹 Update session with new user data
+    session['user'] = {'name': user.name, 'email': user.email, 'role': user.role, 'status': user.status}
 
     return jsonify({"message": "Profile updated successfully!"})
     
