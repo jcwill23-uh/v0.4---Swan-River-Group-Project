@@ -111,7 +111,7 @@ def authorized():
         user.status = "active"
         db.session.commit()
 
-        session['user'] = {'name': user.name, 'email': user.email, 'role': user.role}
+        session['user'] = {'name': user.name, 'email': user.email, 'role': user.role, 'status': user.status}
 
         if user.role == "admin":
             return redirect(url_for('admin_home'))
