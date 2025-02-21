@@ -1,10 +1,19 @@
 The website is hosted on Microsoft Azure and uses Office 365 authentication via Microsoft Graph API. Upon login, users are assigned a role as either admin or basic user.
 
+Welcome Page
+
+![alt text](welcome.png)
+
 Authentication & User Roles
   - Office 365 Login: Users authenticate using their Microsoft credentials.
   - Role Assignment:
       Admins: Have full user management privileges.
       Basic Users: Have limited access with no administrative controls.
+
+Basic User Views
+
+
+![alt text](edit-profile.png)
 
 Admin Functionalities
   - Admins have access to a user management dashboard where they can:
