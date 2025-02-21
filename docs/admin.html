@@ -20,22 +20,22 @@
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     <script>
         function redirectToProfileView() {
-            window.location.href = "{{ url_for('admin_view_profile') }}";
+            window.location.href = "{{ url_for('admin-view-profile') }}";
         }
         function redirectToEditProfile() {
-            window.location.href = "{{ url_for('admin_edit_profile') }}";
+            window.location.href = "{{ url_for('admin-edit-profile') }}";
         }
         function redirectToCreateNewUser() {
-            window.location.href = "{{ url_for('admin_create_user') }}";
+            window.location.href = "{{ url_for('admin-create-user') }}";
         }
         function redirectToUserView() {
-            window.location.href = "{{ url_for('admin_view_users') }}";
+            window.location.href = "{{ url_for('admin-view-users') }}";
         }
         function redirectToUpdateUser() {
-            window.location.href = "{{ url_for('admin_update_user') }}";
+            window.location.href = "{{ url_for('admin-update-user') }}";
         }
         function redirectToDeleteUser() {
-            window.location.href = "{{ url_for('admin_delete_user') }}";
+            window.location.href = "{{ url_for('admin-delete-user') }}";
         }
     </script>
 
