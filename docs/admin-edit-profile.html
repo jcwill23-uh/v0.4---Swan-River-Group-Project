@@ -48,24 +48,28 @@
         </div>
         <br>
 
-        <button class="save-btn" type="button" onclick="updateProfile()">Save</button>
+        <button class="save-btn" type="button" onclick="updateUserProfile()">Save</button>
         <button class="back" type="button" onclick="redirectToAdminHome()">Back to Home</button>
     </form>
 
     <script>
-        async function updateProfile() {
+        async function updateUserProfile() {
             const updatedName = document.getElementById('userName').value;
             const updatedEmail = document.getElementById('userEmail').value;
-
-            const response = await fetch("{{ url_for('update-user-profile') }}", {
+    
+            const response = await fetch("{{ url_for('update_user_profile') }}", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: updatedName, email: updatedEmail })
             });
-
+    
             const data = await response.json();
-            alert(data.message);
-            window.location.href = "{{ url_for('admin-view-profile') }}";
+            if (data.error) {
+                alert("Error: " + data.error);
+            } else {
+                alert(data.message);
+                window.location.href = "{{ url_for('basic_user_view') }}";
+            }
         }
     </script>
 </body>
