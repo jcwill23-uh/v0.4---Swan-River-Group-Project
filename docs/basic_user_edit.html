@@ -41,16 +41,16 @@
       
         <div class="form-row">
             <label class="edit" for="userRole">Role:</label>
-            <input class="box" type="text" id="userRole" name="userRole" value="{{ user.role }}" disabled>
+            <input class="box" type="text" id="userRole" name="userRole" value="{{ user.role or 'Not Assigned' }}" disabled>
         </div>
       
         <div class="form-row">
             <label class="edit" for="userStatus">Status:</label>
-            <input class="box" type="text" id="userStatus" name="userStatus" value="{{ user.status }}" disabled>
+            <input class="box" type="text" id="userStatus" name="userStatus" value="{{ user.status or 'Not Available' }}" disabled>
         </div>
         <br>
         <button class="save-btn" id="save" type="button" onclick="updateUserProfile()">Save</button>
-        <button class="back" onclick="redirectToBasicHome()">Back to Home</button>
+        <button class="back" type="button" onclick="redirectToBasicHome()">Back to Home</button>
     </form>
 
     <script>
