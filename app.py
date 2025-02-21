@@ -188,37 +188,37 @@ def admin_home():
         return redirect(url_for('index'))
     return render_template('admin.html', user_name=session['user']['name'])
 
-@app.route('/admin-create-user')
+@app.route('/admin_create_user')
 def admin_create_user():
     if 'user' not in session:
         return redirect(url_for('index'))
     return render_template('admin-create-user.html')
 
-@app.route('/admin-delete-user')
+@app.route('/admin_delete_user')
 def admin_delete_user():
     if 'user' not in session:
         return redirect(url_for('index'))
     return render_template('admin-delete-user.html')
 
-@app.route('/admin-edit-profile')
+@app.route('/admin_edit_profile')
 def admin_edit_profile():
     if 'user' not in session:
         return redirect(url_for('index'))
     return render_template('admin-edit-profile.html', user=session['user'])
 
-@app.route('/admin-update-user')
+@app.route('/admin_update_user')
 def admin_update_user():
     if 'user' not in session:
         return redirect(url_for('index'))
     return render_template('admin-update-user.html')
 
-@app.route('/admin-view-profile')
+@app.route('/admin_view_profile')
 def admin_view_profile():
     if 'user' not in session:
         return redirect(url_for('index'))
     return render_template('admin-view-profile.html', user=session['user'])
 
-@app.route('/admin-view-users')
+@app.route('/admin_view_users')
 def admin_view_users():
     if 'user' not in session:
         return redirect(url_for('index'))
