@@ -113,7 +113,9 @@ def authorized():
 
         session['user'] = {'name': user.name, 'email': user.email, 'role': user.role}
 
-        return redirect(url_for('admin_home') if user.role == "admin" else url_for('basic_user_home'))
+        if user.role == "admin":
+            return redirect(url_for('admin_home'))
+        return redirect(url_for('basic_user_home'))
 
     except Exception as e:
         logger.error(f"Internal Server Error: {str(e)}")
