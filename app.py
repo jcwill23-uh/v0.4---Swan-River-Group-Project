@@ -248,10 +248,19 @@ def update_user_profile():
     user.email = new_email
     db.session.commit()
 
-    # 🔹 Update session with new user data
+    # Update session with new user data
     session['user'] = {'name': user.name, 'email': user.email, 'role': user.role, 'status': user.status}
 
     return jsonify({"message": "Profile updated successfully!"})
+
+# Fetch all users in database
+@app.route('/admin/all_users')
+def all_users():
+    users = User.query.all()
+    return jsonify([
+        {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "status": user.status}
+        for user in users
+    ])
     
 # Helper functions
 def _build_auth_url(scopes=None, state=None):
