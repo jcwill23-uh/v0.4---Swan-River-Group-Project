@@ -145,45 +145,47 @@ def basic_user_edit():
         return redirect(url_for('index'))
     return render_template("basic_user_edit.html", user=session['user'])
 
-# Admin-Only Decorator
-'''
-def admin_required(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        if 'user' not in session or session['user'].get('role') != "admin":
-            flash("Access denied. Admins only.", "danger")
-            return redirect(url_for('index'))
-        return func(*args, **kwargs)
-    return wrapper
-'''
-
 # Admin Routes
 @app.route('/admin_home')
 def admin_home():
+    if 'user' not in session:
+        return redirect(url_for('index'))
     return render_template('admin.html', user_name=session['user']['name'])
 
 @app.route('/admin-create-user')
 def admin_create_user():
+    if 'user' not in session:
+        return redirect(url_for('index'))
     return render_template('admin-create-user.html')
 
 @app.route('/admin-delete-user')
 def admin_delete_user():
+    if 'user' not in session:
+        return redirect(url_for('index'))
     return render_template('admin-delete-user.html')
 
 @app.route('/admin-edit-profile')
 def admin_edit_profile():
+    if 'user' not in session:
+        return redirect(url_for('index'))
     return render_template('admin-edit-profile.html', user=session['user'])
 
 @app.route('/admin-update-user')
 def admin_update_user():
+    if 'user' not in session:
+        return redirect(url_for('index'))
     return render_template('admin-update-user.html')
 
 @app.route('/admin-view-profile')
 def admin_view_profile():
+    if 'user' not in session:
+        return redirect(url_for('index'))
     return render_template('admin-view-profile.html', user=session['user'])
 
 @app.route('/admin-view-users')
 def admin_view_users():
+    if 'user' not in session:
+        return redirect(url_for('index'))
     return render_template('admin-view-user.html')
 
 
