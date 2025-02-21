@@ -315,6 +315,30 @@ def update_user(user_id):
 
     return jsonify({"message": "User updated successfully!"}), 200
 
+# Suspend user's account
+@app.route('/admin/deactivate_user/<int:user_id>', methods=['PUT'])
+def deactivate_user(user_id):
+    if "user" not in session or session["user"]["role"] != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json()
+    new_status = data.get("status", "deactivated").strip().lower()
+
+    # Ensure the status is valid
+    if new_status not in ["active", "deactivated"]:
+        return jsonify({"error": "Invalid status value"}), 400
+
+    user.status = new_status
+    db.session.commit()
+
+    logger.info(f"Admin {session['user']['email']} suspended user {user.email}")
+
+    return jsonify({"message": "User suspended successfully!"}), 200
+
 # Fetch all users in database
 @app.route('/admin/all_users')
 def all_users():
