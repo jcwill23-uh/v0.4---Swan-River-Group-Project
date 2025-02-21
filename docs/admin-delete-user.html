@@ -16,11 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-  <script>
-    function redirectToAdmin() {
-        window.location.href = "/success";
-    }
-    </script>
+
 </head>
 
 <body class="userList">
@@ -57,23 +53,24 @@
         let users = [];
         let currentUserIndex = null;
         let sortDirections = [true, true, true, true];
-
+        
         async function fetchUsers() {
             try {
                 const response = await fetch('/admin/all_users');
                 users = await response.json();
-
+        
                 if (users.error) {
                     alert("Error fetching users: " + users.error);
                     return;
                 }
-
+        
+                console.log(users);  // Debugging: Check if ID is included
                 renderUserList(users);
             } catch (error) {
                 console.error("Failed to fetch users", error);
             }
         }
-
+        
         function renderUserList(users) {
             const userListElement = document.getElementById("userList");
             userListElement.innerHTML = users.map((user, index) => `
@@ -88,40 +85,46 @@
                 </tr>
             `).join('');
         }
-
+        
         function openModal(index) {
             currentUserIndex = index;
             document.getElementById('confirmModal').style.display = "block";
         }
-
+        
         async function confirmSuspend() {
             const userId = users[currentUserIndex].id;
-
+        
             await fetch(`/admin/deactivate_user/${userId}`, {
-                method: 'PUT'
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: "suspended" })
             });
-
+        
             alert('User has been suspended');
             closeModal();
             fetchUsers();
         }
-
+        
         function closeModal() {
             document.getElementById('confirmModal').style.display = "none";
         }
-
+        
         function sortTable(columnIndex) {
             const sortAscending = sortDirections[columnIndex];
             sortDirections[columnIndex] = !sortDirections[columnIndex];
-
+        
             users.sort((a, b) => {
-                let valueA = Object.values(a)[columnIndex].toLowerCase();
-                let valueB = Object.values(b)[columnIndex].toLowerCase();
-
+                let valueA = Object.values(a)[columnIndex] || "";
+                let valueB = Object.values(b)[columnIndex] || "";
+        
                 return sortAscending ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
             });
-
+        
             renderUserList(users);
+        }
+        
+        function redirectToAdmin() {
+            window.location.href = "/admin_home";
         }
 
         window.onload = fetchUsers;
