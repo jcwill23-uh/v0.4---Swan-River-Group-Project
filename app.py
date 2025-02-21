@@ -103,39 +103,55 @@ def authorized():
         user_info = _get_user_info(token)
         email = user_info.get('mail') or user_info.get('userPrincipalName')
 
+        logger.info(f"User attempting login: {email}")
+
+        # 🔍 Fetch user from database
         user = User.query.filter_by(email=email).first()
 
         if not user:
-            user = User(name=user_info.get('displayName', 'Unknown'), email=email, role='basicuser', status='active')
+            logger.info(f"User {email} not found. Creating new basic user.")
+            user = User(
+                name=user_info.get('displayName', 'Unknown'),
+                email=email,
+                role='basicuser',  # Default role
+                status='active'    # Default status
+            )
             db.session.add(user)
-        
-        db.session.commit()
+            db.session.commit()
+            db.session.refresh(user)  # Ensure role and status are fresh
 
-        # Explicitly refresh the user object to get updated values
-        db.session.refresh(user)
+        else:
+            logger.info(f"User {email} found in database with role: {user.role} and status: {user.status}")
+            db.session.refresh(user)  # Refresh to get the latest role and status
 
-        # Check if the user is suspended
+        # 🔍 Check if the user is suspended
         if user.status.lower() != "active":
+            logger.warning(f"User {email} is suspended. Redirecting to login.")
             flash("Account suspended. Please contact support.", "error")
             return redirect(url_for('login'))
 
+        # Store user details properly in session
         session['user'] = {
             'name': user.name,
             'email': user.email,
-            'role': user.role,
+            'role': user.role,  # Ensure this reflects the database value
             'status': user.status
         }
 
-        logger.info(f"User {user.email} logged in with role: {user.role} and status: {user.status}")
+        logger.info(f"User {user.email} logged in with role: {session['user']['role']} and status: {session['user']['status']}")
 
-        if user.role == "admin":
+        # Redirect based on role
+        if session['user']['role'] == "admin":
+            logger.info(f"Admin {user.email} is being redirected to admin_home")
             return redirect(url_for('admin_home'))
-        return redirect(url_for('basic_user_home'))
+        else:
+            return redirect(url_for('basic_user_home'))
 
     except Exception as e:
-        logger.error(f"Internal Server Error: {str(e)}")
+        logger.error(f"Internal Server Error: {str(e)}", exc_info=True)
         flash("An error occurred while logging in. Please try again.", "error")
         return redirect(url_for('login'))
+
 
 @app.route('/logout')
 def logout():
