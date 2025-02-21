@@ -20,10 +20,9 @@
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     <script>
         function redirectToBasicHome() {
-            window.location.href = "/basic_user_home";
+            window.location.href = "{{ url_for('basic_user_home') }}";
         }
     </script>
-
 </head>
 
 <body class="normal">
@@ -31,51 +30,35 @@
         <h2><u>Edit Profile</u></h2>
 
         <div class="form-row">
-          <label class="edit" for="userName">Name:</label>
-          <input class="box" type="text" id="userName" name="name" value="" required>
+            <label class="edit" for="userName">Name:</label>
+            <input class="box" type="text" id="userName" name="name" value="{{ user.name }}" required>
         </div>
       
         <div class="form-row">
-          <label class="edit" for="userEmail">Email:</label>
-          <input class="box" type="email" id="userEmail" name="email" value="" required>
+            <label class="edit" for="userEmail">Email:</label>
+            <input class="box" type="email" id="userEmail" name="email" value="{{ user.email }}" required>
         </div>
       
         <div class="form-row">
-          <label class="edit" for="userRole">Role:</label>
-          <input class="box" type="text" id="userRole" name="userRole" value="" disabled>
+            <label class="edit" for="userRole">Role:</label>
+            <input class="box" type="text" id="userRole" name="userRole" value="{{ user.role }}" disabled>
         </div>
       
         <div class="form-row">
-          <label class="edit" for="userStatus">Status:</label>
-          <input class="box" type="text" id="userStatus" name="userStatus" value="" disabled>
+            <label class="edit" for="userStatus">Status:</label>
+            <input class="box" type="text" id="userStatus" name="userStatus" value="{{ user.status }}" disabled>
         </div>
         <br>
         <button class="save-btn" id="save" type="button" onclick="updateUserProfile()">Save</button>
-        
         <button class="back" onclick="redirectToBasicHome()">Back to Home</button>
     </form>
 
     <script>
-    async function loadUserProfile() {
-        const response = await fetch('/user/profile');
-        const user = await response.json();
-
-        if (user.error) {
-            alert("Error: " + user.error);
-            return;
-        }
-
-        document.getElementById('userName').value = user.name;
-        document.getElementById('userEmail').value = user.email;
-        document.getElementById('userRole').value = user.role;
-        document.getElementById('userStatus').value = user.status;
-    }
-
     async function updateUserProfile() {
         const updatedName = document.getElementById('userName').value;
         const updatedEmail = document.getElementById('userEmail').value;
 
-        const response = await fetch('/user/profile/update', {
+        const response = await fetch("{{ url_for('update_user_profile') }}", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: updatedName, email: updatedEmail })
@@ -83,10 +66,8 @@
 
         const data = await response.json();
         alert(data.message);
-        window.location.href = "basic_user_view.html";
+        window.location.href = "{{ url_for('basic_user_view') }}";
     }
-
-    window.onload = loadUserProfile;
     </script>
 </body>
 </html>
