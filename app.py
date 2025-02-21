@@ -145,7 +145,7 @@ def authorized():
         logger.info(f"Checking role for {user.email}: session['user']['role'] = {session['user']['role']}")
 
         # Redirect based on role
-        if session['user']['role'] == "admin":
+        if session.get('user', {}).get('role', '').strip().lower() == "admin":
             logger.info(f"Admin {user.email} is being redirected to admin_home")
             return redirect(url_for('admin_home'))
         else:
