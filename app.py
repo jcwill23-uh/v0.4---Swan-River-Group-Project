@@ -131,7 +131,7 @@ def logout():
 def basic_user_home():
     if 'user' not in session:
         return redirect(url_for('index'))
-    return render_template('basic_user_home.html', user_name=session['user']['displayName'])
+    return render_template('basic_user_home.html', user_name=session['user'])
 
 @app.route('/basic_user_view')
 def basic_user_view():
