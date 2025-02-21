@@ -105,7 +105,7 @@ def authorized():
 
         logger.info(f"User attempting login: {email}")
 
-        # 🔍 Fetch user from database
+        # Fetch user from database
         user = User.query.filter_by(email=email).first()
 
         if not user:
@@ -124,7 +124,7 @@ def authorized():
             logger.info(f"User {email} found in database with role: {user.role} and status: {user.status}")
             db.session.refresh(user)  # Refresh to get the latest role and status
 
-        # 🔍 Check if the user is suspended
+        # Check if the user is suspended
         if user.status.lower() != "active":
             logger.warning(f"User {email} is suspended. Redirecting to login.")
             flash("Account suspended. Please contact support.", "error")
