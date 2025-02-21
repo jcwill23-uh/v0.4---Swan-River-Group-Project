@@ -122,7 +122,8 @@ def authorized():
 
         else:
             logger.info(f"User {email} found in database with role: {user.role} and status: {user.status}")
-            db.session.refresh(user)  # Refresh to get the latest role and status
+
+        db.session.refresh(user)  # Refresh to get the latest role and status
 
         # Check if the user is suspended
         if user.status.lower() != "active":
@@ -134,11 +135,14 @@ def authorized():
         session['user'] = {
             'name': user.name,
             'email': user.email,
-            'role': user.role,  # Ensure this reflects the database value
+            'role': user.role.strip().lower(),  # Ensure this reflects the database value
             'status': user.status
         }
 
         logger.info(f"User {user.email} logged in with role: {session['user']['role']} and status: {session['user']['status']}")
+
+         # Debug before role check
+        logger.info(f"Checking role for {user.email}: session['user']['role'] = {session['user']['role']}")
 
         # Redirect based on role
         if session['user']['role'] == "admin":
