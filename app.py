@@ -220,6 +220,8 @@ app = Flask(__name__)
 # Your database connection string
 conn_string = "Driver={ODBC Driver 18 for SQL Server};Server=tcp:swan-river-user-information.database.windows.net,1433;Database=UserDatabase;Uid=jcwill23@cougarnet.uh.edu@swan-river-user-information;Pwd=H1ghLander;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
 
+#Routes
+
 @app.route('/')
 def test_db_connection():
     try:
@@ -228,9 +230,130 @@ def test_db_connection():
             cursor.execute("SELECT 1")
             result = cursor.fetchone()
             if result:
-                return jsonify({'message': 'Database connection successful', 'result': result[0]})
+                return render_template('index.html')
     except Exception as e:
         return jsonify({'error': str(e)})
 
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/azure_login')
+def azure_login():
+    session['state'] = 'random_state'
+    auth_url = _build_auth_url(scopes=SCOPE, state=session['state'])
+    return redirect(auth_url)
+
+@app.route('/auth/callback')
+def authorized():
+    try:
+        code = request.args.get('code')
+        if not code:
+            return redirect(url_for('index'))
+        
+        token = _get_token_from_code(code)
+        if not token:
+            return "Error: Failed to retrieve access token", 500
+
+        user_info = _get_user_info(token)
+        if not user_info:
+            return "Error: Failed to retrieve user info", 500
+
+        # Ensure a valid email is present
+        email = user_info.get('mail') or user_info.get('userPrincipalName')
+        if not email:
+            return "Error: User email not found in authentication response", 500
+
+        # Check if user exists
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User(
+                name=user_info.get('displayName', 'Unknown'),
+                email=email,
+                role='basicuser'
+            )
+            db.session.add(user)  # Add new user only if not found
+
+        user.status = "active"  # Update user status
+        db.session.commit()  # Save changes
+
+        # Store user info in session
+        session['user'] = {'name': user.name, 'email': user.email, 'role': user.role}
+
+        # Redirect based on role
+        if user.role == "admin":
+            return redirect(url_for('admin_home'))
+        return redirect(url_for('basic_user_home'))
+
+    except Exception as e:
+        logger.error(f"Internal Server Error: {str(e)}")
+        return f"Internal Server Error: {str(e)}", 500
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
+@app.route('/basic_user_home')
+def basic_user_home():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    return render_template('basic_user_home.html', user_name=session['user']['displayName'])
+
+@app.route('/basic_user_view')
+def basic_user_view():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    user = session['user']
+    return render_template("basic_user_view.html", user=user)
+
+@app.route('/basic_user_edit')
+def basic_user_edit():
+    return render_template("basic_user_edit.html")
+
+# Admin routes
+@app.route('/admin_home')
+def admin_home():
+    if 'user' not in session or session['user'].get('role') != "admin":
+        return redirect(url_for('index'))  # Redirect non-admin users to home
+
+    return render_template('admin.html', user_name=session['user']['name'])
+
+@app.route('/user/profile')
+def user_profile():
+    if "user" not in session:
+        return jsonify({"error": "User not logged in"}), 401
+    user = User.query.filter_by(email=session['user'].get('email')).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify({"name": user.name, "email": user.email, "role": user.role, "status": user.status})
+
+@app.route('/user/profile/update', methods=['PUT'])
+def update_user_profile():
+    if "user" not in session:
+        return jsonify({"error": "User not logged in"}), 401
+    user = User.query.filter_by(email=session['user'].get('email')).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    data = request.get_json()
+    user.name = data.get("name", user.name)
+    db.session.commit()
+    return jsonify({"message": "Profile updated successfully!"})
+
+# Helper functions
+def _build_auth_url(scopes=None, state=None):
+    return msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY).get_authorization_request_url(
+        scopes, state=state, redirect_uri=REDIRECT_URI)
+
+def _get_token_from_code(code):
+    client = msal.ConfidentialClientApplication(CLIENT_ID, authority=AUTHORITY, client_credential=CLIENT_SECRET)
+    result = client.acquire_token_by_authorization_code(code, scopes=SCOPE, redirect_uri=REDIRECT_URI)
+    return result.get("access_token")
+
+def _get_user_info(token):
+    user_info = requests.get('https://graph.microsoft.com/v1.0/me', headers={'Authorization': 'Bearer ' + token}).json()
+    user_info['role'] = 'basicuser'
+    user_info['status'] = 'active'
+    return user_info
 if __name__ == '__main__':
     app.run(debug=True)
