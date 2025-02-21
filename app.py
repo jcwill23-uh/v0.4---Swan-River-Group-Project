@@ -281,6 +281,40 @@ def create_user():
 
     return jsonify({"message": "User created successfully!"}), 201
 
+# Update user information in database
+@app.route('/admin/update_user/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    if "user" not in session or session["user"]["role"] != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json()
+    new_name = data.get("name", user.name).strip()
+    new_email = data.get("email", user.email).strip()
+    new_role = data.get("role", user.role).strip().lower()
+    new_status = data.get("status", user.status).strip().lower()
+
+    # Prevent duplicate emails
+    if new_email != user.email:
+        existing_user = User.query.filter_by(email=new_email).first()
+        if existing_user:
+            return jsonify({"error": "Email already in use"}), 400
+
+    # Update user details
+    user.name = new_name
+    user.email = new_email
+    user.role = new_role
+    user.status = new_status
+
+    db.session.commit()
+
+    logger.info(f"Admin {session['user']['email']} updated user {user.email}")
+
+    return jsonify({"message": "User updated successfully!"}), 200
+
 # Fetch all users in database
 @app.route('/admin/all_users')
 def all_users():
