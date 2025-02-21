@@ -18,7 +18,7 @@
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
   <script>
     function redirectToAdmin() {
-        window.location.href = "/success";
+        window.location.href = "/admin_home";
     }
     </script>
 
@@ -78,10 +78,9 @@
             onchange="updateUser(${index}, 'role', 'basicuser')"> Basic User</label>
           </td>
           <td>
-            <select onchange="updateUser(${index}, 'status', this.value)">
+            <select id="status-${user.id}">
               <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
-              <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
-              <option value="deactivated" ${user.status === 'deactivated' ? 'selected' : ''}>Deactivated</option>
+              <option value="deactivated" ${user.status !== 'active' ? 'selected' : ''}>Deactivated</option>
             </select>
           </td>
           <td><button class="save-btn" onclick="openModal(${index})">Save Changes</button></td>
@@ -102,19 +101,37 @@
 
     // Confirm the changes and close the modal
     async function confirmChanges() {
-      const userId = users[currentUserIndex].id;
-      const updatedUser = users[currentUserIndex];
-  
-      await fetch(`/admin/update_user/${userId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedUser)
-      });
-  
-      alert('User updated successfully');
-      document.getElementById('confirmModal').style.display = "none";
-      fetchUsers(); // Refresh user list
-  }
+    if (currentUserIndex === null) {
+        alert("No user selected.");
+        return;
+    }
+
+    const userId = users[currentUserIndex]?.id;
+    if (!userId) {
+        alert("Error: User ID is missing.");
+        return;
+    }
+
+    // Get updated values
+    const updatedUser = { ...users[currentUserIndex] };
+    updatedUser.status = document.getElementById(`status-${userId}`).value;
+
+    const response = await fetch(`/admin/update_user/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedUser)
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+        alert('User updated successfully');
+        document.getElementById('confirmModal').style.display = "none";
+        fetchUsers();  // Refresh user list
+    } else {
+        alert(`Error: ${result.error}`);
+    }
+}
 
     // Close the modal without saving
     function closeModal() {
