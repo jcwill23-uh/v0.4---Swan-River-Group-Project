@@ -55,101 +55,111 @@
   </div>
 
   <script>
-    let users = []; // Define users array
-    let sortDirections = [true, true, true, true]; // Track sorting directions per column
-
+    let users = [];
+    let currentUserIndex = null; // Track selected user
+    let sortDirections = { name: true, email: true, role: true, status: true }; // Sorting state
+    
     async function fetchUsers() {
         const response = await fetch('/admin/all_users');
         users = await response.json();
         renderUserList(users);
     }
-
-    // Render user list into the table
+    
+    // Render User Table
     function renderUserList(users) {
-      const userListElement = document.getElementById('userList');
-      userListElement.innerHTML = users.map((user, index) => `
-        <tr>
-          <td><input type="text" value="${user.name}" onchange="updateUser(${index}, 'name', this.value)"></td>
-          <td><input type="email" value="${user.email}" onchange="updateUser(${index}, 'email', this.value)"></td>
-          <td>
-            <label><input type="radio" name="role-${index}" value="admin" ${user.role === 'admin' ? 'checked' : ''} 
-            onchange="updateUser(${index}, 'role', 'admin')"> Admin</label>
-            <label><input type="radio" name="role-${index}" value="basicuser" ${user.role === 'basicuser' ? 'checked' : ''} 
-            onchange="updateUser(${index}, 'role', 'basicuser')"> Basic User</label>
-          </td>
-          <td>
-            <select id="status-${index}">
-              <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
-              <option value="deactivated" ${user.status === 'deactivated' ? 'selected' : ''}>Deactivated</option>
-            </select>
-          </td>
-          <td><button class="save-btn" onclick="confirmChanges(${index})">Save Changes</button></td>
-        </tr>
-      `).join('');
+        const userListElement = document.getElementById('userList');
+        userListElement.innerHTML = users.map((user, index) => `
+            <tr>
+              <td><input type="text" value="${user.name}" onchange="updateUser(${index}, 'name', this.value)"></td>
+              <td><input type="email" value="${user.email}" onchange="updateUser(${index}, 'email', this.value)"></td>
+              <td>
+                <label><input type="radio" name="role-${index}" value="admin" ${user.role === 'admin' ? 'checked' : ''} onchange="updateUser(${index}, 'role', 'admin')"> Admin</label>
+                <label><input type="radio" name="role-${index}" value="basicuser" ${user.role === 'basicuser' ? 'checked' : ''} onchange="updateUser(${index}, 'role', 'basicuser')"> Basic User</label>
+              </td>
+              <td>
+                <select id="status-${index}">
+                  <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
+                  <option value="deactivated" ${user.status === 'deactivated' ? 'selected' : ''}>Deactivated</option>
+                </select>
+              </td>
+              <td><button class="save-btn" onclick="openModal(${index})">Save Changes</button></td>
+            </tr>
+        `).join('');
     }
-
-    // Update user property
+    
+    // Update User Data (When Input Changes)
     function updateUser(index, property, value) {
-      users[index][property] = value;
+        users[index][property] = value;
     }
-
-    // Open the save changes modal for confirmation
+    
+    // Open Modal
     function openModal(index) {
-      currentUserIndex = index;
-      document.getElementById('confirmModal').style.display = "block";
+        console.log("Opening modal for index:", index);
+        currentUserIndex = index;
+        document.getElementById('confirmModal').style.display = "block";
     }
-
-    // Confirm the changes and close the modal
-    async function confirmChanges(index) {
-      const userId = users[index]?.id;
-      if (!userId) {
-          alert("Error: User ID is missing.");
-          return;
-      }
-  
-      // Get updated values from input fields
-      const updatedUser = {
-          name: document.querySelector(`#editUserTable tr:nth-child(${index + 2}) td input[type="text"]`).value,
-          email: document.querySelector(`#editUserTable tr:nth-child(${index + 2}) td input[type="email"]`).value,
-          role: document.querySelector(`input[name="role-${index}"]:checked`).value,
-          status: document.getElementById(`status-${index}`).value
-      };
-  
-      // Send the updated user data to the server
-      const response = await fetch(`/admin/update_user/${userId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedUser)
-      });
-  
-      const result = await response.json();
-  
-      if (response.ok) {
-          alert('User updated successfully');
-          document.getElementById('confirmModal').style.display = "none";
-          fetchUsers();  // Refresh user list
-      } else {
-          alert(`Error: ${result.error}`);
-      }
-  }
-
-    // Close the modal without saving
+    
+    // onfirm and Save Changes
+    async function confirmChanges() {
+        if (currentUserIndex === null) {
+            alert("No user selected.");
+            return;
+        }
+    
+        console.log("Saving changes for index:", currentUserIndex);
+    
+        const userId = users[currentUserIndex]?.id;
+        if (!userId) {
+            alert("Error: User ID is missing.");
+            return;
+        }
+    
+        const updatedUser = {
+            name: document.querySelector(`#editUserTable tr:nth-child(${currentUserIndex + 2}) td input[type="text"]`).value,
+            email: document.querySelector(`#editUserTable tr:nth-child(${currentUserIndex + 2}) td input[type="email"]`).value,
+            role: document.querySelector(`input[name="role-${currentUserIndex}"]:checked`).value,
+            status: document.getElementById(`status-${currentUserIndex}`).value
+        };
+    
+        console.log("Updated user data:", updatedUser);
+    
+        const response = await fetch(`/admin/update_user/${userId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedUser)
+        });
+    
+        const result = await response.json();
+        console.log("Server response:", result);
+    
+        if (response.ok) {
+            alert('User updated successfully');
+            document.getElementById('confirmModal').style.display = "none";
+            fetchUsers();
+        } else {
+            alert(`Error: ${result.error}`);
+        }
+    }
+    
+    // Close Modal
     function closeModal() {
-      document.getElementById('confirmModal').style.display = "none";
+        console.log("Closing modal");
+        document.getElementById('confirmModal').style.display = "none";
     }
-
-    // Sorting function
+    
+    // ✅ Sorting Function
     function sortUsersBy(property) {
-      sortDirection[property] = !sortDirection[property]; // Toggle sorting order
-      users.sort((a, b) => {
-          if (a[property] < b[property]) return sortDirection[property] ? -1 : 1;
-          if (a[property] > b[property]) return sortDirection[property] ? 1 : -1;
-          return 0;
-      });
-      renderUserList(users);
-  }
+        sortDirections[property] = !sortDirections[property]; // Toggle sorting order
+        users.sort((a, b) => {
+            if (a[property] < b[property]) return sortDirections[property] ? -1 : 1;
+            if (a[property] > b[property]) return sortDirections[property] ? 1 : -1;
+            return 0;
+        });
+        renderUserList(users);
+    }
+    
+    window.onload = fetchUsers;
 
-  window.onload = fetchUsers;
   </script>
 </body>
 
