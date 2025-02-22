@@ -291,29 +291,35 @@ def update_user(user_id):
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    data = request.get_json()
-    new_name = data.get("name", user.name).strip()
-    new_email = data.get("email", user.email).strip()
-    new_role = data.get("role", user.role).strip().lower()
-    new_status = data.get("status", user.status).strip().lower()
+    try:
+        data = request.get_json()
+        new_name = data.get("name", user.name).strip()
+        new_email = data.get("email", user.email).strip()
+        new_role = data.get("role", user.role).strip().lower()
+        new_status = data.get("status", user.status).strip().lower()
 
-    # Prevent duplicate emails
-    if new_email != user.email:
-        existing_user = User.query.filter_by(email=new_email).first()
-        if existing_user:
-            return jsonify({"error": "Email already in use"}), 400
+        # Prevent duplicate emails
+        if new_email != user.email:
+            existing_user = User.query.filter_by(email=new_email).first()
+            if existing_user:
+                return jsonify({"error": "Email already in use"}), 400
 
-    # Update user details
-    user.name = new_name
-    user.email = new_email
-    user.role = new_role
-    user.status = new_status
+        # Update user details
+        user.name = new_name
+        user.email = new_email
+        user.role = new_role
+        user.status = new_status
 
-    db.session.commit()
+        db.session.commit()
 
-    logger.info(f"Admin {session['user']['email']} updated user {user.email}")
+        logger.info(f"Admin {session['user']['email']} updated user {user.email}")
 
-    return jsonify({"message": "User updated successfully!"}), 200
+        return jsonify({"message": "User updated successfully!"}), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        logger.error(f"Database error: {str(e)}")
+        return jsonify({"error": "Database error, could not update user"}), 500
 
 # Suspend user's account
 @app.route('/admin/deactivate_user/<int:user_id>', methods=['PUT'])
