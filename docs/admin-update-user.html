@@ -100,22 +100,22 @@
     }
 
     // Confirm the changes and close the modal
-    async function confirmChanges() {
-    if (currentUserIndex === null) {
-        alert("No user selected.");
-        return;
-    }
-
-    const userId = users[currentUserIndex]?.id;
+    async function confirmChanges(index) {
+    const userId = users[index]?.id;
     if (!userId) {
         alert("Error: User ID is missing.");
         return;
     }
 
-    // Get updated values
-    const updatedUser = { ...users[currentUserIndex] };
-    updatedUser.status = document.getElementById(`status-${userId}`).value;
+    // Get updated values from input fields
+    const updatedUser = {
+        name: document.querySelector(`#editUserTable tr:nth-child(${index + 2}) td input[type="text"]`).value,
+        email: document.querySelector(`#editUserTable tr:nth-child(${index + 2}) td input[type="email"]`).value,
+        role: document.querySelector(`input[name="role-${index}"]:checked`).value,
+        status: document.getElementById(`status-${index}`).value
+    };
 
+    // Send the updated user data to the server
     const response = await fetch(`/admin/update_user/${userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
