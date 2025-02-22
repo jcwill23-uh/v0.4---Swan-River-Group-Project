@@ -93,16 +93,22 @@
         
         async function confirmSuspend() {
             const userId = users[currentUserIndex].id;
-        
-            await fetch(`/admin/deactivate_user/${userId}`, {
+
+            const response = await fetch(`/admin/deactivate_user/${userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: "suspended" })
+                body: JSON.stringify({ status: "deactivated" })
             });
-        
-            alert('User has been suspended');
-            closeModal();
-            fetchUsers();
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('User has been suspended');
+                closeModal();
+                fetchUsers();  // Refresh the list of users
+            } else {
+                alert(`Error: ${result.error}`);
+            }
         }
         
         function closeModal() {
