@@ -2,7 +2,7 @@ The website is hosted on Microsoft Azure and uses Office 365 authentication via 
 
 Welcome Page
 
-![alt text](welcome.png)
+![alt text](images/welcome.png)
 
 Authentication & User Roles
   - Office 365 Login: Users authenticate using their Microsoft credentials.
@@ -13,7 +13,7 @@ Authentication & User Roles
 Basic User Views
 
 
-![alt text](edit-profile.png)
+![alt text](images/edit-profile.png)
 
 Admin Functionalities
   - Admins have access to a user management dashboard where they can:
