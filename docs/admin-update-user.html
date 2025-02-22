@@ -59,7 +59,7 @@
     let currentUserIndex = null; // Track selected user
     let sortDirections = { name: true, email: true, role: true, status: true }; // Sorting state
     
-    // ✅ Fetch users and display in the table
+    // Fetch users and display in the table
     async function fetchUsers() {
         const response = await fetch('/admin/all_users');
         users = await response.json();
