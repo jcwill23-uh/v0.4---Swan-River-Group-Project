@@ -101,37 +101,37 @@
 
     // Confirm the changes and close the modal
     async function confirmChanges(index) {
-    const userId = users[index]?.id;
-    if (!userId) {
-        alert("Error: User ID is missing.");
-        return;
-    }
-
-    // Get updated values from input fields
-    const updatedUser = {
-        name: document.querySelector(`#editUserTable tr:nth-child(${index + 2}) td input[type="text"]`).value,
-        email: document.querySelector(`#editUserTable tr:nth-child(${index + 2}) td input[type="email"]`).value,
-        role: document.querySelector(`input[name="role-${index}"]:checked`).value,
-        status: document.getElementById(`status-${index}`).value
-    };
-
-    // Send the updated user data to the server
-    const response = await fetch(`/admin/update_user/${userId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedUser)
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
-        alert('User updated successfully');
-        document.getElementById('confirmModal').style.display = "none";
-        fetchUsers();  // Refresh user list
-    } else {
-        alert(`Error: ${result.error}`);
-    }
-}
+      const userId = users[index]?.id;
+      if (!userId) {
+          alert("Error: User ID is missing.");
+          return;
+      }
+  
+      // Get updated values from input fields
+      const updatedUser = {
+          name: document.querySelector(`#editUserTable tr:nth-child(${index + 2}) td input[type="text"]`).value,
+          email: document.querySelector(`#editUserTable tr:nth-child(${index + 2}) td input[type="email"]`).value,
+          role: document.querySelector(`input[name="role-${index}"]:checked`).value,
+          status: document.getElementById(`status-${index}`).value
+      };
+  
+      // Send the updated user data to the server
+      const response = await fetch(`/admin/update_user/${userId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedUser)
+      });
+  
+      const result = await response.json();
+  
+      if (response.ok) {
+          alert('User updated successfully');
+          document.getElementById('confirmModal').style.display = "none";
+          fetchUsers();  // Refresh user list
+      } else {
+          alert(`Error: ${result.error}`);
+      }
+  }
 
     // Close the modal without saving
     function closeModal() {
