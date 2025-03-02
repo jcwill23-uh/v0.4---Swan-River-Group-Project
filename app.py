@@ -307,22 +307,17 @@ def update_user(user_id):
 
     try:
         data = request.get_json()
-        new_name = data.get("name", user.name).strip()
-        new_email = data.get("email", user.email).strip()
-        new_role = data.get("role", user.role).strip().lower()
-        new_status = data.get("status", user.status).strip().lower()
+        user.first_name = data.get("first_name", user.first_name).strip()
+        user.middle_name = data.get("middle_name", user.middle_name).strip() if "middle_name" in data else user.middle_name
+        user.last_name = data.get("last_name", user.last_name).strip()
+        user.role = data.get("role", user.role).strip().lower()
+        user.status = data.get("status", user.status).strip().lower()
 
         # Prevent duplicate emails
         if new_email != user.email:
             existing_user = User.query.filter_by(email=new_email).first()
             if existing_user:
                 return jsonify({"error": "Email already in use"}), 400
-
-        # Update user details
-        user.name = new_name
-        user.email = new_email
-        user.role = new_role
-        user.status = new_status
 
         db.session.commit()
 
