@@ -30,7 +30,7 @@
 <body class="normal">
     <div class="user-info">
         <h2><u>Profile Information</u></h2>
-        <p>Name: <span id="userName">{{ user.name }}</span></p>
+        <p>Name: <span id="userName">{{ user.first_name }}{% if user.middle_name %} {{ user.middle_name }}{% endif %} {{ user.last_name }}</span></p>
         <p>Email: <span id="userEmail">{{ user.email }}</span></p>
         <p>Role: <span id="userRole">{{ user.role }}</span></p>
         <p>Status: <span id="userStatus">{{ user.status }}</span></p><br>
@@ -39,3 +39,4 @@
     </div>
 </body>
 </html>
+
