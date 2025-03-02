@@ -178,7 +178,6 @@ def basic_user_home():
         user_name=f"{session['user']['first_name']} {session['user'].get('middle_name', '').strip()} {session['user']['last_name']}".strip()
     )
 
-
 @app.route('/basic_user_view')
 def basic_user_view():
     if 'user' not in session:
@@ -200,7 +199,6 @@ def admin_home():
         'admin.html',
         user_name=f"{session['user']['first_name']} {session['user'].get('middle_name', '').strip()} {session['user']['last_name']}".strip()
     )
-
 
 @app.route('/admin_create_user')
 def admin_create_user():
@@ -307,17 +305,20 @@ def update_user(user_id):
 
     try:
         data = request.get_json()
-        user.first_name = data.get("first_name", user.first_name).strip()
-        user.middle_name = data.get("middle_name", user.middle_name).strip() if "middle_name" in data else user.middle_name
-        user.last_name = data.get("last_name", user.last_name).strip()
-        user.role = data.get("role", user.role).strip().lower()
-        user.status = data.get("status", user.status).strip().lower()
+        if not data:
+            return jsonify({"error": "Invalid JSON received"}), 400  # New check to prevent JSON errors
 
-        # Prevent duplicate emails
-        if new_email != user.email:
-            existing_user = User.query.filter_by(email=new_email).first()
-            if existing_user:
-                return jsonify({"error": "Email already in use"}), 400
+        # Validate required fields
+        required_fields = ["first_name", "last_name", "role", "status"]
+        for field in required_fields:
+            if field not in data or not isinstance(data[field], str) or not data[field].strip():
+                return jsonify({"error": f"Missing or invalid field: {field}"}), 400
+
+        user.first_name = data["first_name"].strip()
+        user.middle_name = data.get("middle_name", "").strip()  # Handle optional middle name
+        user.last_name = data["last_name"].strip()
+        user.role = data["role"].strip().lower()
+        user.status = data["status"].strip().lower()
 
         db.session.commit()
 
@@ -325,10 +326,11 @@ def update_user(user_id):
 
         return jsonify({"message": "User updated successfully!"}), 200
 
-    except SQLAlchemyError as e:
+    except Exception as e:
         db.session.rollback()
         logger.error(f"Database error: {str(e)}")
         return jsonify({"error": "Database error, could not update user"}), 500
+
 
 # Suspend user's account
 @app.route('/admin/deactivate_user/<int:user_id>', methods=['PUT'])
