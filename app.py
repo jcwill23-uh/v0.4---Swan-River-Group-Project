@@ -190,6 +190,12 @@ def basic_user_edit():
         return redirect(url_for('index'))
     return render_template("basic_user_edit.html", user=session['user'])
 
+@app.route('/basic_user_forms')
+def basic_user_forms():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    return render_template("basic_user_forms.html", user=session['user'])
+
 # Admin Routes
 @app.route('/admin_home')
 def admin_home():
