@@ -173,7 +173,11 @@ def logout():
 def basic_user_home():
     if 'user' not in session:
         return redirect(url_for('index'))
-    return render_template('basic_user_home.html', user_name=session['user']['name'])
+    return render_template(
+        'basic_user_home.html',
+        user_name=f"{session['user']['first_name']} {session['user'].get('middle_name', '').strip()} {session['user']['last_name']}".strip()
+    )
+
 
 @app.route('/basic_user_view')
 def basic_user_view():
@@ -192,7 +196,11 @@ def basic_user_edit():
 def admin_home():
     if 'user' not in session:
         return redirect(url_for('index'))
-    return render_template('admin.html', user_name=session['user']['name'])
+    return render_template(
+        'admin.html',
+        user_name=f"{session['user']['first_name']} {session['user'].get('middle_name', '').strip()} {session['user']['last_name']}".strip()
+    )
+
 
 @app.route('/admin_create_user')
 def admin_create_user():
@@ -378,3 +386,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run()
+    
