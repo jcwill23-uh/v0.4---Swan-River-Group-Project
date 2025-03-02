@@ -64,7 +64,9 @@ class User(db.Model):
     __tablename__ = 'User'
     
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    first_name = db.Column(db.String(50), nullable=False)
+    middle_name = db.Column(db.String(50), nullable=True)
+    last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
@@ -111,10 +113,12 @@ def authorized():
         if not user:
             logger.info(f"User {email} not found. Creating new basic user.")
             user = User(
-                name=user_info.get('displayName', 'Unknown'),
+                first_name=user_info.get('givenName', 'Unknown'),
+                middle_name=None,
+                last_name=user_info.get('surname', 'Unknown'),
                 email=email,
-                role='basicuser',  # Default role
-                status='active'    # Default status
+                role='basicuser',
+                status='active'
             )
             db.session.add(user)
             db.session.commit()
@@ -133,9 +137,11 @@ def authorized():
 
         # Store user details properly in session
         session['user'] = {
-            'name': user.name,
+            'first_name': user.first_name,
+            'middle_name': user.middle_name if user.middle_name else '',
+            'last_name': user.last_name,
             'email': user.email,
-            'role': user.role.strip().lower(),  # Ensure this reflects the database value
+            'role': user.role.strip().lower(),
             'status': user.status
         }
 
@@ -225,32 +231,32 @@ def admin_view_users():
     return render_template('admin-view-user.html')
 
 
+# Update user profile
 @app.route('/user/profile/update', methods=['PUT'])
 def update_user_profile():
     if "user" not in session:
         return jsonify({"error": "User not logged in"}), 401
 
-    user = User.query.filter_by(email=session['user'].get('email')).first()
+    user = User.query.filter_by(email=session['user']['email']).first()
     if not user:
         return jsonify({"error": "User not found"}), 404
 
     data = request.get_json()
-    new_name = data.get("name", user.name)
-    new_email = data.get("email", user.email)
-
-    # Prevent duplicate emails
-    if new_email != user.email:
-        existing_user = User.query.filter_by(email=new_email).first()
-        if existing_user:
-            return jsonify({"error": "Email already in use"}), 400
-
-    user.name = new_name
-    user.email = new_email
+    user.first_name = data.get("first_name", user.first_name).strip()
+    user.middle_name = data.get("middle_name", user.middle_name).strip() if "middle_name" in data else user.middle_name
+    user.last_name = data.get("last_name", user.last_name).strip()
+    
     db.session.commit()
-
-    # Update session with new user data
-    session['user'] = {'name': user.name, 'email': user.email, 'role': user.role, 'status': user.status}
-
+    
+    session['user'] = {
+        'first_name': user.first_name,
+        'middle_name': user.middle_name if user.middle_name else '',
+        'last_name': user.last_name,
+        'email': user.email,
+        'role': user.role,
+        'status': user.status
+    }
+    
     return jsonify({"message": "Profile updated successfully!"})
 
 @app.route('/admin/create_user', methods=['POST'])
@@ -372,4 +378,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run()
-    
