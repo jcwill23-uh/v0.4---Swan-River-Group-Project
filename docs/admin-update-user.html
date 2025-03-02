@@ -13,15 +13,14 @@
   <title>Admin User Management</title>
 
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
-    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='script.js') }}" defer></script>
   <script>
     function redirectToAdmin() {
         window.location.href = "/admin_home";
     }
-    </script>
-
+  </script>
 </head>
 
 <body class="userList">
@@ -58,7 +57,6 @@
     let users = [];
     let currentUserIndex = null; // Track selected user
     let sortDirections = { name: true, email: true, role: true, status: true }; // Sorting state
-    
     // Fetch users and display in the table
     async function fetchUsers() {
         const response = await fetch('/admin/all_users');
@@ -72,7 +70,7 @@
         userListElement.innerHTML = users.map((user, index) => `
             <tr>
               <td><input type="text" id="name-${index}" value="${user.name}" onchange="updateUser(${index}, 'name', this.value)"></td>
-              <td><input type="email" id="email-${index}" value="${user.email}" onchange="updateUser(${index}, 'email', this.value)"></td>
+              <td><input type="email" id="email-${index}" value="${user.email}" readonly></td>
               <td>
                 <label><input type="radio" name="role-${index}" value="admin" ${user.role === 'admin' ? 'checked' : ''} onchange="updateUser(${index}, 'role', 'admin')"> Admin</label>
                 <label><input type="radio" name="role-${index}" value="basicuser" ${user.role === 'basicuser' ? 'checked' : ''} onchange="updateUser(${index}, 'role', 'basicuser')"> Basic User</label>
@@ -143,13 +141,11 @@
             alert(`Error: ${result.error}`);
         }
     }
-    
     // Close modal
     function closeModal() {
         console.log("Closing modal");
         document.getElementById('confirmModal').style.display = "none";
     }
-    
     // Sorting functionality
     function sortUsersBy(property) {
         sortDirections[property] = !sortDirections[property]; // Toggle sorting order
@@ -160,11 +156,8 @@
         });
         renderUserList(users);
     }
-    
     // Load users when page loads
     window.onload = fetchUsers;
-
   </script>
 </body>
-
 </html>
