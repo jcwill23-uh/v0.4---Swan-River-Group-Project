@@ -29,7 +29,9 @@
     <table id="editUserTable">
       <thead>
         <tr>
-          <th onclick="sortUsersBy('name')">Name ▲▼</th>
+          <th onclick="sortUsersBy('first_name')">First Name ▲▼</th>
+          <th onclick="sortUsersBy('middle_name')">Middle Name ▲▼</th>
+          <th onclick="sortUsersBy('last_name')">Last Name ▲▼</th>
           <th onclick="sortUsersBy('email')">Email ▲▼</th>
           <th onclick="sortUsersBy('role')">Role ▲▼</th>
           <th onclick="sortUsersBy('status')">Status ▲▼</th>
@@ -44,7 +46,7 @@
 
   <button class="back" onclick="redirectToAdmin()">Back to Home</button>
 
-  <!-- Modal for confirmation -->
+  <!-- Confirmation Modal -->
   <div id="confirmModal" class="modal">
     <div class="modal-content">
       <h3>Are you sure you want to save the changes?</h3>
@@ -55,75 +57,58 @@
 
   <script>
     let users = [];
-    let currentUserIndex = null; // Track selected user
-    let sortDirections = { name: true, email: true, role: true, status: true }; // Sorting state
-    // Fetch users and display in the table
+    let currentUserIndex = null;
+    let sortDirections = { first_name: true, middle_name: true, last_name: true, email: true, role: true, status: true };
+    
     async function fetchUsers() {
         const response = await fetch('/admin/all_users');
         users = await response.json();
         renderUserList(users);
     }
     
-    // Render users in the table
     function renderUserList(users) {
         const userListElement = document.getElementById('userList');
         userListElement.innerHTML = users.map((user, index) => `
             <tr>
-              <td><input type="text" id="name-${index}" value="${user.name}" onchange="updateUser(${index}, 'name', this.value)"></td>
-              <td><input type="email" id="email-${index}" value="${user.email}" readonly></td>
+              <td><input type="text" value="${user.first_name}" onchange="updateUser(${index}, 'first_name', this.value)"></td>
+              <td><input type="text" value="${user.middle_name || ''}" onchange="updateUser(${index}, 'middle_name', this.value)"></td>
+              <td><input type="text" value="${user.last_name}" onchange="updateUser(${index}, 'last_name', this.value)"></td>
+              <td><input type="email" value="${user.email}" readonly></td>
               <td>
-                <label><input type="radio" name="role-${index}" value="admin" ${user.role === 'admin' ? 'checked' : ''} onchange="updateUser(${index}, 'role', 'admin')"> Admin</label>
-                <label><input type="radio" name="role-${index}" value="basicuser" ${user.role === 'basicuser' ? 'checked' : ''} onchange="updateUser(${index}, 'role', 'basicuser')"> Basic User</label>
+                <select onchange="updateUser(${index}, 'role', this.value)">
+                  <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                  <option value="basicuser" ${user.role === 'basicuser' ? 'selected' : ''}>Basic User</option>
+                </select>
               </td>
               <td>
-                <select id="status-${index}" onchange="updateUser(${index}, 'status', this.value)">
+                <select onchange="updateUser(${index}, 'status', this.value)">
                   <option value="active" ${user.status === 'active' ? 'selected' : ''}>Active</option>
                   <option value="deactivated" ${user.status === 'deactivated' ? 'selected' : ''}>Deactivated</option>
                 </select>
               </td>
-              <td><button class="save-btn" onclick="openModal(${index})">Save Changes</button></td>
+              <td><button onclick="openModal(${index})">Save Changes</button></td>
             </tr>
         `).join('');
     }
     
-    // Update user object when changes are made
     function updateUser(index, property, value) {
         users[index][property] = value;
     }
     
-    // Open confirmation modal and store selected user index
     function openModal(index) {
-        console.log("Opening modal for user index:", index);
         currentUserIndex = index;
         document.getElementById('confirmModal').style.display = "block";
     }
     
-    // Confirm and save changes to the database
     async function confirmChanges() {
         if (currentUserIndex === null) {
             alert("No user selected.");
             return;
         }
     
-        console.log("Saving changes for user index:", currentUserIndex);
+        const userId = users[currentUserIndex].id;
+        const updatedUser = users[currentUserIndex];
     
-        const userId = users[currentUserIndex]?.id;
-        if (!userId) {
-            alert("Error: User ID is missing.");
-            return;
-        }
-    
-        // Collect updated values from the table
-        const updatedUser = {
-            name: document.getElementById(`name-${currentUserIndex}`).value,
-            email: document.getElementById(`email-${currentUserIndex}`).value,
-            role: document.querySelector(`input[name="role-${currentUserIndex}"]:checked`).value,
-            status: document.getElementById(`status-${currentUserIndex}`).value
-        };
-    
-        console.log("Updated user data:", updatedUser);
-    
-        // Send request to Flask backend
         const response = await fetch(`/admin/update_user/${userId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -131,32 +116,29 @@
         });
     
         const result = await response.json();
-        console.log("Server response:", result);
-    
         if (response.ok) {
             alert('User updated successfully');
-            document.getElementById('confirmModal').style.display = "none";
-            fetchUsers();  // Refresh user list
+            closeModal();
+            fetchUsers();
         } else {
             alert(`Error: ${result.error}`);
         }
     }
-    // Close modal
+    
     function closeModal() {
-        console.log("Closing modal");
         document.getElementById('confirmModal').style.display = "none";
     }
-    // Sorting functionality
+    
     function sortUsersBy(property) {
-        sortDirections[property] = !sortDirections[property]; // Toggle sorting order
+        sortDirections[property] = !sortDirections[property];
         users.sort((a, b) => {
-            if (a[property] < b[property]) return sortDirections[property] ? -1 : 1;
-            if (a[property] > b[property]) return sortDirections[property] ? 1 : -1;
-            return 0;
+            let valueA = a[property] ? a[property].toLowerCase() : "";
+            let valueB = b[property] ? b[property].toLowerCase() : "";
+            return sortDirections[property] ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
         });
         renderUserList(users);
     }
-    // Load users when page loads
+    
     window.onload = fetchUsers;
   </script>
 </body>
