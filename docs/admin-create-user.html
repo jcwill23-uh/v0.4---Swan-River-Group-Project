@@ -30,8 +30,18 @@
         <h2><u>Create New User</u></h2>
 
         <div class="form-row">
-          <label class="edit" for="userName">Name:</label>
-          <input class="box" type="text" id="userName" name="name" required>
+          <label class="edit" for="firstName">First Name:</label>
+          <input class="box" type="text" id="firstName" name="first_name" required>
+        </div>
+
+        <div class="form-row">
+          <label class="edit" for="middleName">Middle Name:</label>
+          <input class="box" type="text" id="middleName" name="middle_name">
+        </div>
+
+        <div class="form-row">
+          <label class="edit" for="lastName">Last Name:</label>
+          <input class="box" type="text" id="lastName" name="last_name" required>
         </div>
 
         <div class="form-row">
@@ -66,13 +76,15 @@
 
         <script>
         async function createUser() {
-          const name = document.getElementById('userName').value.trim();
+          const firstName = document.getElementById('firstName').value.trim();
+          const middleName = document.getElementById('middleName').value.trim();
+          const lastName = document.getElementById('lastName').value.trim();
           const email = document.getElementById('userEmail').value.trim();
           const roleInput = document.querySelector('input[name="userRole"]:checked');
           const statusInput = document.querySelector('input[name="userStatus"]:checked');
 
-          if (!name || !email) {
-              alert("Name and Email are required.");
+          if (!firstName || !lastName || !email) {
+              alert("First Name, Last Name, and Email are required.");
               return;
           }
 
@@ -92,7 +104,7 @@
           const response = await fetch('/admin/create_user', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name, email, role, status })
+              body: JSON.stringify({ first_name: firstName, middle_name: middleName, last_name: lastName, email, role, status })
           });
 
           if (response.ok) {
