@@ -44,7 +44,7 @@
         </table>
     </div>
 
-    <button class="back" onclick="redirectToAdmin()">Back to Home</a>
+    <button class="back" onclick="redirectToAdmin()">Back to Home</button>
 
     <script>
         let users = []; // Store users for sorting
@@ -71,9 +71,10 @@
             userTable.innerHTML = ""; // Clear the table before rendering
 
             users.forEach(user => {
+                const fullName = `${user.first_name} ${user.middle_name ? user.middle_name + ' ' : ''}${user.last_name}`.trim();
                 const row = document.createElement("tr");
                 row.innerHTML = `
-                    <td>${user.name}</td>
+                    <td>${fullName}</td>
                     <td>${user.email}</td>
                     <td>${user.role}</td>
                     <td>${user.status}</td>
@@ -98,6 +99,5 @@
 
         window.onload = fetchUsers;
     </script>
-
 </body>
 </html>
