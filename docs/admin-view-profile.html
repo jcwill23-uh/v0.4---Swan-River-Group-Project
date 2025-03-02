@@ -29,7 +29,7 @@
 <body class="normal">
     <div class="user-info">
         <h2><u>Admin Profile</u></h2>
-        <p>Name: <span>{{ user.name }}</span></p>
+        <p>Name: <span>{{ user.first_name }}{% if user.middle_name %} {{ user.middle_name }}{% endif %} {{ user.last_name }}</span></p>
         <p>Email: <span>{{ user.email }}</span></p>
         <p>Role: <span>{{ user.role }}</span></p>
         <p>Status: <span>{{ user.status }}</span></p><br>
@@ -38,4 +38,3 @@
     </div>
 </body>
 </html>
-
