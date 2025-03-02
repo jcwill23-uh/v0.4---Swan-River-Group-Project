@@ -101,28 +101,39 @@
     }
     
     async function confirmChanges() {
-        if (currentUserIndex === null) {
-            alert("No user selected.");
-            return;
-        }
-    
-        const userId = users[currentUserIndex].id;
-        const updatedUser = users[currentUserIndex];
-    
-        const response = await fetch(`/admin/update_user/${userId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedUser)
-        });
-    
-        const result = await response.json();
-        if (response.ok) {
-            alert('User updated successfully');
-            closeModal();
-            fetchUsers();
-        } else {
-            alert(`Error: ${result.error}`);
-        }
+      if (currentUserIndex === null) {
+          alert("No user selected.");
+          return;
+      }
+  
+      const userId = users[currentUserIndex].id;
+      const updatedUser = {
+          first_name: users[currentUserIndex].first_name,
+          middle_name: users[currentUserIndex].middle_name,
+          last_name: users[currentUserIndex].last_name,
+          role: users[currentUserIndex].role,
+          status: users[currentUserIndex].status
+      };
+  
+      try {
+          const response = await fetch(`/admin/update_user/${userId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updatedUser)
+          });
+  
+          const result = await response.json();
+          if (response.ok) {
+              alert('User updated successfully');
+              closeModal();  // Close the popup after saving
+              fetchUsers();  // Refresh the user list after saving
+          } else {
+              alert(`Error: ${result.error}`);
+          }
+      } catch (error) {
+          console.error("Error updating user:", error);
+          alert("An error occurred while updating the user.");
+      }
     }
     
     function closeModal() {
