@@ -11,6 +11,7 @@ import msal
 import requests
 import pyodbc
 from dotenv import load_dotenv
+from azure.storage.blob import BlobServiceClient
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -378,7 +379,64 @@ def all_users():
         }
         for user in users
     ])
+
+
+# Azure Blob Storage Configuration - USER'S SIGNATURE PHOTO
+AZURE_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=usersignatures;AccountKey=rGwYQGqikAfq0XDTasLRbd5HTQkbVW2s8NClGZ9NGdCknqdp8MBGEo8/WEdd/GO205SYcwyOz+cL+ASt/PQdPQ==;EndpointSuffix=core.windows.net"
+CONTAINER_NAME = "signatures"
+
+blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+container_client = blob_service_client.get_container_client(CONTAINER_NAME)
+
+def upload_signature(file, user_id):
+    try:
+        blob_name = f"signatures/user_{user_id}.png"  # Save as PNG format
+        blob_client = container_client.get_blob_client(blob_name)
+        
+        # Upload the file
+        blob_client.upload_blob(file, overwrite=True)
+        
+        # Generate the accessible URL
+        signature_url = f"https://usersignatures.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
+        
+        # Save the URL to the database
+        user = User.query.get(user_id)
+        if user:
+            user.signature_url = signature_url
+            db.session.commit()
+        
+        return {"message": "Signature uploaded successfully!", "signature_url": signature_url}
     
+    except Exception as e:
+        return {"error": f"Error uploading signature: {str(e)}"}
+
+# Upload signature
+def upload_signature(file, user_id):
+    try:
+        blob_name = f"user_{user_id}.png"
+        blob_client = container_client.get_blob_client(blob_name)
+
+        # Check if an old signature exists and delete it
+        if blob_client.exists():
+            blob_client.delete_blob()
+
+        # Upload the new signature
+        blob_client.upload_blob(file, overwrite=True)
+
+        # Generate the new signature URL
+        signature_url = f"https://usersignatures.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
+
+        # Update the database
+        user = User.query.get(user_id)
+        if user:
+            user.signature_url = signature_url  # Overwrite old URL
+            db.session.commit()
+
+        return {"message": "Signature uploaded successfully!", "signature_url": signature_url}
+
+    except Exception as e:
+        return {"error": f"Error uploading signature: {str(e)}"}
+  
 # Helper functions
 def _build_auth_url(scopes=None, state=None):
     return msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY).get_authorization_request_url(
