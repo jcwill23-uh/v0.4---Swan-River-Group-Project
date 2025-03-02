@@ -88,14 +88,35 @@
             sortDirections[columnIndex] = !sortDirections[columnIndex]; // Toggle sorting order
 
             users.sort((a, b) => {
-                let valueA = Object.values(a)[columnIndex].toLowerCase();
-                let valueB = Object.values(b)[columnIndex].toLowerCase();
-                
+                let valueA, valueB;
+
+                switch (columnIndex) {
+                    case 0: // Name
+                        valueA = `${a.first_name} ${a.middle_name ? a.middle_name + ' ' : ''}${a.last_name}`.toLowerCase();
+                        valueB = `${b.first_name} ${b.middle_name ? b.middle_name + ' ' : ''}${b.last_name}`.toLowerCase();
+                        break;
+                    case 1: // Email
+                        valueA = a.email.toLowerCase();
+                        valueB = b.email.toLowerCase();
+                        break;
+                    case 2: // Role (Fixed Sorting for Role Column)
+                        valueA = a.role.toLowerCase();
+                        valueB = b.role.toLowerCase();
+                        break;
+                    case 3: // Status
+                        valueA = a.status.toLowerCase();
+                        valueB = b.status.toLowerCase();
+                        break;
+                    default:
+                        return 0; // Do nothing if columnIndex is out of bounds
+                }
+
                 return sortAscending ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
             });
 
             renderUserList(users);
         }
+
 
         window.onload = fetchUsers;
     </script>
