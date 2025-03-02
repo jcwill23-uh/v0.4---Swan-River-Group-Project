@@ -28,23 +28,23 @@
         <h2><u>Edit Admin Profile</u></h2>
 
         <div class="form-row">
-            <label class="edit" for="userName">Name:</label>
-            <input class="box" type="text" id="userName" name="name" value="{{ user.name }}" required>
+            <label class="edit" for="firstName">First Name:</label>
+            <input class="box" type="text" id="firstName" name="first_name" value="{{ user.first_name }}" required>
         </div>
 
+        <div class="form-row">
+            <label class="edit" for="middleName">Middle Name:</label>
+            <input class="box" type="text" id="middleName" name="middle_name" value="{{ user.middle_name or '' }}">
+        </div>
+
+        <div class="form-row">
+            <label class="edit" for="lastName">Last Name:</label>
+            <input class="box" type="text" id="lastName" name="last_name" value="{{ user.last_name }}" required>
+        </div>
+      
         <div class="form-row">
             <label class="edit" for="userEmail">Email:</label>
-            <input class="box" type="email" id="userEmail" name="email" value="{{ user.email }}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label class="edit" for="userRole">Role:</label>
-            <input class="box" type="text" id="userRole" name="userRole" value="{{ user.role }}" readonly>
-        </div>
-
-        <div class="form-row">
-            <label class="edit" for="userStatus">Status:</label>
-            <input class="box" type="text" id="userStatus" name="userStatus" value="{{ user.status }}" readonly>
+            <input class="box" type="email" id="userEmail" name="email" value="{{ user.email }}" disabled style="color: black;">
         </div>
         <br>
 
@@ -54,13 +54,18 @@
 
     <script>
         async function updateUserProfile() {
-            const updatedName = document.getElementById('userName').value;
-            const updatedEmail = document.getElementById('userEmail').value;
+            const updatedFirstName = document.getElementById('firstName').value;
+            const updatedMiddleName = document.getElementById('middleName').value;
+            const updatedLastName = document.getElementById('lastName').value;
     
             const response = await fetch("{{ url_for('update_user_profile') }}", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: updatedName, email: updatedEmail })
+                body: JSON.stringify({
+                    first_name: updatedFirstName,
+                    middle_name: updatedMiddleName,
+                    last_name: updatedLastName
+                })
             });
     
             const data = await response.json();
