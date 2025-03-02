@@ -364,7 +364,13 @@ def deactivate_user(user_id):
 def all_users():
     users = User.query.all()
     return jsonify([
-        {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "status": user.status}
+        {
+            "id": user.id,
+            "name": f"{user.first_name} {user.middle_name + ' ' if user.middle_name else ''}{user.last_name}".strip(),
+            "email": user.email,
+            "role": user.role,
+            "status": user.status
+        }
         for user in users
     ])
     
@@ -385,5 +391,4 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run()
-    
+    app.run()    
