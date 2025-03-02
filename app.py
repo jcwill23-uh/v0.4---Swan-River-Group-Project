@@ -366,7 +366,9 @@ def all_users():
     return jsonify([
         {
             "id": user.id,
-            "name": f"{user.first_name} {user.middle_name + ' ' if user.middle_name else ''}{user.last_name}".strip(),
+            "first_name": user.first_name if user.first_name else "",
+            "middle_name": user.middle_name if user.middle_name else "",
+            "last_name": user.last_name if user.last_name else "",
             "email": user.email,
             "role": user.role,
             "status": user.status
