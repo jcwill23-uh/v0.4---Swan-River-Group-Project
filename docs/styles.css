@@ -31,9 +31,35 @@ body.forms {
     justify-content: center;
     align-items: center;
     margin: 20px 0;
+    flex-direction: column;
 }
 
 .signature-container img {
+    max-width: 300px;
+    border: 2px solid var(--secondary-color);
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#editControls {
+    margin-top: 20px;
+}
+
+#editControls button {
+    background-color: var(--secondary-color);
+    color: var(--darker-white);
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#editControls button:hover {
+    background-color: var(--darker-secondary);
+}
+
+canvas {
     max-width: 300px;
     border: 2px solid var(--secondary-color);
     border-radius: 8px;
