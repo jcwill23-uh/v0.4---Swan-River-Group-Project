@@ -272,7 +272,7 @@ def admin_view_users():
     return render_template('admin-view-user.html')
 
 @app.route('/admin_user_forms')
-def admin_create_user():
+def admin_user_forms():
     if 'user' not in session:
         return redirect(url_for('index'))
     return render_template('admin-user-forms.html')
