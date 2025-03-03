@@ -21,6 +21,7 @@ body.forms {
     font-family: Arial, sans-serif;
     background: var(--primary-color);
     margin: 0;
+    color: var(--darker-white);
     text-align: center;
 }
 
