@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project.">
+    <meta name="keywords" content="swan river, group project, cosc 4353">
+    <meta property="og:title" content="Swan River Group Project">
+    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+
+    <title>Swan River Group Project - Admin</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <script>
+      function redirectToAdmin() {
+          window.location.href = "/admin_home";
+      }
+      </script>
+    
+
+</head>
+
+<body class="normal">
+    <div class="welcome">
+        <h1>View Old Requested Froms</h1><br>
+      <button class="back" onclick="redirectToAdmin()">Back to Home</button>
+    </div>
+
+</body>
+</html>
