@@ -41,34 +41,38 @@
         }
         
         async function uploadSignature() {
-            const fileInput = document.getElementById("signatureInput");
-            if (fileInput.files.length === 0) {
-                alert("Please select a signature file.");
-                return;
-            }
-    
-            const formData = new FormData();
-            formData.append("signature", fileInput.files[0]);
-    
-            try {
-                const response = await fetch("/upload_signature", {
-                    method: "POST",
-                    body: formData
-                });
-    
-                const data = await response.json();
-                if (response.ok) {
-                    document.getElementById("signaturePreview").src = data.signature_url;
-                    document.getElementById("signaturePreview").style.display = "block";
-                    alert("Signature uploaded successfully!");
-                } else {
-                    alert("Upload failed: " + data.error);
-                }
-            } catch (error) {
-                console.error("Error uploading signature:", error);
-                alert("An unexpected error occurred. Please try again.");
-            }
+        const fileInput = document.getElementById("signatureInput");
+        const previewImage = document.getElementById("signaturePreview");
+
+        if (fileInput.files.length === 0) {
+            alert("Please select a signature file.");
+            return;
         }
+
+        const formData = new FormData();
+        formData.append("signature", fileInput.files[0]);
+
+        try {
+            const response = await fetch("/upload_signature", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            if (response.ok && data.signature_url) {
+                // Update the preview image
+                previewImage.src = data.signature_url + "?" + new Date().getTime(); // Prevents caching
+                previewImage.style.display = "block";
+
+                alert("Signature uploaded successfully!");
+            } else {
+                alert("Upload failed: " + data.error);
+            }
+        } catch (error) {
+            console.error("Error uploading signature:", error);
+            alert("An unexpected error occurred. Please try again.");
+        }
+    }
     </script>
 </body>
 </html>
