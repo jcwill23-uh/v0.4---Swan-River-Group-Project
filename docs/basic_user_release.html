@@ -41,26 +41,28 @@
                  alt="Signature Image" style="display: none;">
         {% endif %}
     </div>
-    
-    <!-- Edit Photo Button (Hidden when no image) -->
-    <br>
-    <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
-    
+
     <!-- Editing Controls -->
     <div id="editControls" style="display: none; text-align: center;">
         <button onclick="rotateImage()">Rotate</button>
+        <button onclick="cancelEdit()">Cancel</button>
         <button onclick="saveEditedImage()">Save</button>
     </div>
     
-    <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
+    <!-- Edit Photo Button (Hidden when no image) -->
+    <div class="button-container">
+        <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
+        <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
+    </div>
 
     <script>
         let cropper;
         const previewImage = document.getElementById("signaturePreview");
         const editControls = document.getElementById("editControls");
         const editPhotoButton = document.getElementById("editPhotoButton");
-        const canvas = document.getElementById("cropCanvas");
         const fileInput = document.getElementById("signatureInput");
+
+        let originalImageSrc = previewImage.src; // stores original image when opening the editor
     
         // Show Cropper when user selects an image
         fileInput.addEventListener("change", function(event) {
@@ -105,6 +107,15 @@
             if (cropper) {
                 cropper.rotate(90); // Rotate by 90 degrees
             }
+        }
+
+        // Cancel Edit
+        function cancelEdit() {
+            if (cropper) {
+                cropper.destroy();
+            }
+            previewImage.src = originalImageSrc; // Restore the original image
+            editControls.style.display = "none"; // Hide controls
         }
     
         // Save Edited Image
