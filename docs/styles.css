@@ -408,3 +408,36 @@ body.userList tbody tr:hover {
     margin-right: 10px;
     transform: scale(1.2); /* Make them slightly larger for visibility */
 }
+
+.release-form-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+    background-color: var(--primary-color);
+    border-radius: 8px;
+    box-shadow: 0px 2px 8px var(--secondary-color);
+}
+
+/* Stack selectable options vertically */
+.release-form-container .selection-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+/* SSN fields alignment */
+.ssn-container {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+    width: fit-content;
+}
+.ssn-container input {
+    width: 50px;
+    text-align: center;
+    font-size: 16px;
+    padding: 5px;
+}
