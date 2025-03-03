@@ -14,7 +14,7 @@
     <title>Swan River Group Project</title>
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <!-- Cropper.js (CDN) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
@@ -26,8 +26,79 @@
     <h1><u>Authorization to Release Educational Records</u></h1>
 
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
+    <div class="release-form-container">
+        <form>
+            <!-- UH Campus Selection -->
+            <h3>Please select your UH campus below:</h3>
+            <div class="selection-group">
+                <label><input type="radio" name="campus" value="Clear Lake"> Clear Lake</label>
+                <label><input type="radio" name="campus" value="Downtown"> Downtown</label>
+                <label><input type="radio" name="campus" value="Main"> Main</label>
+                <label><input type="radio" name="campus" value="Victoria"> Victoria</label>
+            </div>
 
-    <p>Please upload a picture of your signature below.</p>
+            <!-- Categories of Information to Release -->
+            <h3>Please select what categories of your information to release (One or many):</h3>
+            <div class="selection-group">
+                <label><input type="checkbox" name="categories" value="Registrar"> Office of the University Registrar</label>
+                <label><input type="checkbox" name="categories" value="Financial Aid"> Scholarships and Financial Aid</label>
+                <label><input type="checkbox" name="categories" value="Student Financial Services"> Student Financial Services</label>
+                <label><input type="checkbox" name="categories" value="Undergraduate Scholars"> Undergraduate Scholars @ UH (formerly USD)</label>
+                <label><input type="checkbox" name="categories" value="Advancement"> University Advancement</label>
+                <label><input type="checkbox" name="categories" value="Dean of Students"> Dean of Students Office</label>
+                <label><input type="checkbox" id="otherCategoryCheckbox" onclick="toggleOtherText('otherCategoryText', 'otherCategoryCheckbox')"> Other (Please Specify)</label>
+                <input type="text" id="otherCategoryText" style="display: none;" placeholder="Specify other category">
+            </div>
+
+            <!-- Specific Disclosure Authorization -->
+            <h3>Specifically, I authorize disclosure of the following information or category of information (One or many):</h3>
+            <div class="selection-group">
+                <label><input type="checkbox" name="info" value="Advising"> Academic Advising Profile/Information</label>
+                <label><input type="checkbox" name="info" value="Academic Records"> Academic Records</label>
+                <label><input type="checkbox" name="info" value="All Records"> All University Records</label>
+                <label><input type="checkbox" name="info" value="Billing"> Billing/Financial Aid</label>
+                <label><input type="checkbox" name="info" value="Disciplinary"> Disciplinary</label>
+                <label><input type="checkbox" name="info" value="Grades"> Grades/Transcripts</label>
+                <label><input type="checkbox" name="info" value="Housing"> Housing</label>
+                <label><input type="checkbox" name="info" value="Photos"> Photos</label>
+                <label><input type="checkbox" name="info" value="Scholarships"> Scholarship and/or Honors</label>
+                <label><input type="checkbox" id="otherInfoCheckbox" onclick="toggleOtherText('otherInfoText', 'otherInfoCheckbox')"> Other (Please Specify)</label>
+                <input type="text" id="otherInfoText" style="display: none;" placeholder="Specify other information">
+            </div>
+
+            <!-- Release Information To -->
+            <h3>This information may be released to (Print Name(s) of Individuals To Whom University May Disclose Information):</h3>
+            <input type="text" name="releaseTo" placeholder="Enter names">
+
+            <!-- Purpose of Informing -->
+            <h3>The above names may be used for the purpose of informing:</h3>
+            <div class="selection-group">
+                <label><input type="checkbox" name="purpose" value="Family"> Family</label>
+                <label><input type="checkbox" name="purpose" value="Educational Institution"> Educational Institution</label>
+                <label><input type="checkbox" name="purpose" value="Honor or Award"> Honor or Award</label>
+                <label><input type="checkbox" name="purpose" value="Employer"> Employer/Prospective Employer</label>
+                <label><input type="checkbox" name="purpose" value="Public/Media"> Public or Media of Scholarship</label>
+                <label><input type="checkbox" id="otherPurposeCheckbox" onclick="toggleOtherText('otherPurposeText', 'otherPurposeCheckbox')"> Other (Please Specify)</label>
+                <input type="text" id="otherPurposeText" style="display: none;" placeholder="Specify other purpose">
+            </div>
+
+            <!-- Password Requirement -->
+            <h3>Please provide a password to obtain information via the phone.</h3>
+            <h3>The password should not contain more than ten letters. You must provide the password to the individuals or agencies listed above. The University will not release information to the caller if the caller does not have the password. A new form must be completed to change your password.</h3>
+            <input type="text" name="password" placeholder="Enter password" onblur="validatePassword(this)">
+
+            <!-- PeopleSoft ID -->
+            <h3>PeopleSoft I.D. Number:</h3>
+            <input type="text" name="peoplesoftID" placeholder="7-digit PeopleSoft ID" onblur="validatePeopleSoftID(this)">
+
+            <!-- Student Name -->
+            <h3>Student Name:</h3>
+            <input type="text" name="studentName" placeholder="Enter Student Name">
+        </form>
+    </div>
+    <!-- END OF FORM INFORMATION -->
+
+    <h3>Please upload a picture of your signature below.</h3>
     <input type="file" id="signatureInput" accept="image/png, image/jpeg">
     <br><br>
     <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>  
@@ -52,6 +123,9 @@
     <!-- Edit Photo Button (Hidden when no image) -->
     <div class="button-container">
         <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
+        <!-- WILL NEED TO ADD ROUTING AND FUNCTIONALITY FOR NEXT 2 BUTTONS -->
+        <button class ="back">Save For Later</button>
+        <button class ="back">Submit Form</button>
         <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
     </div>
 
