@@ -59,6 +59,18 @@ body.forms {
     background-color: var(--darker-secondary);
 }
 
+/* Button Container for Vertical Stacking */
+.button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.button-container button {
+    margin-bottom: 10px;
+}
+
 canvas {
     max-width: 300px;
     border: 2px solid var(--secondary-color);
