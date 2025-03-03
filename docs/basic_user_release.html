@@ -28,14 +28,18 @@
     <p>Please upload a picture of your signature below.</p>
     <input type="file" id="signatureInput" accept="image/png, image/jpeg">
     <br><br>
-    <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>
-    <br>
-    <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
-
+    <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>  
     <!-- Signature Preview -->
-    <img id="signaturePreview" src="{{ signature_url }}" 
-     alt="No Signature Uploaded" 
-     style="max-width: 300px; display: {% if signature_url %}'block'{% else %}'none'{% endif %};">
+    <div class="signature-container">
+        {% if signature_url %}
+            <img id="signaturePreview" src="{{ signature_url }}" 
+                 alt="Signature Image">
+        {% else %}
+            <img id="signaturePreview" src="" 
+                 alt="Signature Image" style="display: none;">
+        {% endif %}
+    </div>
+    <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
 
     <script>
         function redirectToBasicHome() {
