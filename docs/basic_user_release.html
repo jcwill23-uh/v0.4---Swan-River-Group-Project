@@ -25,7 +25,9 @@
 
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
 
+    <p>Please upload a picture of your signature below.</p>
     <input type="file" id="signatureInput" accept="image/png, image/jpeg">
+    <br><br>
     <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>
     <br>
     <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
@@ -44,22 +46,27 @@
                 alert("Please select a signature file.");
                 return;
             }
-
+    
             const formData = new FormData();
             formData.append("signature", fileInput.files[0]);
-
-            const response = await fetch("/upload_signature", {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await response.json();
-            if (data.signature_url) {
-                document.getElementById("signaturePreview").src = data.signature_url;
-                document.getElementById("signaturePreview").style.display = "block";
-                alert("Signature uploaded successfully!");
-            } else {
-                alert("Error: " + data.error);
+    
+            try {
+                const response = await fetch("/upload_signature", {
+                    method: "POST",
+                    body: formData
+                });
+    
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById("signaturePreview").src = data.signature_url;
+                    document.getElementById("signaturePreview").style.display = "block";
+                    alert("Signature uploaded successfully!");
+                } else {
+                    alert("Upload failed: " + data.error);
+                }
+            } catch (error) {
+                console.error("Error uploading signature:", error);
+                alert("An unexpected error occurred. Please try again.");
             }
         }
     </script>
