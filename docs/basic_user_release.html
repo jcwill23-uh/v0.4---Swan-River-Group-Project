@@ -16,7 +16,9 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
+    <!-- Cropper.js (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </head>
 
@@ -39,9 +41,98 @@
                  alt="Signature Image" style="display: none;">
         {% endif %}
     </div>
+    <!-- Editing Controls -->
+    <div id="editControls" style="display: none; text-align: center;">
+        <canvas id="cropCanvas"></canvas> <!-- Canvas for Cropping -->
+        <button onclick="rotateImage()">Rotate</button>
+        <button onclick="cropImage()">Crop</button>
+        <button onclick="saveEditedImage()">Save</button>
+    </div>
     <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
 
     <script>
+        let cropper;
+        const previewImage = document.getElementById("signaturePreview");
+        const editControls = document.getElementById("editControls");
+        const canvas = document.getElementById("cropCanvas");
+        const fileInput = document.getElementById("signatureInput");
+    
+        // Show Cropper when user selects an image
+        fileInput.addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    initializeCropper();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    
+        // Initialize Cropper.js
+        function initializeCropper() {
+            if (cropper) {
+                cropper.destroy();
+            }
+            cropper = new Cropper(previewImage, {
+                aspectRatio: NaN,  // Freeform cropping
+                viewMode: 1, // Restrict cropping box within the image
+                autoCropArea: 1, // Default full image
+                responsive: true,
+            });
+            editControls.style.display = "block"; // Show controls
+        }
+    
+        // Rotate Image
+        function rotateImage() {
+            if (cropper) {
+                cropper.rotate(90); // Rotate by 90 degrees
+            }
+        }
+    
+        // Crop Image
+        function cropImage() {
+            if (cropper) {
+                const croppedCanvas = cropper.getCroppedCanvas();
+                previewImage.src = croppedCanvas.toDataURL("image/png");
+                cropper.destroy(); // Disable cropper after cropping
+                editControls.style.display = "none"; // Hide controls
+            }
+        }
+    
+        // Save Edited Image
+        async function saveEditedImage() {
+            if (!cropper) {
+                alert("Please crop or rotate the image first.");
+                return;
+            }
+    
+            const croppedCanvas = cropper.getCroppedCanvas();
+            croppedCanvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append("signature", blob, "signature.png");
+    
+                try {
+                    const response = await fetch("/upload_signature", {
+                        method: "POST",
+                        body: formData
+                    });
+    
+                    const data = await response.json();
+                    if (response.ok && data.signature_url) {
+                        previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Cache busting
+                        alert("Signature updated successfully!");
+                    } else {
+                        alert("Upload failed: " + data.error);
+                    }
+                } catch (error) {
+                    console.error("Error uploading signature:", error);
+                    alert("An unexpected error occurred. Please try again.");
+                }
+            }, "image/png");
+        }
+        
         function redirectToBasicHome() {
             window.location.href = "{{ url_for('basic_user_home') }}";
         }
