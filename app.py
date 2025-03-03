@@ -271,6 +271,11 @@ def admin_view_users():
         return redirect(url_for('index'))
     return render_template('admin-view-user.html')
 
+@app.route('/admin_user_forms')
+def admin_create_user():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    return render_template('admin-user-forms.html')
 
 # Update user profile
 @app.route('/user/profile/update', methods=['PUT'])
