@@ -71,6 +71,7 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
+    signature_url = db.Column(db.String(255), nullable=True)
 
 # Azure AD Configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
@@ -384,34 +385,23 @@ def all_users():
 # Azure Blob Storage Configuration - USER'S SIGNATURE PHOTO
 AZURE_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=usersignatures;AccountKey=rGwYQGqikAfq0XDTasLRbd5HTQkbVW2s8NClGZ9NGdCknqdp8MBGEo8/WEdd/GO205SYcwyOz+cL+ASt/PQdPQ==;EndpointSuffix=core.windows.net"
 CONTAINER_NAME = "signatures"
+STORAGE_ACCOUNT_NAME = "usersignatures"
 
 blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
 container_client = blob_service_client.get_container_client(CONTAINER_NAME)
 
-def upload_signature(file, user_id):
-    try:
-        blob_name = f"signatures/user_{user_id}.png"  # Save as PNG format
-        blob_client = container_client.get_blob_client(blob_name)
-        
-        # Upload the file
-        blob_client.upload_blob(file, overwrite=True)
-        
-        # Generate the accessible URL
-        signature_url = f"https://usersignatures.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
-        
-        # Save the URL to the database
-        user = User.query.get(user_id)
-        if user:
-            user.signature_url = signature_url
-            db.session.commit()
-        
-        return {"message": "Signature uploaded successfully!", "signature_url": signature_url}
-    
-    except Exception as e:
-        return {"error": f"Error uploading signature: {str(e)}"}
+# Upload user signature to Azure Blob Storage
+@app.route('/upload_signature', methods=['POST'])
+def upload_user_signature():
+    if "user" not in session:
+        return jsonify({"error": "User not logged in"}), 401
 
-# Upload signature
-def upload_signature(file, user_id):
+    user_id = session["user"]["id"]
+    if "signature" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files["signature"].read()
+
     try:
         blob_name = f"user_{user_id}.png"
         blob_client = container_client.get_blob_client(blob_name)
@@ -423,19 +413,19 @@ def upload_signature(file, user_id):
         # Upload the new signature
         blob_client.upload_blob(file, overwrite=True)
 
-        # Generate the new signature URL
-        signature_url = f"https://usersignatures.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
+        # Generate the signature URL
+        signature_url = f"https://{STORAGE_ACCOUNT_NAME}.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
 
-        # Update the database
+        # Update database with new signature URL
         user = User.query.get(user_id)
         if user:
-            user.signature_url = signature_url  # Overwrite old URL
+            user.signature_url = signature_url
             db.session.commit()
 
-        return {"message": "Signature uploaded successfully!", "signature_url": signature_url}
+        return jsonify({"message": "Signature uploaded successfully!", "signature_url": signature_url})
 
     except Exception as e:
-        return {"error": f"Error uploading signature: {str(e)}"}
+        return jsonify({"error": f"Error uploading signature: {str(e)}"}), 500
   
 # Helper functions
 def _build_auth_url(scopes=None, state=None):
@@ -454,4 +444,4 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run()    
+    app.run()
