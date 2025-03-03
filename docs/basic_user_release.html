@@ -43,15 +43,15 @@
     </div>
     
     <!-- Edit Photo Button (Hidden when no image) -->
+    <br>
     <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
     
     <!-- Editing Controls -->
     <div id="editControls" style="display: none; text-align: center;">
-        <canvas id="cropCanvas"></canvas> <!-- Canvas for Cropping -->
         <button onclick="rotateImage()">Rotate</button>
-        <button onclick="cropImage()">Crop</button>
         <button onclick="saveEditedImage()">Save</button>
     </div>
+    
     <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
 
     <script>
@@ -104,16 +104,6 @@
         function rotateImage() {
             if (cropper) {
                 cropper.rotate(90); // Rotate by 90 degrees
-            }
-        }
-    
-        // Crop Image
-        function cropImage() {
-            if (cropper) {
-                const croppedCanvas = cropper.getCroppedCanvas();
-                previewImage.src = croppedCanvas.toDataURL("image/png");
-                cropper.destroy(); // Disable cropper after cropping
-                editControls.style.display = "none"; // Hide controls
             }
         }
     
