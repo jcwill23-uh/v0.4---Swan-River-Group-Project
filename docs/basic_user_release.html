@@ -41,6 +41,10 @@
                  alt="Signature Image" style="display: none;">
         {% endif %}
     </div>
+    
+    <!-- Edit Photo Button (Hidden when no image) -->
+    <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
+    
     <!-- Editing Controls -->
     <div id="editControls" style="display: none; text-align: center;">
         <canvas id="cropCanvas"></canvas> <!-- Canvas for Cropping -->
@@ -54,6 +58,7 @@
         let cropper;
         const previewImage = document.getElementById("signaturePreview");
         const editControls = document.getElementById("editControls");
+        const editPhotoButton = document.getElementById("editPhotoButton");
         const canvas = document.getElementById("cropCanvas");
         const fileInput = document.getElementById("signatureInput");
     
@@ -65,10 +70,22 @@
                 reader.onload = function(e) {
                     previewImage.src = e.target.result;
                     initializeCropper();
+                    editPhotoButton.style.display = "block"; // Show Edit button after selecting a file
                 };
                 reader.readAsDataURL(file);
             }
         });
+    
+        // Toggle Edit Controls
+        function toggleEditControls() {
+            if (editControls.style.display === "none") {
+                initializeCropper();
+                editControls.style.display = "block";
+            } else {
+                editControls.style.display = "none";
+                if (cropper) cropper.destroy();
+            }
+        }
     
         // Initialize Cropper.js
         function initializeCropper() {
@@ -81,7 +98,6 @@
                 autoCropArea: 1, // Default full image
                 responsive: true,
             });
-            editControls.style.display = "block"; // Show controls
         }
     
         // Rotate Image
@@ -122,6 +138,7 @@
                     const data = await response.json();
                     if (response.ok && data.signature_url) {
                         previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Cache busting
+                        editPhotoButton.style.display = "block"; // Show Edit button after saving
                         alert("Signature updated successfully!");
                     } else {
                         alert("Upload failed: " + data.error);
