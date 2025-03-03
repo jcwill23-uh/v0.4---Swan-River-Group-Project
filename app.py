@@ -196,6 +196,11 @@ def basic_user_edit():
 def basic_user_forms():
     if 'user' not in session:
         return redirect(url_for('index'))
+    # Fetch user's signature from the database
+    email = session['user']['email']
+    user = User.query.filter_by(email=email).first()
+    # Get the signature URL (if exists)
+    signature_url = user.signature_url if user and user.signature_url else ""
     return render_template("basic_user_forms.html", user=session['user'])
 
 @app.route('/basic_user_release')
