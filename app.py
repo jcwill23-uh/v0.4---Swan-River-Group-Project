@@ -277,6 +277,18 @@ def admin_user_forms():
         return redirect(url_for('index'))
     return render_template('admin-user-forms.html')
 
+@app.route('/admin_request_forms')
+def admin_request_forms():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    return render_template('admin-request-forms.html')
+
+@app.route('/admin_previous_forms')
+def admin_previous_forms():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    return render_template('admin-previous-forms.html')
+
 # Update user profile
 @app.route('/user/profile/update', methods=['PUT'])
 def update_user_profile():
