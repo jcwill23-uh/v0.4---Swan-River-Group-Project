@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project.">
+    <meta name="keywords" content="swan river, group project, cosc 4353">
+    <meta property="og:title" content="Swan River Group Project">
+    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+
+    <title>Swan River Group Project</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Cropper.js (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+
+<body class="forms">
+    <h1><u>Change of Name and/or Social Security Number</u></h1>
+
+    <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
+
+    <p>Please upload a picture of your signature below.</p>
+    <input type="file" id="signatureInput" accept="image/png, image/jpeg">
+    <br><br>
+    <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>  
+    <!-- Signature Preview -->
+    <div class="signature-container">
+        {% if signature_url %}
+            <img id="signaturePreview" src="{{ signature_url }}" 
+                 alt="Signature Image">
+        {% else %}
+            <img id="signaturePreview" src="" 
+                 alt="Signature Image" style="display: none;">
+        {% endif %}
+    </div>
+
+    <!-- Editing Controls -->
+    <div id="editControls" style="display: none; text-align: center;">
+        <button onclick="rotateImage()">Rotate</button>
+        <button onclick="cancelEdit()">Cancel</button>
+        <button onclick="saveEditedImage()">Save</button>
+    </div>
+    
+    <!-- Edit Photo Button (Hidden when no image) -->
+    <div class="button-container">
+        <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
+        <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
+    </div>
+
+    <script>
+        let cropper;
+        const previewImage = document.getElementById("signaturePreview");
+        const editControls = document.getElementById("editControls");
+        const editPhotoButton = document.getElementById("editPhotoButton");
+        const fileInput = document.getElementById("signatureInput");
+
+        let originalImageSrc = previewImage.src; // stores original image when opening the editor
+    
+        // Show Cropper when user selects an image
+        fileInput.addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    initializeCropper();
+                    editPhotoButton.style.display = "block"; // Show Edit button after selecting a file
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    
+        // Toggle Edit Controls
+        function toggleEditControls() {
+            if (editControls.style.display === "none") {
+                initializeCropper();
+                editControls.style.display = "block";
+            } else {
+                editControls.style.display = "none";
+                if (cropper) cropper.destroy();
+            }
+        }
+    
+        // Initialize Cropper.js
+        function initializeCropper() {
+            if (cropper) {
+                cropper.destroy();
+            }
+            cropper = new Cropper(previewImage, {
+                aspectRatio: NaN,  // Freeform cropping
+                viewMode: 1, // Restrict cropping box within the image
+                autoCropArea: 1, // Default full image
+                responsive: true,
+            });
+        }
+    
+        // Rotate Image
+        function rotateImage() {
+            if (cropper) {
+                cropper.rotate(90); // Rotate by 90 degrees
+            }
+        }
+
+        // Cancel Edit
+        function cancelEdit() {
+            if (cropper) {
+                cropper.destroy();
+            }
+            previewImage.src = originalImageSrc; // Restore the original image
+            editControls.style.display = "none"; // Hide controls
+        }
+    
+        // Save Edited Image
+        async function saveEditedImage() {
+            if (!cropper) {
+                alert("Please crop or rotate the image first.");
+                return;
+            }
+    
+            const croppedCanvas = cropper.getCroppedCanvas();
+            croppedCanvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append("signature", blob, "signature.png");
+    
+                try {
+                    const response = await fetch("/upload_signature", {
+                        method: "POST",
+                        body: formData
+                    });
+    
+                    const data = await response.json();
+                    if (response.ok && data.signature_url) {
+                        previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Cache busting
+                        editPhotoButton.style.display = "block"; // Show Edit button after saving
+                        alert("Signature updated successfully!");
+                    } else {
+                        alert("Upload failed: " + data.error);
+                    }
+                } catch (error) {
+                    console.error("Error uploading signature:", error);
+                    alert("An unexpected error occurred. Please try again.");
+                }
+            }, "image/png");
+        }
+        
+        function redirectToBasicHome() {
+            window.location.href = "{{ url_for('basic_user_home') }}";
+        }
+        
+        async function uploadSignature() {
+        const fileInput = document.getElementById("signatureInput");
+        const previewImage = document.getElementById("signaturePreview");
+
+        if (fileInput.files.length === 0) {
+            alert("Please select a signature file.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("signature", fileInput.files[0]);
+
+        try {
+            const response = await fetch("/upload_signature", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            if (response.ok && data.signature_url) {
+                // Update image preview
+                previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Prevents caching
+                previewImage.style.display = "block";
+
+                alert("Signature uploaded successfully!");
+            } else {
+                alert("Upload failed: " + data.error);
+            }
+        } catch (error) {
+            console.error("Error uploading signature:", error);
+            alert("An unexpected error occurred. Please try again.");
+        }
+    }
+    </script>
+    
+</body>
+</html>
