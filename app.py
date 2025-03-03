@@ -198,6 +198,12 @@ def basic_user_forms():
         return redirect(url_for('index'))
     return render_template("basic_user_forms.html", user=session['user'])
 
+@app.route('/basic_user_release')
+def basic_user_release():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    return render_template("basic_user_release.html", user=session['user'])
+
 # Admin Routes
 @app.route('/admin_home')
 def admin_home():
