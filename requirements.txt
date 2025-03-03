@@ -8,3 +8,5 @@ msal
 pyodbc
 gunicorn
 simplejson
+azure-storage-blob
+pandas
