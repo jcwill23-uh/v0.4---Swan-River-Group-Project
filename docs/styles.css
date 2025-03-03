@@ -375,3 +375,36 @@ body.userList tbody tr:hover {
 .delete-btn:hover {
     background-color: var(--darker-secondary);
 }
+
+/* Apply styles only to the form on this page */
+.release-form-container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+    background-color: var(--primary-color);
+    border-radius: 8px;
+    box-shadow: 0px 2px 8px var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+/* Ensure options are stacked vertically */
+.release-form-container .selection-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.release-form-container .selection-group div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    width: 100%;
+}
+
+.release-form-container .selection-group input[type="checkbox"],
+.release-form-container .selection-group input[type="radio"] {
+    margin-right: 10px;
+    transform: scale(1.2); /* Make them slightly larger for visibility */
+}
