@@ -14,15 +14,10 @@
     <title>Swan River Group Project</title>
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-    <script>
-        function redirectToBasicHome() {
-            window.location.href = "{{ url_for('basic_user_home') }}";
-        }
-    </script>
 </head>
 
 <body class="forms">
@@ -36,9 +31,13 @@
     <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
 
     <!-- Signature Preview -->
-    <img id="signaturePreview" src="" alt="No Signature Uploaded" style="max-width: 200px; display: none;">
+    <img id="signaturePreview" src="" alt="No Signature Uploaded" style="max-width: 300px; display: none;">
 
     <script>
+        function redirectToBasicHome() {
+            window.location.href = "{{ url_for('basic_user_home') }}";
+        }
+        
         async function uploadSignature() {
             const fileInput = document.getElementById("signatureInput");
             if (fileInput.files.length === 0) {
