@@ -37,6 +37,9 @@
         function redirectToDeleteUser() {
             window.location.href = "{{ url_for('admin_delete_user') }}";
         }
+        function redirectToAdminForms() {
+            window.location.href = "{{ url_for('admin_user_forms') }}";
+        }
     </script>
 
 </head>
@@ -50,6 +53,7 @@
         <button class="admin-btn" onclick="redirectToUserView()">View Users</button><br>
         <button class="admin-btn" onclick="redirectToUpdateUser()">Update Users</button><br>
         <button class="admin-btn" onclick="redirectToDeleteUser()">Delete Users</button><br>
+        <button class="admin-btn" onclick="redirectToAdminForms()">View Users Forms</button><br>
     </div>
 
 </body>
