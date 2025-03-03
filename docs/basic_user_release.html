@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project.">
+    <meta name="keywords" content="swan river, group project, cosc 4353">
+    <meta property="og:title" content="Swan River Group Project">
+    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+
+    <title>Swan River Group Project</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <script>
+        function redirectToBasicHome() {
+            window.location.href = "{{ url_for('basic_user_home') }}";
+        }
+    </script>
+</head>
+
+<body class="forms">
+    <h1><u>Authorization to Release Educational Records</u></h1>
+
+    <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
+
+    <input type="file" id="signatureInput" accept="image/png, image/jpeg">
+    <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>
+    <br>
+    <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
+
+    <!-- Signature Preview -->
+    <img id="signaturePreview" src="" alt="No Signature Uploaded" style="max-width: 200px; display: none;">
+
+    <script>
+        async function uploadSignature() {
+            const fileInput = document.getElementById("signatureInput");
+            if (fileInput.files.length === 0) {
+                alert("Please select a signature file.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("signature", fileInput.files[0]);
+
+            const response = await fetch("/upload_signature", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.signature_url) {
+                document.getElementById("signaturePreview").src = data.signature_url;
+                document.getElementById("signaturePreview").style.display = "block";
+                alert("Signature uploaded successfully!");
+            } else {
+                alert("Error: " + data.error);
+            }
+        }
+    </script>
+</body>
+</html>
