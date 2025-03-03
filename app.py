@@ -207,7 +207,12 @@ def basic_user_forms():
 def basic_user_release():
     if 'user' not in session:
         return redirect(url_for('index'))
-    return render_template("basic_user_release.html", user=session['user'])
+    # Fetch user's signature from the database
+    email = session['user']['email']
+    user = User.query.filter_by(email=email).first()
+    # Get the signature URL (if exists)
+    signature_url = user.signature_url if user and user.signature_url else ""
+    return render_template("basic_user_release.html", user=session['user'], signature_url=signature_url)
 
 # Admin Routes
 @app.route('/admin_home')
