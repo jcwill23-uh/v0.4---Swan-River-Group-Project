@@ -33,7 +33,9 @@
     <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
 
     <!-- Signature Preview -->
-    <img id="signaturePreview" src="" alt="No Signature Uploaded" style="max-width: 300px; display: none;">
+    <img id="signaturePreview" src="{{ signature_url }}" 
+     alt="No Signature Uploaded" 
+     style="max-width: 300px; display: {% if signature_url %}'block'{% else %}'none'{% endif %};">
 
     <script>
         function redirectToBasicHome() {
@@ -60,8 +62,8 @@
 
             const data = await response.json();
             if (response.ok && data.signature_url) {
-                // Update the preview image
-                previewImage.src = data.signature_url + "?" + new Date().getTime(); // Prevents caching
+                // Update image preview
+                previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Prevents caching
                 previewImage.style.display = "block";
 
                 alert("Signature uploaded successfully!");
