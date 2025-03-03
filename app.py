@@ -402,35 +402,47 @@ def upload_user_signature():
     if "user" not in session:
         return jsonify({"error": "User not logged in"}), 401
 
-    user_id = session["user"]["id"]
+    email = session["user"]["email"]
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
     if "signature" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
-    file = request.files["signature"].read()
-
+    file = request.files["signature"]
+    
     try:
-        blob_name = f"user_{user_id}.png"
+        # Ensure file type is allowed
+        if file.filename == "":
+            return jsonify({"error": "Invalid file name"}), 400
+        
+        allowed_extensions = {"png", "jpg", "jpeg"}
+        if file.filename.split(".")[-1].lower() not in allowed_extensions:
+            return jsonify({"error": "Invalid file format. Only PNG, JPG, and JPEG are allowed."}), 400
+
+        blob_name = f"signatures/user_{user.id}.png"
         blob_client = container_client.get_blob_client(blob_name)
 
-        # Check if an old signature exists and delete it
-        if blob_client.exists():
+        # Delete old signature if exists
+        blob_list = container_client.list_blobs(name_starts_with=blob_name)
+        if any(blob_list):
             blob_client.delete_blob()
 
-        # Upload the new signature
-        blob_client.upload_blob(file, overwrite=True)
+        # Upload new signature
+        blob_client.upload_blob(file.read(), overwrite=True)
 
-        # Generate the signature URL
+        # Generate the URL
         signature_url = f"https://{STORAGE_ACCOUNT_NAME}.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
 
-        # Update database with new signature URL
-        user = User.query.get(user_id)
-        if user:
-            user.signature_url = signature_url
-            db.session.commit()
+        # Update database
+        user.signature_url = signature_url
+        db.session.commit()
 
         return jsonify({"message": "Signature uploaded successfully!", "signature_url": signature_url})
 
     except Exception as e:
+        logging.error(f"Error uploading signature: {str(e)}")
         return jsonify({"error": f"Error uploading signature: {str(e)}"}), 500
   
 # Helper functions
