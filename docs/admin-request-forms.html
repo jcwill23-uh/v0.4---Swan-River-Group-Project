@@ -30,6 +30,42 @@
 <body class="normal">
     <div class="welcome">
         <h1>View New Requested Froms</h1><br>
+        <table>
+    <thead>
+        <tr>
+            <th>Student Name</th>
+            <th>PeopleSoft ID</th>
+            <th>Campus</th>
+            <th>Categories</th>
+            <th>Specific Info</th>
+            <th>Release To</th>
+            <th>Purpose</th>
+            <th>Signature</th>
+            <th>Submitted At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in requests %}
+        <tr>
+            <td>{{ request.student_name }}</td>
+            <td>{{ request.peoplesoft_id }}</td>
+            <td>{{ request.campus }}</td>
+            <td>{{ request.categories }}</td>
+            <td>{{ request.specific_info }}</td>
+            <td>{{ request.release_to }}</td>
+            <td>{{ request.purpose }}</td>
+            <td>
+                {% if request.signature_url %}
+                <a href="{{ request.signature_url }}" target="_blank">View Signature</a>
+                {% else %}
+                N/A
+                {% endif %}
+            </td>
+            <td>{{ request.submitted_at }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
       <button class="back" onclick="redirectToAdmin()">Back to Home</button>
     </div>
 
