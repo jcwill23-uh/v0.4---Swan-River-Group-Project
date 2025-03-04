@@ -28,6 +28,9 @@
         function redirectToChangeName() {
             window.location.href = "{{ url_for('basic_user_ssn') }}";
         }
+        function redirectToFormStatus() {
+            window.location.href = "{{ url_for('basic_user_form_status') }}";
+        }
     </script>
 </head>
 
@@ -37,6 +40,8 @@
         <button class="back" onclick="redirectToRecordsRelease()">Authorization to Release Educationsal Records</button>
         <br>
         <button class="back" onclick="redirectToChangeName()">Change of Name and/or Social Security Number</button>
+        <br>
+        <button class="back" onclick="redirectToFormStatus()">Form Submission Status</button>
         <br>
         <button class="back" type="button" onclick="redirectToBasicHome()">Back to Home</button>
     </div>
