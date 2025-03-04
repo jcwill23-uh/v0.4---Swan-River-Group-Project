@@ -45,6 +45,7 @@
         </tr>
     </thead>
     <tbody>
+    {% if requests %}
         {% for request in requests %}
         <tr>
             <td>{{ request.student_name }}</td>
@@ -64,7 +65,13 @@
             <td>{{ request.submitted_at }}</td>
         </tr>
         {% endfor %}
-    </tbody>
+    {% else %}
+        <tr>
+            <td colspan="9">No forms have been submitted yet.</td>
+        </tr>
+    {% endif %}
+</tbody>
+
 </table>
       <button class="back" onclick="redirectToAdmin()">Back to Home</button>
     </div>
