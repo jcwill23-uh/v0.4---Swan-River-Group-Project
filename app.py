@@ -12,6 +12,7 @@ import requests
 import pyodbc
 from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
+from datetime import datetime
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -280,6 +281,23 @@ def basic_user_ssn():
     signature_url = user.signature_url if user and user.signature_url else ""
     return render_template("basic_user_ssn.html", user=session['user'], signature_url=signature_url)
 
+# Function to set time stamp upon form submission
+@app.route("/submit_release_form", methods=["POST"])
+def submit_release_form():
+    if "user" not in session:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    form_data = request.form.to_dict()
+    form_data["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    form_data["status"] = "pending approval"
+
+    # Save to database
+    db.session.add(FormSubmission(**form_data))
+    db.session.commit()
+
+    return jsonify({"message": "Form submitted successfully!"})
+
+
 @app.route('/basic_user_form_status')
 def basic_user_form_status():
     if 'user' not in session:
@@ -287,7 +305,7 @@ def basic_user_form_status():
     # Fetch user's signature from the database
     email = session['user']['email']
     user = User.query.filter_by(email=email).first()
-    return render_template("basic_user_forms.html", user=session['user'])
+    return render_template("basic_user_form_status.html", user=session['user'])
 
 # Admin Routes
 @app.route('/admin_home')
