@@ -125,7 +125,48 @@
         <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
         <!-- WILL NEED TO ADD ROUTING AND FUNCTIONALITY FOR NEXT 2 BUTTONS -->
         <button class ="back">Save For Later</button>
-        <button class ="back">Submit Form</button>
+
+        <!-- When clicked Submit, it should send the form to admin"-->
+        <form id="releaseForm">
+    <!-- Form elements -->
+    <button type="submit" class="back">Submit Form</button>
+</form>
+
+<div id="successMessage" style="display: none; color: green;">Form submitted successfully!</div>
+<div id="errorMessage" style="display: none; color: red;">An error occurred while submitting the form. Please try again.</div>
+
+<script>
+    document.getElementById("releaseForm").addEventListener("submit", async function (event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch("/submit_release_form", {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById("successMessage").style.display = "block";
+                document.getElementById("errorMessage").style.display = "none";
+
+                // Optionally, clear the form or redirect the user
+                this.reset();
+            } else {
+                throw new Error(data.error || "Submission failed");
+            }
+        } catch (error) {
+            console.error("Error submitting form:", error);
+            document.getElementById("successMessage").style.display = "none";
+            document.getElementById("errorMessage").style.display = "block";
+        }
+    });
+</script>
+
+
+        
         <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
     </div>
 
