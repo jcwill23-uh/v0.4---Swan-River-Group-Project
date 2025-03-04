@@ -73,6 +73,61 @@ class User(db.Model):
     status = db.Column(db.String(20), default="active")
     signature_url = db.Column(db.String(255), nullable=True)
 
+from datetime import datetime
+
+# Release Form Request Model
+class ReleaseFormRequest(db.Model):
+    __tablename__ = 'release_form_request'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    student_name = db.Column(db.String(100), nullable=False)
+    peoplesoft_id = db.Column(db.String(10), nullable=False)
+    password = db.Column(db.String(10), nullable=False)
+    campus = db.Column(db.String(50), nullable=False)
+    categories = db.Column(db.String(255), nullable=False)  # Comma-separated categories
+    specific_info = db.Column(db.String(255), nullable=False)  # Comma-separated specific info
+    release_to = db.Column(db.String(255), nullable=False)
+    purpose = db.Column(db.String(255), nullable=False)  # Comma-separated purposes
+    signature_url = db.Column(db.String(255), nullable=True)
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Route to handle form submission
+@app.route('/submit_release_form', methods=['POST'])
+def submit_release_form():
+    try:
+        # Gather form data
+        data = request.form
+        student_name = data.get('studentName').strip()
+        peoplesoft_id = data.get('peoplesoftID').strip()
+        password = data.get('password').strip()
+        campus = data.get('campus').strip()
+        categories = ','.join(request.form.getlist('categories'))
+        specific_info = ','.join(request.form.getlist('info'))
+        release_to = data.get('releaseTo').strip()
+        purpose = ','.join(request.form.getlist('purpose'))
+        signature_url = data.get('signature_url', None)
+
+        # Save to database
+        new_request = ReleaseFormRequest(
+            student_name=student_name,
+            peoplesoft_id=peoplesoft_id,
+            password=password,
+            campus=campus,
+            categories=categories,
+            specific_info=specific_info,
+            release_to=release_to,
+            purpose=purpose,
+            signature_url=signature_url
+        )
+        db.session.add(new_request)
+        db.session.commit()
+
+        return jsonify({"message": "Form submitted successfully!"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # Azure AD Configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
 CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
@@ -281,7 +336,10 @@ def admin_user_forms():
 def admin_request_forms():
     if 'user' not in session:
         return redirect(url_for('index'))
-    return render_template('admin-request-forms.html')
+
+    # Fetch all submitted forms
+    requests = ReleaseFormRequest.query.all()
+    return render_template('admin-request-forms.html', requests=requests)
 
 @app.route('/admin_previous_forms')
 def admin_previous_forms():
