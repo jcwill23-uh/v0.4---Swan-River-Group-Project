@@ -31,8 +31,10 @@
             <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
+                <p>First Name: </p>
                 <input type="text" name="first_name" value="{{ user.first_name }}" readonly>
-                
+
+                <p>Middle Name: </p>
                 {% if user.middle_name.strip() %}
                     <!-- Readonly middle name input if it exists -->
                     <input type="text" name="middle_name" value="{{ user.middle_name }}" readonly>
@@ -41,6 +43,7 @@
                     <input type="text" name="middle_name" placeholder="Enter Middle Name">
                 {% endif %}
 
+                <p>Last Name: </p>
                 <input type="text" name="last_name" value="{{ user.last_name }}" readonly>
             </div>
 
