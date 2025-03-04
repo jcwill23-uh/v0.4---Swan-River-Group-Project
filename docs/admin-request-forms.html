@@ -27,10 +27,10 @@
 
 </head>
 
-<body class="normal">
-    <div class="welcome">
+<body class="userList">
+    <div>
         <h1>View New Requested Froms</h1><br>
-        <table>
+        <table id="userTable">
     <thead>
         <tr>
             <th>Student Name</th>
@@ -44,7 +44,7 @@
             <th>Submitted At</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="userTableBody">
     {% if requests %}
         {% for request in requests %}
         <tr>
