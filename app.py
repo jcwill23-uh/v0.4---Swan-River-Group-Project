@@ -176,14 +176,15 @@ def submit_release_form():
         except subprocess.CalledProcessError:
             return jsonify({"error": "PDF generation failed"}), 500
 
-        # Store PDF in Azure Blob Storage
+        # Upload PDF to Azure Blob Storage (Use PDF Storage Account)
         blob_name = f"release_forms/form_{new_request.id}.pdf"
-        blob_client = container_client.get_blob_client(blob_name)
-
+        blob_client = pdf_container_client.get_blob_client(blob_name)
+        
         with open(pdf_path, "rb") as data:
             blob_client.upload_blob(data, overwrite=True)
-
-        new_request.pdf_url = f"https://{STORAGE_ACCOUNT_NAME}.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
+        
+        # Store PDF URL in the database (Using PDF Storage)
+        new_request.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
         db.session.commit()
 
         return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
@@ -644,12 +645,21 @@ def admin_get_pdf(form_id):
     return redirect(form.pdf_url)
 
 # Azure Blob Storage Configuration - USER'S SIGNATURE PHOTO
-AZURE_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=usersignatures;AccountKey=rGwYQGqikAfq0XDTasLRbd5HTQkbVW2s8NClGZ9NGdCknqdp8MBGEo8/WEdd/GO205SYcwyOz+cL+ASt/PQdPQ==;EndpointSuffix=core.windows.net"
-CONTAINER_NAME = "signatures"
+SIGNATURE_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=usersignatures;AccountKey=rGwYQGqikAfq0XDTasLRbd5HTQkbVW2s8NClGZ9NGdCknqdp8MBGEo8/WEdd/GO205SYcwyOz+cL+ASt/PQdPQ==;EndpointSuffix=core.windows.net"
+SIGNATURE_CONTAINER_NAME = "signatures"
 STORAGE_ACCOUNT_NAME = "usersignatures"
 
-blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
-container_client = blob_service_client.get_container_client(CONTAINER_NAME)
+# Azure Blob Storage Configuration - PDF's
+PDF_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=swanriverpdfs;AccountKey=ngToSF78m/0QeZVrW6cgw4xbRfhC+5AsuLJzB0vXoLroL7diVT59uvpIiklgcpc7UqyVHjVH9k5q+AStzdWBMw==;EndpointSuffix=core.windows.net"
+PDF_CONTAINER_NAME = "releaseforms"
+
+# Initialize Azure Blob Clients
+signature_blob_service = BlobServiceClient.from_connection_string(SIGNATURE_STORAGE_CONNECTION_STRING)
+pdf_blob_service = BlobServiceClient.from_connection_string(PDF_STORAGE_CONNECTION_STRING)
+
+# Container Clients
+signature_container_client = signature_blob_service.get_container_client(SIGNATURE_CONTAINER_NAME)
+pdf_container_client = pdf_blob_service.get_container_client(PDF_CONTAINER_NAME)
 
 # Upload user signature to Azure Blob Storage
 @app.route('/upload_signature', methods=['POST'])
