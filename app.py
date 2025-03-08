@@ -163,6 +163,10 @@ def submit_release_form():
         db.session.add(new_request)
         db.session.commit()
 
+        user = User.query.filter_by(email=session["user"]["email"]).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
         # Generate PDF
         pdf_path = f"/mnt/data/form_{new_request.id}.pdf"
         tex_content = generate_latex_content(new_request, user)
