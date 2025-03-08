@@ -165,7 +165,7 @@ def submit_release_form():
 
         # Generate PDF
         pdf_path = f"/mnt/data/form_{new_request.id}.pdf"
-        tex_content = generate_latex_content(new_request)
+        tex_content = generate_latex_content(new_request, user)
         tex_file_path = f"/mnt/data/form_{new_request.id}.tex"
 
         with open(tex_file_path, "w") as tex_file:
