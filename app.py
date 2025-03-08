@@ -157,7 +157,7 @@ def submit_release_form():
             specific_info=specific_info,
             release_to=release_to,
             purpose=purpose,
-            signature_url=signature_url
+            signature_url=signature_url,
             submitted_at=None if not is_final_submission else datetime.utcnow()
         )
         db.session.add(new_request)
@@ -381,11 +381,11 @@ def generate_pdf(form_id):
 
     # Save to database (assuming we store the file in Azure)
     blob_name = f"release_forms/form_{form_id}.pdf"
-    blob_client = container_client.get_blob_client(blob_name)
+    blob_client = pdf_container_client.get_blob_client(blob_name)
     with open(pdf_file_path, "rb") as data:
         blob_client.upload_blob(data, overwrite=True)
 
-    form.pdf_url = f"https://{STORAGE_ACCOUNT_NAME}.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
+    form.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
     db.session.commit()
 
     return send_file(pdf_file_path, as_attachment=True)
@@ -687,7 +687,7 @@ def upload_user_signature():
             return jsonify({"error": "Invalid file format. Only PNG, JPG, and JPEG are allowed."}), 400
 
         blob_name = f"signatures/user_{user.id}.png"
-        blob_client = container_client.get_blob_client(blob_name)
+        blob_client = signature_container_client.get_blob_client(blob_name)
 
         # Delete old signature if exists
         blob_list = container_client.list_blobs(name_starts_with=blob_name)
