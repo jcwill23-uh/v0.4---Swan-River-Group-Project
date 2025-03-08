@@ -147,7 +147,7 @@ def submit_release_form():
         specific_info = ','.join(request.form.getlist('info'))
         release_to = (data.get('releaseTo') or "").strip()
         purpose = ','.join(request.form.getlist('purpose'))
-        signature_url = data.get('signature_url', None)
+        signature_url = data.get('signature_url', None) or "/home/signatures/default-signature.png"
 
         # Save form request in database
         new_request = ReleaseFormRequest(
@@ -451,7 +451,7 @@ def generate_latex_content(form, user):
     
     \\section*{{Signature}}
     \\begin{{center}}
-        \\IfFileExists{{{signature_path}}}{{\\includegraphics[width=0.3\\textwidth]{{{signature_path}}}}}{{\\textbf{{No signature on file.}}}}
+        \IfFileExists{{{form.signature_url}}}{{\includegraphics[width=0.3\textwidth]{{{form.signature_url}}}}}{{No signature on file.}}
     \\end{{center}}
     
     \\vfill
