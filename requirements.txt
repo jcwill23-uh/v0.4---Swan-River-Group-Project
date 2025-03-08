@@ -10,3 +10,4 @@ gunicorn
 simplejson
 azure-storage-blob
 pandas
+pygments
