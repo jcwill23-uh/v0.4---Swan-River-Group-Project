@@ -414,7 +414,12 @@ def generate_pdf(form_id):
 # Generate latex content for release form
 def generate_latex_content(form, user):
     # Ensure signature file path is valid
-    signature_path = form.signature_url if form.signature_url else "/mnt/data/default-signature.png"
+    if form.signature_url and form.signature_url.strip():
+        signature_path = form.signature_url
+    else:
+        signature_path = "/mnt/data/default-signature.png"  # Ensure a default exists
+
+    print(f"Using signature path: {signature_path}")  # Debugging output
 
     latex_content = f"""
     \\documentclass{{article}}
@@ -446,7 +451,7 @@ def generate_latex_content(form, user):
     
     \\section*{{Signature}}
     \\begin{{center}}
-        \\IfFileExists{{{signature_path}}}{{\\includegraphics[width=0.3\\textwidth]{{{signature_path}}}}}{{No signature on file.}}
+        \\IfFileExists{{{signature_path}}}{{\\includegraphics[width=0.3\\textwidth]{{{signature_path}}}}}{{\\textbf{{No signature on file.}}}}
     \\end{{center}}
     
     \\vfill
