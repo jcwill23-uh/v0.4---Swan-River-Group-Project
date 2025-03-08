@@ -136,6 +136,7 @@ def submit_release_form():
     try:
         # Gather form data
         data = request.form
+        is_final_submission = data.get("final_submission") == "true";
         student_name = data.get('studentName').strip()
         peoplesoft_id = data.get('peoplesoftID').strip()
         password = data.get('password').strip()
@@ -157,11 +158,35 @@ def submit_release_form():
             release_to=release_to,
             purpose=purpose,
             signature_url=signature_url
+            submitted_at=None if not is_final_submission else datetime.utcnow()
         )
         db.session.add(new_request)
         db.session.commit()
 
-        return jsonify({"message": "Form submitted successfully!"}), 200
+        # Generate PDF
+        pdf_path = f"/mnt/data/form_{new_request.id}.pdf"
+        tex_content = generate_latex_content(new_request)
+        tex_file_path = f"/mnt/data/form_{new_request.id}.tex"
+
+        with open(tex_file_path, "w") as tex_file:
+            tex_file.write(tex_content)
+
+        try:
+            subprocess.run(["pdflatex", "-output-directory", "/mnt/data", tex_file_path], check=True)
+        except subprocess.CalledProcessError:
+            return jsonify({"error": "PDF generation failed"}), 500
+
+        # Store PDF in Azure Blob Storage
+        blob_name = f"release_forms/form_{new_request.id}.pdf"
+        blob_client = container_client.get_blob_client(blob_name)
+
+        with open(pdf_path, "rb") as data:
+            blob_client.upload_blob(data, overwrite=True)
+
+        new_request.pdf_url = f"https://{STORAGE_ACCOUNT_NAME}.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
+        db.session.commit()
+
+        return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
