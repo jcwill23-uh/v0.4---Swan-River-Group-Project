@@ -137,7 +137,7 @@ def submit_release_form():
         # Gather form data
         data = request.form
         is_final_submission = data.get("final_submission") == "true";
-        student_name = data.get('studentName').strip()
+        student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
         peoplesoft_id = data.get('peoplesoftID').strip()
         password = data.get('password').strip()
         campus = data.get('campus').strip()
