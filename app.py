@@ -171,7 +171,7 @@ def submit_release_form():
             return jsonify({"error": "User not found"}), 404
 
         # Ensure the directory exists
-        pdf_dir = "/mnt/data"
+        pdf_dir = "/home/pdf_files/"
         if not os.path.exists(pdf_dir):
             os.makedirs(pdf_dir)  # Create directory if it doesn't exist
 
@@ -415,11 +415,11 @@ def generate_pdf(form_id):
 def generate_latex_content(form, user):
     # Ensure signature file path is valid
     if form.signature_url and form.signature_url.strip():
-        signature_path = form.signature_url
+        signature_path = form.signature_url  # If signature exists, use it
     else:
-        signature_path = "/mnt/data/default-signature.png"  # Ensure a default exists
+        signature_path = "/home/signatures/default-signature.png"  # Use default
 
-    print(f"Using signature path: {signature_path}")  # Debugging output
+    print(f"Using signature path: {signature_path}")  # Debugging
 
     latex_content = f"""
     \\documentclass{{article}}
@@ -451,7 +451,7 @@ def generate_latex_content(form, user):
     
     \\section*{{Signature}}
     \\begin{{center}}
-        \IfFileExists{{{form.signature_url}}}{{\includegraphics[width=0.3\textwidth]{{{form.signature_url}}}}}{{No signature on file.}}
+        \\IfFileExists{{{signature_path}}}{{\\includegraphics[width=0.3\\textwidth]{{{signature_path}}}}}{{\\textbf{{No signature on file.}}}}
     \\end{{center}}
     
     \\vfill
