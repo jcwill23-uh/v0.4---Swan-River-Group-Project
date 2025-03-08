@@ -134,20 +134,22 @@ class UserSignature(db.Model):
 @app.route('/submit_release_form', methods=['POST'])
 def submit_release_form():
     try:
-        # Gather form data
+        import os
+
         data = request.form
-        is_final_submission = data.get("final_submission") == "true";
+        is_final_submission = data.get("final_submission") == "true"
+
         student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
-        peoplesoft_id = data.get('peoplesoftID').strip()
-        password = data.get('password').strip()
-        campus = data.get('campus').strip()
+        peoplesoft_id = (data.get('peoplesoftID') or "").strip()
+        password = (data.get('password') or "").strip()
+        campus = (data.get('campus') or "").strip()
         categories = ','.join(request.form.getlist('categories'))
         specific_info = ','.join(request.form.getlist('info'))
-        release_to = data.get('releaseTo').strip()
+        release_to = (data.get('releaseTo') or "").strip()
         purpose = ','.join(request.form.getlist('purpose'))
         signature_url = data.get('signature_url', None)
 
-        # Save to database
+        # Save form request in database
         new_request = ReleaseFormRequest(
             student_name=student_name,
             peoplesoft_id=peoplesoft_id,
@@ -163,31 +165,38 @@ def submit_release_form():
         db.session.add(new_request)
         db.session.commit()
 
+        # Fetch User Object Before PDF Generation
         user = User.query.filter_by(email=session["user"]["email"]).first()
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        # Generate PDF
-        pdf_path = f"/mnt/data/form_{new_request.id}.pdf"
-        tex_content = generate_latex_content(new_request, user)
-        tex_file_path = f"/mnt/data/form_{new_request.id}.tex"
+        # Ensure the directory exists
+        pdf_dir = "/mnt/data"
+        if not os.path.exists(pdf_dir):
+            os.makedirs(pdf_dir)  # Create directory if it doesn't exist
 
+        # Define file paths
+        tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
+        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
+
+        # Write LaTeX content to the file
         with open(tex_file_path, "w") as tex_file:
-            tex_file.write(tex_content)
+            tex_file.write(generate_latex_content(new_request, user))
 
+        # Run pdflatex to generate PDF
         try:
-            subprocess.run(["pdflatex", "-output-directory", "/mnt/data", tex_file_path], check=True)
+            subprocess.run(["pdflatex", "-output-directory", pdf_dir, tex_file_path], check=True)
         except subprocess.CalledProcessError:
             return jsonify({"error": "PDF generation failed"}), 500
 
-        # Upload PDF to Azure Blob Storage (Use PDF Storage Account)
+        # Upload PDF to Azure Blob Storage
         blob_name = f"release_forms/form_{new_request.id}.pdf"
         blob_client = pdf_container_client.get_blob_client(blob_name)
-        
-        with open(pdf_path, "rb") as data:
+
+        with open(pdf_file_path, "rb") as data:
             blob_client.upload_blob(data, overwrite=True)
-        
-        # Store PDF URL in the database (Using PDF Storage)
+
+        # Store PDF URL in the database
         new_request.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
         db.session.commit()
 
@@ -195,7 +204,6 @@ def submit_release_form():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 # Azure AD Configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
