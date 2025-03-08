@@ -93,6 +93,7 @@ class ReleaseFormRequest(db.Model):
     release_to = db.Column(db.String(255), nullable=False)
     purpose = db.Column(db.String(255), nullable=False)  # Comma-separated purposes
     signature_url = db.Column(db.String(255), nullable=True)
+    pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # Request Form Model
@@ -609,6 +610,13 @@ def all_users():
         for user in users
     ])
 
+# Admin retrieve submitted PDF's
+@app.route('/admin_get_pdf/<int:form_id>', methods=['GET'])
+def admin_get_pdf(form_id):
+    form = ReleaseFormRequest.query.get(form_id)
+    if not form or not form.pdf_url:
+        return jsonify({"error": "PDF not found"}), 404
+    return redirect(form.pdf_url)
 
 # Azure Blob Storage Configuration - USER'S SIGNATURE PHOTO
 AZURE_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=usersignatures;AccountKey=rGwYQGqikAfq0XDTasLRbd5HTQkbVW2s8NClGZ9NGdCknqdp8MBGEo8/WEdd/GO205SYcwyOz+cL+ASt/PQdPQ==;EndpointSuffix=core.windows.net"
