@@ -185,9 +185,18 @@ def submit_release_form():
 
         # Run pdflatex to generate PDF
         try:
-            subprocess.run(["pdflatex", "-output-directory", pdf_dir, tex_file_path], check=True)
-        except subprocess.CalledProcessError:
-            return jsonify({"error": "PDF generation failed"}), 500
+            result = subprocess.run(
+                ["/usr/bin/pdflatex", "-output-directory", "/mnt/data/", tex_file_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True
+            )
+            print("PDF Generation Output:", result.stdout.decode())  # Debugging
+        except subprocess.CalledProcessError as e:
+            print("PDF Generation Error:", e.stderr.decode())  # Debugging
+            return jsonify({"error": f"PDF generation failed: {e.stderr.decode()}"}), 500
+        except FileNotFoundError:
+            return jsonify({"error": "pdflatex not found. Make sure LaTeX is installed."}), 500
 
         # Upload PDF to Azure Blob Storage
         blob_name = f"release_forms/form_{new_request.id}.pdf"
