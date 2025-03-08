@@ -27,7 +27,7 @@
 
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
     <div class="release-form-container">
-        <form>
+        <form id="releaseForm">
             <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
@@ -113,6 +113,9 @@
             <!-- Student Name -->
             <h3>Student Name:</h3>
             <input type="text" name="studentName" placeholder="Enter Student Name">
+
+            <h3>Date:</h3>
+            <input type="text" name="submission_date" id="submission_date" readonly>
         </form>
     </div>
     <!-- END OF FORM INFORMATION -->
@@ -143,12 +146,12 @@
     <div class="button-container">
         <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
         <!-- WILL NEED TO ADD ROUTING AND FUNCTIONALITY FOR NEXT 2 BUTTONS -->
-        <button class ="back">Save For Later</button>
+        <button class ="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button>
 
         <!-- When clicked Submit, it should send the form to admin"-->
         <form id="releaseForm" action="/submit_release_form" method="POST">
     <!-- Form elements -->
-    <button type="submit" class="back">Submit Form</button>
+    <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
 </form>
 
 <div id="successMessage" style="display: none; color: green;">Form submitted successfully!</div>
@@ -290,36 +293,56 @@
         }
         
         async function uploadSignature() {
-        const fileInput = document.getElementById("signatureInput");
-        const previewImage = document.getElementById("signaturePreview");
-
-        if (fileInput.files.length === 0) {
-            alert("Please select a signature file.");
-            return;
+            const fileInput = document.getElementById("signatureInput");
+            const previewImage = document.getElementById("signaturePreview");
+    
+            if (fileInput.files.length === 0) {
+                alert("Please select a signature file.");
+                return;
+            }
+    
+            const formData = new FormData();
+            formData.append("signature", fileInput.files[0]);
+    
+            try {
+                const response = await fetch("/upload_signature", {
+                    method: "POST",
+                    body: formData
+                });
+    
+                const data = await response.json();
+                if (response.ok && data.signature_url) {
+                    // Update image preview
+                    previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Prevents caching
+                    previewImage.style.display = "block";
+    
+                    alert("Signature uploaded successfully!");
+                } else {
+                    alert("Upload failed: " + data.error);
+                }
+            } catch (error) {
+                console.error("Error uploading signature:", error);
+                alert("An unexpected error occurred. Please try again.");
+            }
         }
 
-        const formData = new FormData();
-        formData.append("signature", fileInput.files[0]);
+    document.getElementById("submission_date").value = new Date().toLocaleDateString();
+    
+    async function handleFormSubmission(isFinalSubmission) {
+        const formData = new FormData(document.getElementById("releaseForm"));
+        formData.append("final_submission", isFinalSubmission);
 
         try {
-            const response = await fetch("/upload_signature", {
-                method: "POST",
-                body: formData
-            });
-
+            const response = await fetch("/submit_release_form", { method: "POST", body: formData });
             const data = await response.json();
-            if (response.ok && data.signature_url) {
-                // Update image preview
-                previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Prevents caching
-                previewImage.style.display = "block";
 
-                alert("Signature uploaded successfully!");
+            if (response.ok) {
+                alert(isFinalSubmission ? "Form submitted successfully!" : "Form saved for later.");
             } else {
-                alert("Upload failed: " + data.error);
+                alert("Error: " + data.error);
             }
         } catch (error) {
-            console.error("Error uploading signature:", error);
-            alert("An unexpected error occurred. Please try again.");
+            alert("An error occurred.");
         }
     }
     </script>
