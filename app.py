@@ -363,6 +363,49 @@ def generate_pdf(form_id):
 
     return send_file(pdf_file_path, as_attachment=True)
 
+# Generate latex content for release form
+def generate_latex_content(form, user):
+    latex_content = f"""
+    \\documentclass{{article}}
+    \\usepackage{{graphicx}}
+    \\usepackage{{datetime}}
+    
+    \\begin{{document}}
+    
+    \\title{{Authorization to Release Educational Records}}
+    \\author{{University of Houston}}
+    \\date{{\\today}}
+    
+    \\maketitle
+    
+    \\noindent
+    I \\textbf{{{form.student_name}}}, hereby voluntarily authorize officials in the University of Houston - {form.campus} to disclose personally identifiable information from my educational records.
+    
+    \\section*{{Categories of Information to Release}}
+    {form.categories}
+    
+    \\section*{{Specifically Authorized Information}}
+    {form.specific_info}
+    
+    \\section*{{Release To}}
+    \\textbf{{{form.release_to}}} for the purpose of \\textbf{{{form.purpose}}}.
+    
+    \\section*{{Password for Phone Verification}}
+    {form.password}
+    
+    \\section*{{Signature}}
+    \\begin{{center}}
+        \\includegraphics[width=0.3\\textwidth]{{{form.signature_url}}}
+    \\end{{center}}
+    
+    \\vfill
+    \\noindent
+    Date: \\today
+    
+    \\end{{document}}
+    """
+    return latex_content
+
 # Admin Routes
 @app.route('/admin_home')
 def admin_home():
