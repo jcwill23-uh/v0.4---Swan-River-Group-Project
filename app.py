@@ -113,7 +113,7 @@ class Approval(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('request_form.id'), nullable=False)
-    approver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    approver_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable=False)
     status = db.Column(db.String(20), default="pending")
     comments = db.Column(db.Text, nullable=True)
     approved_at = db.Column(db.DateTime, nullable=True)
