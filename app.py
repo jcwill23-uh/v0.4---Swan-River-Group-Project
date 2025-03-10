@@ -170,10 +170,21 @@ def submit_release_form():
         db.session.add(new_request)
         db.session.commit()
 
+        # Create an approval record for the new request
+        new_approval = Approval(
+            request_id=new_request.id,
+            approver_id=None,  # Set to None or the ID of the approver if applicable
+            status="pending",  # Initial status
+            comments=None,  # Optional comments
+            approved_at=None  # Set to None initially
+        )
+        db.session.add(new_approval)
+        db.session.commit()
+
         # Fetch User Object Before PDF Generation
         user = User.query.filter_by(email=session["user"]["email"]).first()
         if not user:
-            return jsonify({"error": "User not found"}), 404
+            return jsonify({"error": "User  not found"}), 404
 
         # Ensure the directory exists
         pdf_dir = "/home/pdf_files/"
@@ -218,7 +229,6 @@ def submit_release_form():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 # Azure AD Configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
 CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
