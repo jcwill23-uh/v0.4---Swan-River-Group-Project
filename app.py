@@ -105,7 +105,6 @@ class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
     
     id = db.Column(db.Integer, primary_key=True)
-    request_id = db.Column(db.Integer, db.ForeignKey('request_form.id'), nullable=False)
     approver_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable=False)
     status = db.Column(db.String(20), default="pending")
     comments = db.Column(db.Text, nullable=True)
@@ -241,7 +240,6 @@ def submit_release_form():
         is_final_submission = data.get("final_submission") == "true"
 
         # Extract form data
-        request_id = data.get('request_id')
         approver_id = data.get('approver_id')
         status = data.get('status', 'pending')
         comments = data.get('comments')
@@ -249,7 +247,6 @@ def submit_release_form():
 
         # Save form request in database
         new_request = ReleaseFormRequest(
-            request_id=request_id,
             approver_id=approver_id,
             status=status,
             comments=comments,
