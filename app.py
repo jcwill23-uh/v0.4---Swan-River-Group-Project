@@ -140,6 +140,8 @@ class UserSignature(db.Model):
 def submit_release_form():
     try:
         import os
+        from datetime import datetime
+        from flask import request
 
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
@@ -171,15 +173,20 @@ def submit_release_form():
         db.session.commit()
 
         # Create an approval record for the new request
-        new_approval = Approval(
-            request_id=new_request.id,
-            approver_id=None,  # Set to None or the ID of the approver if applicable
-            status="pending",  # Initial status
-            comments=None,  # Optional comments
-            approved_at=None  # Set to None initially
-        )
-        db.session.add(new_approval)
-        db.session.commit()
+        approver_id = get_approver_id()  # Replace with your logic to get approver_id
+
+        if approver_id is not None:
+            new_approval = Approval(
+                request_id=new_request.id,
+                approver_id=approver_id,  # Set to the ID of the approver
+                status="pending",  # Initial status
+                comments=None,  # Optional comments
+                approved_at=None  # Set to None initially
+            )
+            db.session.add(new_approval)
+            db.session.commit()
+        else:
+            return "Error: approver_id cannot be NULL", 400
 
         # Fetch User Object Before PDF Generation
         user = User.query.filter_by(email=session["user"]["email"]).first()
