@@ -381,7 +381,7 @@ def basic_user_form_status():
     return render_template("basic_user_form_status.html", user=session['user'])
 
 # Generate PDF upon submission
-@app.route('/generate_pdf/<int:form_id>', methods=['GET'])
+'''@app.route('/generate_pdf/<int:form_id>', methods=['GET'])
 def generate_pdf(form_id):
     # Retrieve form data
     form = ReleaseFormRequest.query.get(form_id)
@@ -414,7 +414,43 @@ def generate_pdf(form_id):
     form.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
     db.session.commit()
 
-    return send_file(pdf_file_path, as_attachment=True)
+    return send_file(pdf_file_path, as_attachment=True)'''
+
+@app.route('/generate_pdf/<int:form_id>', methods=['GET'])
+def generate_pdf(form_id):
+    # Retrieve form data
+    form = ReleaseFormRequest.query.get(form_id)
+    if not form:
+        return jsonify({"error": "Form not found"}), 404
+
+    user = User.query.filter_by(email=session["user"]["email"]).first()
+    if not user:
+        return jsonify({"error": "User  not found"}), 404
+
+    # Prepare data for LaTeX
+    tex_file_path = f"/mnt/data/form_{form_id}.tex"
+    with open(tex_file_path, "w") as tex_file:
+        tex_file.write(generate_latex_content(form, user))
+
+    # Compile LaTeX to PDF using Makefile
+    try:
+        subprocess.run(["make", f"form_{form_id}.pdf"], check=True, cwd="/mnt/data")
+    except subprocess.CalledProcessError as e:
+        return jsonify({"error": f"PDF generation failed: {e}"}), 500
+
+    pdf_file_path = f"/mnt/data/form_{form_id}.pdf"
+
+    # Save to database (assuming we store the file in Azure)
+    blob_name = f"release_forms/form_{form_id}.pdf"
+    blob_client = pdf_container_client.get_blob_client(blob_name)
+    with open(pdf_file_path, "rb") as data:
+        blob_client.upload_blob(data, overwrite=True)
+
+    form.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+    db.session.commit()
+
+    # Return the PDF URL instead of sending the file
+    return jsonify({"pdf_url": form.pdf_url})
 
 @app.route('/admin/delete_request/<int:request_id>', methods=['DELETE'])
 def delete_request(request_id):
