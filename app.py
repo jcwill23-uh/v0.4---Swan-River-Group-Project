@@ -78,7 +78,7 @@ class User(db.Model):
     signature_url = db.Column(db.String(255), nullable=True)
 
 from datetime import datetime
-
+'''
 # Release Form Request Model
 class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
@@ -100,6 +100,16 @@ class ReleaseFormRequest(db.Model):
 
     def as_json(self):
         return jsonify({c.name: getattr(self, c.name) for c in self.__table__.columns})
+'''
+class ReleaseFormRequest(db.Model):
+    __tablename__ = 'release_form_request'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('request_form.id'), nullable=False)
+    approver_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable=False)
+    status = db.Column(db.String(20), default="pending")
+    comments = db.Column(db.Text, nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
 
 # Request Form Model
 class RequestForm(db.Model):
