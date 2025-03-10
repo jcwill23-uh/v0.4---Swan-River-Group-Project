@@ -99,7 +99,7 @@ class ReleaseFormRequest(db.Model):
     #DELETE THIS IF IT CAUSES PROBLEMS
 
     def as_json(self):
-        return flask.jsonify({c.name: getattr(self, c.name) for c in self.__table__.columns})
+        return jsonify({c.name: getattr(self, c.name) for c in self.__table__.columns})
 
 # Request Form Model
 class RequestForm(db.Model):
