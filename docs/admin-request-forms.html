@@ -68,7 +68,6 @@
             <thead>
                 <tr>
                 <th>ID</th>
-                <th>Request ID</th>
                 <th>Approver ID</th>
                 <th>Status</th>
                 <th>Comments</th>
@@ -80,7 +79,6 @@
                     {% for request in requests %}
                     <tr>
                 <td>{{ request.id }}</td>
-                <td>{{ request.request_id }}</td>
                 <td>{{ request.approver_id }}</td>
                 <td>{{ request.status }}</td>
                 <td>{{ request.comments }}</td>
