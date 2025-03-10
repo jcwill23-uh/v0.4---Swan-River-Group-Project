@@ -463,6 +463,7 @@ def basic_user_form_status():
     # Fetch user's signature from the database
     email = session['user']['email']
     user = User.query.filter_by(email=email).first()
+    requests = ReleaseFormRequest.query.all()
     return render_template("basic_user_form_status.html", user=session['user'])
 
 # Generate PDF upon submission
