@@ -4,19 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="COSC 4353 group project.">
+    <meta name="description" content="Authorization to Release Educational Records">
     <meta name="keywords" content="swan river, group project, cosc 4353">
-    <meta property="og:title" content="Swan River Group Project">
-    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
-    <meta property="og:image" content="/images/swan.jpg">
-    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
-
-    <title>Swan River Group Project</title>
+    <title>Authorization to Release Educational Records</title>
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Cropper.js (CDN) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
@@ -25,10 +19,8 @@
 <body class="forms">
     <h1><u>Authorization to Release Educational Records</u></h1>
 
-    <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
     <div class="release-form-container">
         <form id="releaseForm">
-            <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
                 <p>First Name: </p>
@@ -36,10 +28,8 @@
 
                 <p>Middle Name: </p>
                 {% if user.middle_name.strip() %}
-                    <!-- Readonly middle name input if it exists -->
                     <input type="text" name="middle_name" value="{{ user.middle_name }}" readonly>
                 {% else %}
-                    <!-- Editable middle name input if it's missing -->
                     <input type="text" name="middle_name" placeholder="Enter Middle Name">
                 {% endif %}
 
@@ -47,7 +37,6 @@
                 <input type="text" name="last_name" value="{{ user.last_name }}" readonly>
             </div>
 
-            <!-- UH Campus Selection -->
             <h3>Please select your UH campus below:</h3>
             <div class="selection-group">
                 <label><input type="radio" name="campus" value="Clear Lake"> Clear Lake</label>
@@ -56,7 +45,6 @@
                 <label><input type="radio" name="campus" value="Victoria"> Victoria</label>
             </div>
 
-            <!-- Categories of Information to Release -->
             <h3>Please select what categories of your information to release (One or many):</h3>
             <div class="selection-group">
                 <label><input type="checkbox" name="categories" value="Registrar"> Office of the University Registrar</label>
@@ -69,7 +57,6 @@
                 <input type="text" id="otherCategoryText" style="display: none;" placeholder="Specify other category">
             </div>
 
-            <!-- Specific Disclosure Authorization -->
             <h3>Specifically, I authorize disclosure of the following information or category of information (One or many):</h3>
             <div class="selection-group">
                 <label><input type="checkbox" name="info" value="Advising"> Academic Advising Profile/Information</label>
@@ -85,11 +72,9 @@
                 <input type="text" id="otherInfoText" style="display: none;" placeholder="Specify other information">
             </div>
 
-            <!-- Release Information To -->
             <h3>This information may be released to (Print Name(s) of Individuals To Whom University May Disclose Information):</h3>
             <input type="text" name="releaseTo" placeholder="Enter names">
 
-            <!-- Purpose of Informing -->
             <h3>The above names may be used for the purpose of informing:</h3>
             <div class="selection-group">
                 <label><input type="checkbox" name="purpose" value="Family"> Family</label>
@@ -101,12 +86,10 @@
                 <input type="text" id="otherPurposeText" style="display: none;" placeholder="Specify other purpose">
             </div>
 
-            <!-- Password Requirement -->
             <h3>Please provide a password to obtain information via the phone.</h3>
             <h3>The password should not contain more than ten letters. You must provide the password to the individuals or agencies listed above. The University will not release information to the caller if the caller does not have the password. A new form must be completed to change your password.</h3>
             <input type="text" name="password" placeholder="Enter password" onblur="validatePassword(this)">
 
-            <!-- PeopleSoft ID -->
             <h3>PeopleSoft I.D. Number:</h3>
             <input type="text" name="peoplesoftID" placeholder="7-digit PeopleSoft ID" onblur="validatePeopleSoftID(this)">
 
@@ -114,81 +97,111 @@
             <input type="text" name="submission_date" id="submission_date" readonly>
         </form>
     </div>
-    <!-- END OF FORM INFORMATION -->
 
     <h3>Please upload a picture of your signature below.</h3>
     <input type="file" id="signatureInput" accept="image/png, image/jpeg">
     <br><br>
-    <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>  
-    <!-- Signature Preview -->
+    <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>
+
     <div class="signature-container">
         {% if signature_url %}
-            <img id="signaturePreview" src="{{ signature_url }}" 
-                 alt="Signature Image">
+            <img id="signaturePreview" src="{{ signature_url }}" alt="Signature Image">
         {% else %}
-            <img id="signaturePreview" src="" 
-                 alt="Signature Image" style="display: none;">
+            <img id="signaturePreview" src="" alt="Signature Image" style="display: none;">
         {% endif %}
     </div>
 
-    <!-- Editing Controls -->
     <div id="editControls" style="display: none; text-align: center;">
         <button onclick="rotateImage()">Rotate</button>
         <button onclick="cancelEdit()">Cancel</button>
         <button onclick="saveEditedImage()">Save</button>
     </div>
-    
-    <!-- Edit Photo Button (Hidden when no image) -->
+
     <div class="button-container">
         <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
-        <!-- WILL NEED TO ADD ROUTING AND FUNCTIONALITY FOR NEXT 2 BUTTONS -->
-        <button class ="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button>
+        <button class="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button>
+        <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
+    </div>
 
-        <!-- When clicked Submit, it should send the form to admin"-->
-        <form id="releaseForm" action="/submit_release_form" method="POST">
-    <!-- Form elements -->
-    <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
-</form>
+    <div id="successMessage" style="display: none; color: green;">Form submitted successfully!</div>
+    <div id="errorMessage" style="display: none; color: red;">An error occurred while submitting the form. Please try again.</div>
 
-<div id="successMessage" style="display: none; color: green;">Form submitted successfully!</div>
-<div id="errorMessage" style="display: none; color: red;">An error occurred while submitting the form. Please try again.</div>
-
-<script>
-    document.getElementById("releaseForm").addEventListener("submit", async function (event) {
-        event.preventDefault(); // Prevent default form submission
-
-        const formData = new FormData(this);
-        
-        try {
-            const response = await fetch("/submit_release_form", {
-                method: "POST",
-                body: formData
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                document.getElementById("successMessage").style.display = "block";
-                document.getElementById("errorMessage").style.display = "none";
-
-                // Optionally, clear the form or redirect the user
-                this.reset();
-            } else {
-                throw new Error(data.error || "Submission failed");
-            }
-        } catch (error) {
-            console.error("Error submitting form:", error);
-            document.getElementById("successMessage").style.display = "none";
-            document.getElementById("errorMessage").style.display = "block";
-        }
-    });
-</script>
-
-
-        
-        <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
+    <!-- PDF Viewer -->
+    <div id="pdfContainer" style="display: none;">
+        <h3>Your PDF:</h3>
+        <iframe id="pdfViewer" style="width: 100%; height: 600px;" frameborder="0"></iframe>
     </div>
 
     <script>
+        document.getElementById("releaseForm").addEventListener("submit", async function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch("/submit_release_form", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById("successMessage").style.display = "block";
+                    document.getElementById("errorMessage").style.display = "none";
+
+                    // Display the PDF in the iframe
+                    const pdfUrl = data.pdf_url;
+                    const pdfViewer = document.getElementById("pdfViewer");
+                    pdfViewer.src = pdfUrl; // Set the source of the iframe to the PDF URL
+                    document.getElementById("pdfContainer").style.display = "block"; // Show the PDF container
+
+                    // Optionally, clear the form or redirect the user
+                    this.reset();
+                } else {
+                    throw new Error(data.error || "Submission failed");
+                }
+            } catch (error) {
+                console.error("Error submitting form:", error);
+                document.getElementById("successMessage").style.display = "none";
+                document.getElementById("errorMessage").style.display = "block";
+            }
+        });
+
+        document.getElementById("submission_date").value = new Date().toLocaleDateString();
+
+        async function uploadSignature() {
+            const fileInput = document.getElementById("signatureInput");
+            const previewImage = document.getElementById("signaturePreview");
+
+            if (fileInput.files.length === 0) {
+                alert("Please select a signature file.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("signature", fileInput.files[0]);
+
+            try {
+                const response = await fetch("/upload_signature", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok && data.signature_url) {
+                    previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Prevents caching
+                    previewImage.style.display = "block";
+                    alert("Signature uploaded successfully!");
+                } else {
+                    alert("Upload failed: " + data.error);
+                }
+            } catch (error) {
+                console.error("Error uploading signature:", error);
+                alert("An unexpected error occurred. Please try again.");
+            }
+        }
+
+        // Additional functions for cropping, rotating, and editing the signature
         let cropper;
         const previewImage = document.getElementById("signaturePreview");
         const editControls = document.getElementById("editControls");
@@ -196,7 +209,7 @@
         const fileInput = document.getElementById("signatureInput");
 
         let originalImageSrc = previewImage.src; // stores original image when opening the editor
-    
+
         // Show Cropper when user selects an image
         fileInput.addEventListener("change", function(event) {
             const file = event.target.files[0];
@@ -210,7 +223,7 @@
                 reader.readAsDataURL(file);
             }
         });
-    
+
         // Toggle Edit Controls
         function toggleEditControls() {
             if (editControls.style.display === "none") {
@@ -221,7 +234,7 @@
                 if (cropper) cropper.destroy();
             }
         }
-    
+
         // Initialize Cropper.js
         function initializeCropper() {
             if (cropper) {
@@ -234,7 +247,7 @@
                 responsive: true,
             });
         }
-    
+
         // Rotate Image
         function rotateImage() {
             if (cropper) {
@@ -250,25 +263,25 @@
             previewImage.src = originalImageSrc; // Restore the original image
             editControls.style.display = "none"; // Hide controls
         }
-    
+
         // Save Edited Image
         async function saveEditedImage() {
             if (!cropper) {
                 alert("Please crop or rotate the image first.");
                 return;
             }
-    
+
             const croppedCanvas = cropper.getCroppedCanvas();
             croppedCanvas.toBlob(async (blob) => {
                 const formData = new FormData();
                 formData.append("signature", blob, "signature.png");
-    
+
                 try {
                     const response = await fetch("/upload_signature", {
                         method: "POST",
                         body: formData
                     });
-    
+
                     const data = await response.json();
                     if (response.ok && data.signature_url) {
                         previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Cache busting
@@ -283,65 +296,9 @@
                 }
             }, "image/png");
         }
-        
-        function redirectToBasicHome() {
-            window.location.href = "{{ url_for('basic_user_home') }}";
-        }
-        
-        async function uploadSignature() {
-            const fileInput = document.getElementById("signatureInput");
-            const previewImage = document.getElementById("signaturePreview");
-    
-            if (fileInput.files.length === 0) {
-                alert("Please select a signature file.");
-                return;
-            }
-    
-            const formData = new FormData();
-            formData.append("signature", fileInput.files[0]);
-    
-            try {
-                const response = await fetch("/upload_signature", {
-                    method: "POST",
-                    body: formData
-                });
-    
-                const data = await response.json();
-                if (response.ok && data.signature_url) {
-                    // Update image preview
-                    previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Prevents caching
-                    previewImage.style.display = "block";
-    
-                    alert("Signature uploaded successfully!");
-                } else {
-                    alert("Upload failed: " + data.error);
-                }
-            } catch (error) {
-                console.error("Error uploading signature:", error);
-                alert("An unexpected error occurred. Please try again.");
-            }
-        }
-
-    document.getElementById("submission_date").value = new Date().toLocaleDateString();
-    
-    async function handleFormSubmission(isFinalSubmission) {
-        const formData = new FormData(document.getElementById("releaseForm"));
-        formData.append("final_submission", isFinalSubmission);
-
-        try {
-            const response = await fetch("/submit_release_form", { method: "POST", body: formData });
-            const data = await response.json();
-
-            if (response.ok) {
-                alert(isFinalSubmission ? "Form submitted successfully!" : "Form saved for later.");
-            } else {
-                alert("Error: " + data.error);
-            }
-        } catch (error) {
-            alert("An error occurred.");
-        }
-    }
     </script>
-    
+
+    <button class="back" onclick="redirectToBasicHome()">Back to Home</button>
 </body>
+
 </html>
