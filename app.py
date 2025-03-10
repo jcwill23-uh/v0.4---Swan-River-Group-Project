@@ -416,6 +416,20 @@ def generate_pdf(form_id):
 
     return send_file(pdf_file_path, as_attachment=True)
 
+@app.route('/admin/delete_request/<int:request_id>', methods=['DELETE'])
+def delete_request(request_id):
+    if "user" not in session or session["user"]["role"] != "admin":
+        return jsonify({"error": "Unauthorized"}), 403
+
+    request_to_delete = ReleaseFormRequest.query.get(request_id)
+    if not request_to_delete:
+        return jsonify({"error": "Request not found"}), 404
+
+    db.session.delete(request_to_delete)
+    db.session.commit()
+
+    return jsonify({"message": "Request deleted successfully!"}), 200
+
 # Generate latex content for release form
 def generate_latex_content(form, user):
     # Ensure signature file path is valid
@@ -744,26 +758,6 @@ def upload_user_signature():
         logging.error(f"Error uploading signature: {str(e)}")
         return jsonify({"error": f"Error uploading signature: {str(e)}"}), 500
 
-@app.route('/admin/get_pdf/<int:form_id>', methods=['GET'])
-def admin_get_pdf(form_id):
-    form = ReleaseFormRequest.query.get(form_id)
-    if not form or not form.pdf_url:
-        return jsonify({"error": "PDF not found"}), 404
-    return redirect(form.pdf_url)
-
-@app.route('/admin/delete_request/<int:request_id>', methods=['DELETE'])
-def delete_request(request_id):
-    if "user" not in session or session["user"]["role"] != "admin":
-        return jsonify({"error": "Unauthorized"}), 403
-
-    request_to_delete = ReleaseFormRequest.query.get(request_id)
-    if not request_to_delete:
-        return jsonify({"error": "Request not found"}), 404
-
-    db.session.delete(request_to_delete)
-    db.session.commit()
-
-    return jsonify({"message": "Request deleted successfully!"}), 200
   
 # Helper functions
 def _build_auth_url(scopes=None, state=None):
