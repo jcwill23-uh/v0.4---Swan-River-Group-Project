@@ -109,6 +109,7 @@ class ReleaseFormRequest(db.Model):
     status = db.Column(db.String(20), default="pending")
     comments = db.Column(db.Text, nullable=True)
     approved_at = db.Column(db.DateTime, nullable=True)
+    signature_url = db.Column(db.String(255), nullable=True)  
 
 # Request Form Model
 class RequestForm(db.Model):
