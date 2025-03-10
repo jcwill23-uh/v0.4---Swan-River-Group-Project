@@ -82,7 +82,7 @@ from datetime import datetime
 # Release Form Request Model
 class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     student_name = db.Column(db.String(100), nullable=False)
     peoplesoft_id = db.Column(db.String(10), nullable=False)
@@ -95,6 +95,11 @@ class ReleaseFormRequest(db.Model):
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    #DELETE THIS IF IT CAUSES PROBLEMS
+
+    def as_json(self):
+        return flask.jsonify({c.name: getattr(self, c.name) for c in self.__table__.columns})
 
 # Request Form Model
 class RequestForm(db.Model):
