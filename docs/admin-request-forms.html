@@ -67,42 +67,25 @@
         <table id="userTable">
             <thead>
                 <tr>
-                    <th>Student Name</th>
-                    <th>PeopleSoft ID</th>
-                    <th>Campus</th>
-                    <th>Categories</th>
-                    <th>Specific Info</th>
-                    <th>Release To</th>
-                    <th>Purpose</th>
-                    <th>Signature</th>
-                    <th>Submitted At</th>
-                    <th>Actions</th>
-                </tr>
+                <th>ID</th>
+                <th>Request ID</th>
+                <th>Approver ID</th>
+                <th>Status</th>
+                <th>Comments</th>
+                <th>Approved At</th>
+            </tr>
             </thead>
             <tbody id="userTableBody">
                 {% if requests %}
                     {% for request in requests %}
                     <tr>
-                        <td>{{ request.student_name }}</td>
-                        <td>{{ request.peoplesoft_id }}</td>
-                        <td>{{ request.campus }}</td>
-                        <td>{{ request.categories }}</td>
-                        <td>{{ request.specific_info }}</td>
-                        <td>{{ request.release_to }}</td>
-                        <td>{{ request.purpose }}</td>
-                        <td>
-                            {% if request.signature_url %}
-                            <a href="{{ request.signature_url }}" target="_blank">View Signature</a>
-                            {% else %}
-                            N/A
-                            {% endif %}
-                        </td>
-                        <td>{{ request.submitted_at }}</td>
-                        <td>
-                            <button onclick="viewPDF({{ request.id }})">View PDF</button>
-                            <button onclick="deleteRequest({{ request.id }})">Delete</button>
-                        </td>
-                    </tr>
+                <td>{{ request.id }}</td>
+                <td>{{ request.request_id }}</td>
+                <td>{{ request.approver_id }}</td>
+                <td>{{ request.status }}</td>
+                <td>{{ request.comments }}</td>
+                <td>{{ request.approved_at }}</td>
+            </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
