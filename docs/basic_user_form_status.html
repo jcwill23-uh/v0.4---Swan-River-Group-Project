@@ -29,9 +29,33 @@
 
 <body class="userList">
     <h1>Form Submission Status</h1>
-    <table class="userTable">
-      
-    </table>
+    <table id="userTable">
+            <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>PeopleSoft ID</th>
+                <th>Form Type</th>
+                <th>Submitted At</th>
+                <th>Approval Status</th>
+            </tr>
+        </thead>
+            <tbody id="userTableBody">
+                {% for form in forms %}
+            <tr>
+                <td>{{ form.student_name }}</td>
+                <td>{{ form.student_id }}</td>
+                <td>{{ form.form_type }}</td>
+                <td>{{ form.submitted_at }}</td>
+                <td>{{ form.approval_status }}</td>
+            </tr>
+            {% endfor %}
+            {% if not forms %}
+            <tr>
+                <td colspan="5">No forms submitted yet.</td>
+            </tr>
+            {% endif %}
+            </tbody>
+        </table>
     <button class="back" onclick="redirectToAdmin()">Back to Home</button>
 </body>
 </html>
