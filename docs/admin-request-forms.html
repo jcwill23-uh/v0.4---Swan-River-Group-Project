@@ -78,6 +78,7 @@
                 <th>Purpose</th>
                 <th>Signature URL</th>
                 <th>PDF URL</th>
+                <th>Action</th>
                 <th>Submitted At</th>
             </tr>
             </thead>
@@ -96,6 +97,10 @@
                 <td>{{ request.purpose }}</td>
                 <td>{{ request.signature_url }}</td>
                 <td>{{ request.pdf_url }}</td>
+                <td class="action-buttons">
+                    <button onclick="approveRequest({{ request.id }})">Approve</button>
+                    <button onclick="declineRequest({{ request.id }})">Decline</button>
+                </td>
                 <td>{{ request.submitted_at }}</td>
             </tr>
                     {% endfor %}
@@ -106,7 +111,17 @@
                 {% endif %}
             </tbody>
         </table>
-        
+        <script>
+        function approveRequest(id) {
+            // Implement the approve request logic here
+            console.log("Approved request with ID:", id);
+        }
+
+        function declineRequest(id) {
+            // Implement the decline request logic here
+            console.log("Declined request with ID:", id);
+        }
+    </script>
         <!-- Add an iframe to display the PDF -->
         <iframe id="pdfViewer" style="display:none; width: 100%; height: 600px;" frameborder="0"></iframe>
         
