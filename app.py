@@ -161,7 +161,7 @@ def submit_release_form():
             release_to=release_to,
             purpose=purpose,
             signature_url=signature_url,
-            submitted_at=None if not is_final_submission else datetime.utcnow()
+            submitted_at=None if not is_final_submission else datetime.utcnow(),
             approval_status="pending"  # Set approval status to pending
         )
         db.session.add(new_request)
