@@ -173,7 +173,7 @@ def submit_release_form():
         # Ensure the directory exists
         pdf_dir = "/mnt/data"
         if not os.path.exists(pdf_dir):
-            os.makedirs(pdf_dir)  # Create directory if it doesn't exist
+            os.makedirs(pdf_dir, exist_ok=True)  # Create directory if it doesn't exist
 
         # Define file paths
         tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
