@@ -62,6 +62,14 @@ engine = create_engine(
 app.config['SQLALCHEMY_DATABASE_URI'] = engine.url
 db = SQLAlchemy(app)
 
+import random
+import string
+
+def generate_request_id():
+    letters = ''.join(random.choices(string.ascii_uppercase, k=2))
+    numbers = ''.join(random.choices(string.digits, k=5))
+    return letters + numbers
+
 # ---- Database Models ----
 
 # User Model
@@ -69,6 +77,7 @@ class User(db.Model):
     __tablename__ = 'User'
     
     id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.String(7), unique=True, nullable=False)
     first_name = db.Column(db.String(50), nullable=False)
     middle_name = db.Column(db.String(50), nullable=True)
     last_name = db.Column(db.String(50), nullable=False)
@@ -161,7 +170,7 @@ def submit_release_form():
 
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
-
+        
         student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
         peoplesoft_id = (data.get('peoplesoftID') or "").strip()
         password = (data.get('password') or "").strip()
@@ -171,9 +180,13 @@ def submit_release_form():
         release_to = (data.get('releaseTo') or "").strip()
         purpose = ','.join(request.form.getlist('purpose'))
         signature_url = data.get('signature_url', None) or "/home/signatures/default-signature.png"
+        request_id = generate_request_id()
+        while ReleaseFormRequest.query.filter_by(request_id=request_id).first() is not None:
+            request_id = generate_request_id()
 
         # Save form request in database
         new_request = ReleaseFormRequest(
+            request_id=request_id,
             student_name=student_name,
             peoplesoft_id=peoplesoft_id,
             password=password,
