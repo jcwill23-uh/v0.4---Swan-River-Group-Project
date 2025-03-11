@@ -161,8 +161,7 @@ def submit_release_form():
             release_to=release_to,
             purpose=purpose,
             signature_url=signature_url,
-            submitted_at=None if not is_final_submission else datetime.utcnow(),
-            approval_status="pending"  # Set approval status to pending
+            submitted_at=None if not is_final_submission else datetime.utcnow()
         )
         db.session.add(new_request)
         db.session.commit()
@@ -173,7 +172,7 @@ def submit_release_form():
             return jsonify({"error": "User not found"}), 404
 
         # Ensure the directory exists
-        pdf_dir = "/home/pdf_files"
+        pdf_dir = "/mnt/data"
         if not os.path.exists(pdf_dir):
             os.makedirs(pdf_dir, exist_ok=True)  # Create directory if it doesn't exist
 
@@ -195,7 +194,7 @@ def submit_release_form():
                 print("SUCCESS: LaTeX file exists.")
 
             result = subprocess.run(
-                ["/usr/bin/pdflatex", "-output-directory", "/home/data/", tex_file_path],
+                ["/usr/bin/pdflatex", "-output-directory", "/mnt/data/", tex_file_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 check=True
@@ -217,22 +216,8 @@ def submit_release_form():
             blob_client.upload_blob(data, overwrite=True)
 
         # Store PDF URL in the database
-        # Ensure PDF file path is valid before upload
-        pdf_url = f"https://swanriverpdfs.blob.core.windows.net/releaseforms/{blob_name}"
-        print(f"DEBUG: Attempting to store PDF URL in DB: {pdf_url}")
-        
-        # Update the database record
-        new_request.pdf_url = pdf_url
-        
-        # Debug before commit
-        print(f"DEBUG: Before commit, new_request.pdf_url = {new_request.pdf_url}")
-        
-        # Commit and refresh to force update
+        new_request.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
         db.session.commit()
-        db.session.refresh(new_request)
-        
-        # Debug after commit
-        print(f"SUCCESS: After commit, new_request.pdf_url = {new_request.pdf_url}")
 
         return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
 
@@ -413,17 +398,17 @@ def generate_pdf(form_id):
         return jsonify({"error": "User not found"}), 404
 
     # Prepare data for LaTeX
-    tex_file_path = f"/home/data/form_{form_id}.tex"
+    tex_file_path = f"/mnt/data/form_{form_id}.tex"
     with open(tex_file_path, "w") as tex_file:
         tex_file.write(generate_latex_content(form, user))
 
     # Compile LaTeX to PDF using Makefile
     try:
-        subprocess.run(["make", f"form_{form_id}.pdf"], check=True, cwd="/home/pdf_files")
+        subprocess.run(["make", f"form_{form_id}.pdf"], check=True, cwd="/mnt/data")
     except subprocess.CalledProcessError as e:
         return jsonify({"error": f"PDF generation failed: {e}"}), 500
 
-    pdf_file_path = f"/home/data/form_{form_id}.pdf"
+    pdf_file_path = f"/mnt/data/form_{form_id}.pdf"
 
     # Save to database (assuming we store the file in Azure)
     blob_name = f"release_forms/form_{form_id}.pdf"
@@ -442,7 +427,7 @@ def generate_latex_content(form, user):
     if form.signature_url and form.signature_url.strip():
         signature_path = form.signature_url
     else:
-        signature_path = "/home/data/default-signature.png"  # Ensure a default exists
+        signature_path = "/mnt/data/default-signature.png"  # Ensure a default exists
 
     print(f"Using signature path: {signature_path}")  # Debugging output
 
