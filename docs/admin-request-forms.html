@@ -78,6 +78,7 @@
                 <th>Purpose</th>
                 <th>Signature URL</th>
                 <th>PDF URL</th>
+                <th>Status</th>
                 <th>Action</th>
                 <th>Submitted At</th>
             </tr>
@@ -97,6 +98,7 @@
                 <td>{{ request.purpose }}</td>
                 <td>{{ request.signature_url }}</td>
                 <td>{{ request.pdf_url }}</td>
+                <td>{{ request.status }}</td>
                 <td class="action-buttons">
                     <button onclick="approveRequest({{ request.id }})">Approve</button>
                     <button onclick="declineRequest({{ request.id }})">Decline</button>
@@ -113,13 +115,33 @@
         </table>
         <script>
         function approveRequest(id) {
-            // Implement the approve request logic here
-            console.log("Approved request with ID:", id);
+            fetch(`/approve_request/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                location.reload();  // Reload the page to see the updated status
+            })
+            .catch(error => console.error('Error:', error));
         }
 
         function declineRequest(id) {
-            // Implement the decline request logic here
-            console.log("Declined request with ID:", id);
+            fetch(`/decline_request/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                location.reload();  // Reload the page to see the updated status
+            })
+            .catch(error => console.error('Error:', error));
         }
     </script>
         <!-- Add an iframe to display the PDF -->
