@@ -84,7 +84,7 @@ class User(db.Model):
 from datetime import datetime
 
 # Release Form Request Model
-class ReleaseFormRequest(db.Model):
+'''class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -104,10 +104,10 @@ class ReleaseFormRequest(db.Model):
     #DELETE THIS IF IT CAUSES PROBLEMS
 
     def as_json(self):
-        return jsonify({c.name: getattr(self, c.name) for c in self.__table__.columns})
+        return jsonify({c.name: getattr(self, c.name) for c in self.__table__.columns})'''
 
 
-'''
+
 class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
     
@@ -120,7 +120,7 @@ class ReleaseFormRequest(db.Model):
     
     def as_json(self):
         return jsonify({c.name: getattr(self, c.name) for c in self.__table__.columns})
-'''
+
 # Request Form Model
 class RequestForm(db.Model):
     __tablename__ = 'request_form'
@@ -154,7 +154,7 @@ class UserSignature(db.Model):
     updated_at = db.Column(db.DateTime, nullable=True)
 
 # ---- API Routes ----
-
+'''
 # Route to handle form submission
 @app.route('/submit_release_form', methods=['POST'])
 def submit_release_form():
@@ -206,7 +206,7 @@ def submit_release_form():
 
         # Define file paths
         tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
-        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
+        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")'''
 
         '''
         # Write LaTeX content to the file
@@ -241,12 +241,12 @@ def submit_release_form():
 
         return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
         '''
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    '''except Exception as e:
+        return jsonify({"error": str(e)}), 500'''
 
         
 
-'''
+
 @app.route('/submit_release_form', methods=['POST'])
 def submit_release_form():
     try:
@@ -317,7 +317,7 @@ def submit_release_form():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-'''
+
 # Azure AD Configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
 CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
