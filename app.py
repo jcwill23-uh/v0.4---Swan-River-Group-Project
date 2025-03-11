@@ -187,7 +187,7 @@ class ReleaseFormRequest(db.Model):
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(20), default="pending")
+    approval_status = db.Column(db.String(20), default="pending")
 
     #DELETE THIS IF IT CAUSES PROBLEMS
 
@@ -260,7 +260,7 @@ def submit_release_form():
             release_to=release_to,
             purpose=purpose,
             signature_url=signature_url,
-            status='pending',  # Default status
+            approval_status='pending', 
             submitted_at=None if not is_final_submission else datetime.utcnow()
         )
         db.session.add(new_request)
