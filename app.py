@@ -185,6 +185,13 @@ def submit_release_form():
 
         # Run pdflatex to generate PDF
         try:
+            print(f"Checking if LaTeX file exists: {tex_file_path}")
+            if not os.path.exists(tex_file_path):
+                print("ERROR: LaTeX file was not created!")
+                return jsonify({"error": "LaTeX file was not created."}), 500
+            else:
+                print("SUCCESS: LaTeX file exists.")
+
             result = subprocess.run(
                 ["/usr/bin/pdflatex", "-output-directory", "/mnt/data/", tex_file_path],
                 stdout=subprocess.PIPE,
