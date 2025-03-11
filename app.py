@@ -1,3 +1,5 @@
+import random
+import string
 import os
 import urllib.parse
 import logging
@@ -81,6 +83,19 @@ class User(db.Model):
 
 from datetime import datetime
 
+def generate_request_id():
+    letters = ''.join(random.choices(string.ascii_uppercase, k=2))
+    numbers = ''.join(random.choices(string.digits, k=5))
+    return letters + numbers
+
+def update_request_ids():
+    requests = ReleaseFormRequest.query.filter_by(request_id='TEMP').all()
+    for request in requests:
+        request_id = generate_request_id()
+        while ReleaseFormRequest.query.filter_by(request_id=request_id).first() is not None:
+            request_id = generate_request_id()
+        request.request_id = request_id
+        db.session.commit()
 # Release Form Request Model
 class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
@@ -932,4 +947,5 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        update_request_ids()
     app.run()
