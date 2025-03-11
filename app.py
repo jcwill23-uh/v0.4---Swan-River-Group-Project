@@ -83,25 +83,11 @@ class User(db.Model):
 
 from datetime import datetime
 
-def generate_request_id():
-    letters = ''.join(random.choices(string.ascii_uppercase, k=2))
-    numbers = ''.join(random.choices(string.digits, k=5))
-    return letters + numbers
-
-def update_request_ids():
-    requests = ReleaseFormRequest.query.filter_by(request_id='TEMP').all()
-    for request in requests:
-        request_id = generate_request_id()
-        while ReleaseFormRequest.query.filter_by(request_id=request_id).first() is not None:
-            request_id = generate_request_id()
-        request.request_id = request_id
-        db.session.commit()
 # Release Form Request Model
 class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
 
     id = db.Column(db.Integer, primary_key=True)
-    request_id = db.Column(db.String(7), unique=True, nullable=False)
     student_name = db.Column(db.String(100), nullable=False)
     peoplesoft_id = db.Column(db.String(10), nullable=False)
     password = db.Column(db.String(10), nullable=False)
@@ -189,11 +175,9 @@ def submit_release_form():
         release_to = (data.get('releaseTo') or "").strip()
         purpose = ','.join(request.form.getlist('purpose'))
         signature_url = data.get('signature_url', None) or "/home/signatures/default-signature.png"
-        request_id = data.get('request_id')
 
         # Save form request in database
         new_request = ReleaseFormRequest(
-            request_id=request_id,
             student_name=student_name,
             peoplesoft_id=peoplesoft_id,
             password=password,
@@ -947,5 +931,4 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        update_request_ids()
     app.run()
