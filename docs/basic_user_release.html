@@ -147,6 +147,7 @@
         <!-- When clicked Submit, it should send the form to admin"-->
         <form id="releaseForm" action="/submit_release_form" method="POST">
     <!-- Form elements -->
+            <input type="hidden" id="request_id" name="request_id">
     <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
 </form>
 
@@ -341,6 +342,31 @@
             alert("An error occurred.");
         }
     }
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('releaseForm');
+
+    form.addEventListener('submit', function(event) {
+        const requestIdInput = document.getElementById('request_id');
+        requestIdInput.value = generateRequestId();
+    });
+
+    function generateRequestId() {
+        const letters = generateRandomString(2, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+        const numbers = generateRandomString(5, '0123456789');
+        return letters + numbers;
+    }
+
+    function generateRandomString(length, characters) {
+        let result = '';
+        const charactersLength = characters.length;
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
+    }
+});
     </script>
     
 </body>
