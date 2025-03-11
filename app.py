@@ -62,6 +62,96 @@ engine = create_engine(
 app.config['SQLALCHEMY_DATABASE_URI'] = engine.url
 db = SQLAlchemy(app)
 
+# Azure AD Configuration
+CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
+CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
+TENANT_ID = "170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259"
+AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
+REDIRECT_URI = "https://swan-river-group-project.azurewebsites.net/auth/callback"
+SCOPE = ['User.Read']
+
+# Authentication Routes
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/azure_login')
+def azure_login():
+    session['state'] = 'random_state'
+    auth_url = _build_auth_url(scopes=SCOPE, state=session['state'])
+    return redirect(auth_url)
+
+@app.route('/auth/callback')
+def authorized():
+    try:
+        code = request.args.get('code')
+        if not code:
+            return redirect(url_for('index'))
+        
+        token = _get_token_from_code(code)
+        user_info = _get_user_info(token)
+        email = user_info.get('mail') or user_info.get('userPrincipalName')
+
+        logger.info(f"User attempting login: {email}")
+
+        # Fetch user from database
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            logger.info(f"User {email} not found. Creating new basic user.")
+            user = User(
+                first_name=user_info.get('givenName', 'Unknown'),
+                middle_name=None,
+                last_name=user_info.get('surname', 'Unknown'),
+                email=email,
+                role='basicuser',
+                status='active'
+            )
+            db.session.add(user)
+            db.session.commit()
+            db.session.refresh(user)  # Ensure role and status are fresh
+
+        else:
+            logger.info(f"User {email} found in database with role: {user.role} and status: {user.status}")
+
+        db.session.refresh(user)  # Refresh to get the latest role and status
+
+        # Check if the user is suspended
+        if user.status.lower() != "active":
+            logger.warning(f"User {email} is suspended. Redirecting to login.")
+            flash("Account suspended. Please contact support.", "error")
+            return redirect(url_for('login'))
+
+        # Store user details properly in session
+        session['user'] = {
+            'first_name': user.first_name,
+            'middle_name': user.middle_name if user.middle_name else '',
+            'last_name': user.last_name,
+            'email': user.email,
+            'role': user.role.strip().lower(),
+            'status': user.status
+        }
+
+        logger.info(f"User {user.email} logged in with role: {session['user']['role']} and status: {session['user']['status']}")
+
+         # Debug before role check
+        logger.info(f"Checking role for {user.email}: session['user']['role'] = {session['user']['role']}")
+
+        # Redirect based on role
+        if session.get('user', {}).get('role', '').strip().lower() == "admin":
+            logger.info(f"Admin {user.email} is being redirected to admin_home")
+            return redirect(url_for('admin_home'))
+        else:
+            return redirect(url_for('basic_user_home'))
+
+    except Exception as e:
+        logger.error(f"Internal Server Error: {str(e)}", exc_info=True)
+        flash("An error occurred while logging in. Please try again.", "error")
+        return redirect(url_for('login'))
 
 # ---- Database Models ----
 
@@ -226,98 +316,6 @@ def submit_release_form():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# Azure AD Configuration
-CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
-CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
-TENANT_ID = "170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259"
-AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
-REDIRECT_URI = "https://swan-river-group-project.azurewebsites.net/auth/callback"
-SCOPE = ['User.Read']
-
-# Authentication Routes
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/login')
-def login():
-    return render_template('login.html')
-
-@app.route('/azure_login')
-def azure_login():
-    session['state'] = 'random_state'
-    auth_url = _build_auth_url(scopes=SCOPE, state=session['state'])
-    return redirect(auth_url)
-
-@app.route('/auth/callback')
-def authorized():
-    try:
-        code = request.args.get('code')
-        if not code:
-            return redirect(url_for('index'))
-        
-        token = _get_token_from_code(code)
-        user_info = _get_user_info(token)
-        email = user_info.get('mail') or user_info.get('userPrincipalName')
-
-        logger.info(f"User attempting login: {email}")
-
-        # Fetch user from database
-        user = User.query.filter_by(email=email).first()
-
-        if not user:
-            logger.info(f"User {email} not found. Creating new basic user.")
-            user = User(
-                first_name=user_info.get('givenName', 'Unknown'),
-                middle_name=None,
-                last_name=user_info.get('surname', 'Unknown'),
-                email=email,
-                role='basicuser',
-                status='active'
-            )
-            db.session.add(user)
-            db.session.commit()
-            db.session.refresh(user)  # Ensure role and status are fresh
-
-        else:
-            logger.info(f"User {email} found in database with role: {user.role} and status: {user.status}")
-
-        db.session.refresh(user)  # Refresh to get the latest role and status
-
-        # Check if the user is suspended
-        if user.status.lower() != "active":
-            logger.warning(f"User {email} is suspended. Redirecting to login.")
-            flash("Account suspended. Please contact support.", "error")
-            return redirect(url_for('login'))
-
-        # Store user details properly in session
-        session['user'] = {
-            'first_name': user.first_name,
-            'middle_name': user.middle_name if user.middle_name else '',
-            'last_name': user.last_name,
-            'email': user.email,
-            'role': user.role.strip().lower(),
-            'status': user.status
-        }
-
-        logger.info(f"User {user.email} logged in with role: {session['user']['role']} and status: {session['user']['status']}")
-
-         # Debug before role check
-        logger.info(f"Checking role for {user.email}: session['user']['role'] = {session['user']['role']}")
-
-        # Redirect based on role
-        if session.get('user', {}).get('role', '').strip().lower() == "admin":
-            logger.info(f"Admin {user.email} is being redirected to admin_home")
-            return redirect(url_for('admin_home'))
-        else:
-            return redirect(url_for('basic_user_home'))
-
-    except Exception as e:
-        logger.error(f"Internal Server Error: {str(e)}", exc_info=True)
-        flash("An error occurred while logging in. Please try again.", "error")
-        return redirect(url_for('login'))
-
 
 @app.route('/logout')
 def logout():
