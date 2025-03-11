@@ -62,22 +62,6 @@ engine = create_engine(
 app.config['SQLALCHEMY_DATABASE_URI'] = engine.url
 db = SQLAlchemy(app)
 
-import random
-import string
-
-def generate_request_id():
-    letters = ''.join(random.choices(string.ascii_uppercase, k=2))
-    numbers = ''.join(random.choices(string.digits, k=5))
-    return letters + numbers
-
-def update_request_ids():
-    requests = ReleaseFormRequest.query.filter_by(request_id='TEMP').all()
-    for request in requests:
-        request_id = generate_request_id()
-        while ReleaseFormRequest.query.filter_by(request_id=request_id).first() is not None:
-            request_id = generate_request_id()
-        request.request_id = request_id
-        db.session.commit()
 
 # ---- Database Models ----
 
@@ -190,9 +174,7 @@ def submit_release_form():
         release_to = (data.get('releaseTo') or "").strip()
         purpose = ','.join(request.form.getlist('purpose'))
         signature_url = data.get('signature_url', None) or "/home/signatures/default-signature.png"
-        request_id = generate_request_id()
-        while ReleaseFormRequest.query.filter_by(request_id=request_id).first() is not None:
-            request_id = generate_request_id()
+        request_id = data.get('request_id')
 
         # Save form request in database
         new_request = ReleaseFormRequest(
@@ -950,5 +932,4 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        update_request_ids()
     app.run()
