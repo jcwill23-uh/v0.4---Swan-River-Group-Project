@@ -203,6 +203,8 @@ def submit_release_form():
         blob_client = pdf_container_client.get_blob_client(blob_name)
 
         with open(pdf_file_path, "rb") as data:
+            if not os.path.exists(pdf_file_path):
+                return jsonify({"error": "PDF file was not created successfully."}), 500
             blob_client.upload_blob(data, overwrite=True)
 
         # Store PDF URL in the database
