@@ -70,6 +70,15 @@ def generate_request_id():
     numbers = ''.join(random.choices(string.digits, k=5))
     return letters + numbers
 
+def update_request_ids():
+    requests = ReleaseFormRequest.query.filter_by(request_id='TEMP').all()
+    for request in requests:
+        request_id = generate_request_id()
+        while ReleaseFormRequest.query.filter_by(request_id=request_id).first() is not None:
+            request_id = generate_request_id()
+        request.request_id = request_id
+        db.session.commit()
+
 # ---- Database Models ----
 
 # User Model
@@ -93,6 +102,7 @@ class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
 
     id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.String(7), unique=True, nullable=False)
     student_name = db.Column(db.String(100), nullable=False)
     peoplesoft_id = db.Column(db.String(10), nullable=False)
     password = db.Column(db.String(10), nullable=False)
@@ -940,4 +950,5 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        update_request_ids()
     app.run()
