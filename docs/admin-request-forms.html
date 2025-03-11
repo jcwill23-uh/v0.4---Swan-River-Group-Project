@@ -23,7 +23,7 @@
             window.location.href = "/admin_home";
         }
 
-        function viewPDF(requestId) {
+        /*function viewPDF(requestId) {
             // Fetch the PDF URL from the server
             fetch(`/generate_pdf/${requestId}`)
                 .then(response => {
@@ -42,6 +42,11 @@
                 .catch(error => {
                     console.error("Error fetching PDF:", error);
                 });
+        }*/
+        function viewPDF(pdfUrl) {
+            const pdfViewer = document.getElementById('pdfViewer');
+            pdfViewer.src = pdfUrl;
+            pdfViewer.style.display = 'block';
         }
 
         function deleteRequest(requestId) {
@@ -99,8 +104,9 @@
                 <td>{{ request.release_to }}</td>
                 <td>{{ request.purpose }}</td>
                 <td>{{ request.signature_url }}</td>
-                <td>{{ request.pdf_url }}</td>
-                <td>{{ request.status }}</td>
+                <td><button onclick="viewPDF('{{ request.pdf_url }}')">View PDF</button></td>
+                <!--<td>{{ request.pdf_url }}</td>-->
+                <td>{{ request.approval_status }}</td>
                 <td class="action-buttons">
                     <button onclick="approveRequest({{ request.id }})">Approve</button>
                     <button onclick="declineRequest({{ request.id }})">Decline</button>
