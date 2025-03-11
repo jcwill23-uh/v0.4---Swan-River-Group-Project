@@ -217,13 +217,22 @@ def submit_release_form():
             blob_client.upload_blob(data, overwrite=True)
 
         # Store PDF URL in the database
-        pdf_storage_account_name = "swanriverpdfs"
-        pdf_url = f"https://{pdf_storage_account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
-        print(f"DEBUG: Setting pdf_url in database: {pdf_url}")
+        # Ensure PDF file path is valid before upload
+        pdf_url = f"https://swanriverpdfs.blob.core.windows.net/releaseforms/{blob_name}"
+        print(f"DEBUG: Attempting to store PDF URL in DB: {pdf_url}")
+        
+        # Update the database record
         new_request.pdf_url = pdf_url
-        db.session.add(new_request)
+        
+        # Debug before commit
+        print(f"DEBUG: Before commit, new_request.pdf_url = {new_request.pdf_url}")
+        
+        # Commit and refresh to force update
         db.session.commit()
         db.session.refresh(new_request)
+        
+        # Debug after commit
+        print(f"SUCCESS: After commit, new_request.pdf_url = {new_request.pdf_url}")
 
         return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
 
