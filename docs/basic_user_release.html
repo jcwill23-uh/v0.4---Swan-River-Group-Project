@@ -112,6 +112,8 @@
 
             <h3>Date:</h3>
             <input type="text" name="submission_date" id="submission_date" readonly>
+            <label for="request_id">Request ID:</label>
+        <input type="text" id="request_id" name="request_id" readonly><br>
         </form>
     </div>
     <!-- END OF FORM INFORMATION -->
@@ -147,8 +149,6 @@
         <!-- When clicked Submit, it should send the form to admin"-->
         <form id="releaseForm" action="/submit_release_form" method="POST">
     <!-- Form elements -->
-            <label for="request_id">Request ID:</label>
-        <input type="text" id="request_id" name="request_id" readonly><br>
     <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
 </form>
 
