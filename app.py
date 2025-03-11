@@ -1,5 +1,3 @@
-import random
-import string
 import os
 import urllib.parse
 import logging
@@ -84,7 +82,7 @@ class User(db.Model):
 from datetime import datetime
 
 # Release Form Request Model
-'''class ReleaseFormRequest(db.Model):
+class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -103,21 +101,6 @@ from datetime import datetime
 
     #DELETE THIS IF IT CAUSES PROBLEMS
 
-    def as_json(self):
-        return jsonify({c.name: getattr(self, c.name) for c in self.__table__.columns})'''
-
-
-
-class ReleaseFormRequest(db.Model):
-    __tablename__ = 'release_form_request'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    approver_id = db.Column(db.Integer, db.ForeignKey('User.id'), nullable=False)
-    status = db.Column(db.String(20), default="pending")
-    comments = db.Column(db.Text, nullable=True)
-    approved_at = db.Column(db.DateTime, nullable=True)
-    signature_url = db.Column(db.String(255), nullable=True)
-    
     def as_json(self):
         return jsonify({c.name: getattr(self, c.name) for c in self.__table__.columns})
 
@@ -154,7 +137,7 @@ class UserSignature(db.Model):
     updated_at = db.Column(db.DateTime, nullable=True)
 
 # ---- API Routes ----
-'''
+
 # Route to handle form submission
 @app.route('/submit_release_form', methods=['POST'])
 def submit_release_form():
@@ -206,9 +189,9 @@ def submit_release_form():
 
         # Define file paths
         tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
-        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")'''
+        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
 
-        '''
+        
         # Write LaTeX content to the file
         with open(tex_file_path, "w") as tex_file:
             tex_file.write(generate_latex_content(new_request, user))
@@ -240,81 +223,7 @@ def submit_release_form():
         db.session.commit()
 
         return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
-        '''
-    '''except Exception as e:
-        return jsonify({"error": str(e)}), 500'''
-
         
-
-
-@app.route('/submit_release_form', methods=['POST'])
-def submit_release_form():
-    try:
-        data = request.form
-        is_final_submission = data.get("final_submission") == "true"
-
-        # Extract form data
-        approver_id = data.get('approver_id')
-        status = data.get('status', 'pending')
-        comments = data.get('comments')
-        approved_at = datetime.utcnow() if is_final_submission else None
-
-        # Save form request in database
-        new_request = ReleaseFormRequest(
-            approver_id=approver_id,
-            status=status,
-            comments=comments,
-            approved_at=approved_at
-        )
-        db.session.add(new_request)
-        db.session.commit()
-
-        # Fetch User Object Before PDF Generation
-        user = User.query.filter_by(email=session["user"]["email"]).first()
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
-        # Ensure the directory exists
-        pdf_dir = "/home/pdf_files/"
-        if not os.path.exists(pdf_dir):
-            os.makedirs(pdf_dir)  # Create directory if it doesn't exist
-
-        # Define file paths
-        tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
-        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
-
-        # Write LaTeX content to the file
-        with open(tex_file_path, "w") as tex_file:
-            tex_file.write(generate_latex_content(new_request, user))
-
-        # Run pdflatex to generate PDF
-        try:
-            result = subprocess.run(
-                ["/usr/bin/pdflatex", "-output-directory", pdf_dir, tex_file_path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True
-            )
-            print("PDF Generation Output:", result.stdout.decode())  # Debugging
-        except subprocess.CalledProcessError as e:
-            print("PDF Generation Error:", e.stderr.decode())  # Debugging
-            return jsonify({"error": f"PDF generation failed: {e.stderr.decode()}"}), 500
-        except FileNotFoundError:
-            return jsonify({"error": "pdflatex not found. Make sure LaTeX is installed."}), 500
-
-        # Upload PDF to Azure Blob Storage
-        blob_name = f"release_forms/form_{new_request.id}.pdf"
-        blob_client = pdf_container_client.get_blob_client(blob_name)
-
-        with open(pdf_file_path, "rb") as data:
-            blob_client.upload_blob(data, overwrite=True)
-
-        # Store PDF URL in the database
-        new_request.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
-        db.session.commit()
-
-        return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
