@@ -750,7 +750,25 @@ def upload_user_signature():
     except Exception as e:
         logging.error(f"Error uploading signature: {str(e)}")
         return jsonify({"error": f"Error uploading signature: {str(e)}"}), 500
-  
+
+@app.route('/approve_request/<int:request_id>', methods=['POST'])
+def approve_request(request_id):
+    request = ReleaseFormRequest.query.get(request_id)
+    if request:
+        request.approval_status = "approved"
+        db.session.commit()
+        return jsonify({"message": "Request approved successfully"}), 200
+    return jsonify({"error": "Request not found"}), 404
+
+@app.route('/decline_request/<int:request_id>', methods=['POST'])
+def decline_request(request_id):
+    request = ReleaseFormRequest.query.get(request_id)
+    if request:
+        request.approval_status = "declined"
+        db.session.commit()
+        return jsonify({"message": "Request declined successfully"}), 200
+    return jsonify({"error": "Request not found"}), 404
+    
 # Helper functions
 def _build_auth_url(scopes=None, state=None):
     return msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY).get_authorization_request_url(
