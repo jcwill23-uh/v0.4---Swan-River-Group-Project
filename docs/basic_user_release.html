@@ -27,7 +27,7 @@
 
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
     <div class="release-form-container">
-        <form id="releaseForm">
+        <form id="releaseForm" action="submit_release_form" method="POST">
             <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
@@ -322,25 +322,30 @@
             }
         }
 
-    document.getElementById("submission_date").value = new Date().toLocaleDateString();
-    
-    async function handleFormSubmission(isFinalSubmission) {
-        const formData = new FormData(document.getElementById("releaseForm"));
-        formData.append("final_submission", isFinalSubmission);
-
-        try {
-            const response = await fetch("/submit_release_form", { method: "POST", body: formData });
-            const data = await response.json();
-
-            if (response.ok) {
-                alert(isFinalSubmission ? "Form submitted successfully!" : "Form saved for later.");
-            } else {
-                alert("Error: " + data.error);
+        document.getElementById("submission_date").value = new Date().toLocaleDateString();
+        
+        async function handleFormSubmission(isFinalSubmission) {
+            const form = document.getElementById("releaseForm");
+            const formData = new FormData(form);
+            formData.append("final_submission", isFinalSubmission ? "true" : "false");
+        
+            try {
+                const response = await fetch("/submit_release_form", {
+                    method: "POST",
+                    body: formData
+                });
+                const data = await response.json();
+        
+                if (response.ok) {
+                    alert(isFinalSubmission ? "Form submitted successfully!" : "Form saved for later.");
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (error) {
+                alert("An error occurred while submitting the form.");
             }
-        } catch (error) {
-            alert("An error occurred.");
         }
-    }
+
     </script>
     
 </body>
