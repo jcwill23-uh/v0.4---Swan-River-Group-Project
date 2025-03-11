@@ -95,6 +95,7 @@ class ReleaseFormRequest(db.Model):
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    approval_status = db.Column(db.String(20), default="pending")
 
 # Request Form Model
 class RequestForm(db.Model):
@@ -161,6 +162,7 @@ def submit_release_form():
             purpose=purpose,
             signature_url=signature_url,
             submitted_at=None if not is_final_submission else datetime.utcnow()
+            approval_status="pending"  # Set approval status to pending
         )
         db.session.add(new_request)
         db.session.commit()
