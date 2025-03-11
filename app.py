@@ -171,7 +171,7 @@ def submit_release_form():
             return jsonify({"error": "User not found"}), 404
 
         # Ensure the directory exists
-        pdf_dir = "/mnt/data"
+        pdf_dir = "/home/data"
         if not os.path.exists(pdf_dir):
             os.makedirs(pdf_dir, exist_ok=True)  # Create directory if it doesn't exist
 
@@ -193,7 +193,7 @@ def submit_release_form():
                 print("SUCCESS: LaTeX file exists.")
 
             result = subprocess.run(
-                ["/usr/bin/pdflatex", "-output-directory", "/mnt/data/", tex_file_path],
+                ["/usr/bin/pdflatex", "-output-directory", "/home/data/", tex_file_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 check=True
@@ -397,17 +397,17 @@ def generate_pdf(form_id):
         return jsonify({"error": "User not found"}), 404
 
     # Prepare data for LaTeX
-    tex_file_path = f"/mnt/data/form_{form_id}.tex"
+    tex_file_path = f"/home/data/form_{form_id}.tex"
     with open(tex_file_path, "w") as tex_file:
         tex_file.write(generate_latex_content(form, user))
 
     # Compile LaTeX to PDF using Makefile
     try:
-        subprocess.run(["make", f"form_{form_id}.pdf"], check=True, cwd="/mnt/data")
+        subprocess.run(["make", f"form_{form_id}.pdf"], check=True, cwd="/home/data")
     except subprocess.CalledProcessError as e:
         return jsonify({"error": f"PDF generation failed: {e}"}), 500
 
-    pdf_file_path = f"/mnt/data/form_{form_id}.pdf"
+    pdf_file_path = f"/home/data/form_{form_id}.pdf"
 
     # Save to database (assuming we store the file in Azure)
     blob_name = f"release_forms/form_{form_id}.pdf"
@@ -426,7 +426,7 @@ def generate_latex_content(form, user):
     if form.signature_url and form.signature_url.strip():
         signature_path = form.signature_url
     else:
-        signature_path = "/mnt/data/default-signature.png"  # Ensure a default exists
+        signature_path = "/home/data/default-signature.png"  # Ensure a default exists
 
     print(f"Using signature path: {signature_path}")  # Debugging output
 
