@@ -345,36 +345,6 @@
     }
 
 
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('releaseForm');
-    const requestIdInput = document.getElementById('request_id');
-
-    function generateRequestId() {
-        const letters = generateRandomString(2, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-        const numbers = generateRandomString(5, '0123456789');
-        return letters + numbers;
-    }
-
-    function generateRandomString(length, characters) {
-        let result = '';
-        const charactersLength = characters.length;
-        for (let i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
-        return result;
-    setRequestId() {
-        const requestId = generateRequestId();
-        requestIdInput.value = requestId;
-    }
-
-    // Generate and set request_id on page load
-    setRequestId();
-
-    // Generate and set request_id on form submit
-    form.addEventListener('submit', function(event) {
-        setRequestId();
-    });
-});
     </script>
     
 </body>
