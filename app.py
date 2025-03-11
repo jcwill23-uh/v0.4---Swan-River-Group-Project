@@ -95,6 +95,7 @@ class ReleaseFormRequest(db.Model):
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default="pending")
 
     #DELETE THIS IF IT CAUSES PROBLEMS
 
@@ -888,7 +889,26 @@ def upload_user_signature():
         logging.error(f"Error uploading signature: {str(e)}")
         return jsonify({"error": f"Error uploading signature: {str(e)}"}), 500
 
-  
+
+@app.route('/approve_request/<int:request_id>', methods=['POST'])
+def approve_request(request_id):
+    request = ReleaseFormRequest.query.get(request_id)
+    if request:
+        request.status = 'approved'
+        db.session.commit()
+        return jsonify({"message": "Request approved successfully"}), 200
+    return jsonify({"error": "Request not found"}), 404
+
+@app.route('/decline_request/<int:request_id>', methods=['POST'])
+def decline_request(request_id):
+    request = ReleaseFormRequest.query.get(request_id)
+    if request:
+        request.status = 'declined'
+        db.session.commit()
+        return jsonify({"message": "Request declined successfully"}), 200
+    return jsonify({"error": "Request not found"}), 404
+
+
 # Helper functions
 def _build_auth_url(scopes=None, state=None):
     return msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY).get_authorization_request_url(
