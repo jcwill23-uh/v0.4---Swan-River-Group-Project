@@ -218,8 +218,12 @@ def submit_release_form():
 
         # Store PDF URL in the database
         pdf_storage_account_name = "swanriverpdfs"
-        new_request.pdf_url = f"https://{pdf_storage_account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        pdf_url = f"https://{pdf_storage_account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        print(f"DEBUG: Setting pdf_url in database: {pdf_url}")
+        new_request.pdf_url = pdf_url
+        db.session.add(new_request)
         db.session.commit()
+        db.session.refresh(new_request)
 
         return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
 
