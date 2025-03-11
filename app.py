@@ -173,7 +173,7 @@ def submit_release_form():
             return jsonify({"error": "User not found"}), 404
 
         # Ensure the directory exists
-        pdf_dir = "/home/data"
+        pdf_dir = "/home/pdf_files"
         if not os.path.exists(pdf_dir):
             os.makedirs(pdf_dir, exist_ok=True)  # Create directory if it doesn't exist
 
@@ -217,7 +217,8 @@ def submit_release_form():
             blob_client.upload_blob(data, overwrite=True)
 
         # Store PDF URL in the database
-        new_request.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        pdf_storage_account_name = "swanriverpdfs"
+        new_request.pdf_url = f"https://{pdf_storage_account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
         db.session.commit()
 
         return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
@@ -405,7 +406,7 @@ def generate_pdf(form_id):
 
     # Compile LaTeX to PDF using Makefile
     try:
-        subprocess.run(["make", f"form_{form_id}.pdf"], check=True, cwd="/home/data")
+        subprocess.run(["make", f"form_{form_id}.pdf"], check=True, cwd="/home/pdf_files")
     except subprocess.CalledProcessError as e:
         return jsonify({"error": f"PDF generation failed: {e}"}), 500
 
@@ -730,7 +731,7 @@ def upload_user_signature():
         blob_client = signature_container_client.get_blob_client(blob_name)
 
         # Delete old signature if exists
-        blob_list = container_client.list_blobs(name_starts_with=blob_name)
+        blob_list = signature_container_client.list_blobs(name_starts_with=blob_name)
         if any(blob_list):
             blob_client.delete_blob()
 
@@ -738,7 +739,7 @@ def upload_user_signature():
         blob_client.upload_blob(file.read(), overwrite=True)
 
         # Generate the URL
-        signature_url = f"https://{STORAGE_ACCOUNT_NAME}.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
+        signature_url = f"https://{STORAGE_ACCOUNT_NAME}.blob.core.windows.net/{SIGNATURE_CONTAINER_NAME}/{blob_name}"
 
         # Update database
         user.signature_url = signature_url
