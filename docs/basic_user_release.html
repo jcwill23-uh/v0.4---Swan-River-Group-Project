@@ -147,7 +147,8 @@
         <!-- When clicked Submit, it should send the form to admin"-->
         <form id="releaseForm" action="/submit_release_form" method="POST">
     <!-- Form elements -->
-            <input type="hidden" id="request_id" name="request_id">
+            <label for="request_id">Request ID:</label>
+        <input type="text" id="request_id" name="request_id" readonly><br>
     <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
 </form>
 
@@ -346,11 +347,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('releaseForm');
-
-    form.addEventListener('submit', function(event) {
-        const requestIdInput = document.getElementById('request_id');
-        requestIdInput.value = generateRequestId();
-    });
+    const requestIdInput = document.getElementById('request_id');
 
     function generateRequestId() {
         const letters = generateRandomString(2, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
@@ -365,7 +362,18 @@ document.addEventListener('DOMContentLoaded', function() {
             result += characters.charAt(Math.floor(Math.random() * charactersLength));
         }
         return result;
+    setRequestId() {
+        const requestId = generateRequestId();
+        requestIdInput.value = requestId;
     }
+
+    // Generate and set request_id on page load
+    setRequestId();
+
+    // Generate and set request_id on form submit
+    form.addEventListener('submit', function(event) {
+        setRequestId();
+    });
 });
     </script>
     
