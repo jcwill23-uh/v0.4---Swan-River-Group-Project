@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
 from datetime import datetime
 import subprocess
-import threading
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -63,26 +62,11 @@ engine = create_engine(
 app.config['SQLALCHEMY_DATABASE_URI'] = engine.url
 db = SQLAlchemy(app)
 
-# Lazy initialization of database connection
-def initialize_database():
-    try:
-        with app.app_context():
-            logger.info("Initializing database...")
-            db.create_all()  # Create tables if they don't exist
-            logger.info("Database initialization complete.")
-    except Exception as e:
-        logger.error(f"Error initializing database: {e}")
-
-# Initialize the database in a separate thread when the app starts
-database_thread = threading.Thread(target=initialize_database)
-database_thread.start()
-
 # ---- Database Models ----
 
 # User Model
-# Define the User model first
 class User(db.Model):
-    __tablename__ = 'user'
+    __tablename__ = 'User'
     
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
@@ -93,16 +77,6 @@ class User(db.Model):
     status = db.Column(db.String(20), default="active")
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
-
-# Define the UserSignature model after User
-class UserSignature(db.Model):
-    __tablename__ = 'user_signature'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
-    signature_url = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=True)
 
 from datetime import datetime
 
@@ -123,7 +97,6 @@ class ReleaseFormRequest(db.Model):
     pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     approval_status = db.Column(db.String(20), default="pending")
-    email = db.Column(db.String(100), nullable=False)
 
 # Request Form Model
 class RequestForm(db.Model):
@@ -136,7 +109,7 @@ class RequestForm(db.Model):
     approval_status = db.Column(db.String(20), default="pending")
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-'''# Approval Model
+# Approval Model
 class Approval(db.Model):
     __tablename__ = 'approval'
     
@@ -145,9 +118,17 @@ class Approval(db.Model):
     approver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status = db.Column(db.String(20), default="pending")
     comments = db.Column(db.Text, nullable=True)
-    approved_at = db.Column(db.DateTime, nullable=True)'''
+    approved_at = db.Column(db.DateTime, nullable=True)
 
 # User Signature Model
+class UserSignature(db.Model):
+    __tablename__ = 'user_signature'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    signature_url = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=True)
 
 # ---- API Routes ----
 
@@ -160,10 +141,6 @@ def submit_release_form():
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
 
-        user_email = session.get("user", {}).get("email")
-        if not user_email:
-            return jsonify({"error": "User not authenticated"}), 403
-
         student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
         peoplesoft_id = (data.get('peoplesoftID') or "").strip()
         password = (data.get('password') or "").strip()
@@ -173,7 +150,6 @@ def submit_release_form():
         release_to = (data.get('releaseTo') or "").strip()
         purpose = ','.join(request.form.getlist('purpose'))
         signature_url = data.get('signature_url', None)
-        email=user_email
 
         # Save form request in database
         new_request = ReleaseFormRequest(
@@ -391,6 +367,17 @@ def basic_user_release():
     signature_url = user.signature_url if user and user.signature_url else ""
     return render_template("basic_user_release.html", user=session['user'], signature_url=signature_url)
 
+@app.route('/basic_user_ssn')
+def basic_user_ssn():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    # Fetch user's signature from the database
+    email = session['user']['email']
+    user = User.query.filter_by(email=email).first()
+    # Get the signature URL (if exists)
+    signature_url = user.signature_url if user and user.signature_url else ""
+    return render_template("basic_user_ssn.html", user=session['user'], signature_url=signature_url)
+
 @app.route('/basic_user_form_status')
 def basic_user_form_status():
     if 'user' not in session:
@@ -399,26 +386,6 @@ def basic_user_form_status():
     email = session['user']['email']
     user = User.query.filter_by(email=email).first()
     return render_template("basic_user_form_status.html", user=session['user'])
-
-'''@app.route('/basic_user_form_status')
-def basic_user_form_status():
-    if 'user' not in session:
-        return redirect(url_for('index'))
-    
-    email = session['user']['email']
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    # Fetch requests for the logged-in user
-    requests = ReleaseFormRequest.query.filter_by(email=email).all()
-    return render_template("basic_user_form_status.html", user=user, requests=requests)'''
-
-@app.route('/basic_user_ssn')
-def basic_user_ssn():
-    if 'user' not in session:
-        return redirect(url_for('index'))
-    return render_template('basic_user_ssn.html', user=session['user'])
 
 # Generate PDF upon submission
 @app.route('/generate_pdf/<int:form_id>', methods=['GET'])
@@ -817,7 +784,6 @@ def _get_user_info(token):
 
 # Run Flask App
 if __name__ == '__main__':
-    #with app.app_context():
-        #db.create_all()
-    app.run(host='0.0.0.0', port=8000, debug=True)
-
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
