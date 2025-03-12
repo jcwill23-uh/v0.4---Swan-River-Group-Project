@@ -373,17 +373,6 @@ def basic_user_release():
     signature_url = user.signature_url if user and user.signature_url else ""
     return render_template("basic_user_release.html", user=session['user'], signature_url=signature_url)
 
-'''@app.route('/basic_user_ssn')
-def basic_user_ssn():
-    if 'user' not in session:
-        return redirect(url_for('index'))
-    # Fetch user's signature from the database
-    email = session['user']['email']
-    user = User.query.filter_by(email=email).first()
-    # Get the signature URL (if exists)
-    signature_url = user.signature_url if user and user.signature_url else ""
-    return render_template("basic_user_ssn.html", user=session['user'], signature_url=signature_url)'''
-
 @app.route('/basic_user_form_status')
 def basic_user_form_status():
     if 'user' not in session:
