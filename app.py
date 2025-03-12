@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
 from datetime import datetime
 import subprocess
+import threading
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -62,11 +63,26 @@ engine = create_engine(
 app.config['SQLALCHEMY_DATABASE_URI'] = engine.url
 db = SQLAlchemy(app)
 
+# Lazy initialization of database connection
+def initialize_database():
+    try:
+        with app.app_context():
+            logger.info("Initializing database...")
+            db.create_all()  # Create tables if they don't exist
+            logger.info("Database initialization complete.")
+    except Exception as e:
+        logger.error(f"Error initializing database: {e}")
+
+# Initialize the database in a separate thread when the app starts
+database_thread = threading.Thread(target=initialize_database)
+database_thread.start()
+
 # ---- Database Models ----
 
 # User Model
+# Define the User model first
 class User(db.Model):
-    __tablename__ = 'User'
+    __tablename__ = 'user'
     
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
@@ -77,6 +93,16 @@ class User(db.Model):
     status = db.Column(db.String(20), default="active")
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
+
+# Define the UserSignature model after User
+class UserSignature(db.Model):
+    __tablename__ = 'user_signature'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    signature_url = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=True)
 
 from datetime import datetime
 
@@ -110,7 +136,7 @@ class RequestForm(db.Model):
     approval_status = db.Column(db.String(20), default="pending")
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Approval Model
+'''# Approval Model
 class Approval(db.Model):
     __tablename__ = 'approval'
     
@@ -119,17 +145,9 @@ class Approval(db.Model):
     approver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status = db.Column(db.String(20), default="pending")
     comments = db.Column(db.Text, nullable=True)
-    approved_at = db.Column(db.DateTime, nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)'''
 
 # User Signature Model
-class UserSignature(db.Model):
-    __tablename__ = 'user_signature'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
-    signature_url = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=True)
 
 # ---- API Routes ----
 
@@ -799,6 +817,7 @@ def _get_user_info(token):
 
 # Run Flask App
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+    #with app.app_context():
+        #db.create_all()
     app.run(host='0.0.0.0', port=8000, debug=True)
+
