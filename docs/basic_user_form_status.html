@@ -14,61 +14,51 @@
     <title>Swan River Group Project</title>
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-
+    <!-- Cropper.js (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     <script>
-        function viewPDF(pdfUrl) {
-            const pdfViewer = document.getElementById('pdfViewer');
-            pdfViewer.src = pdfUrl;
-            pdfViewer.style.display = 'block';
-        }
+      function redirectToAdmin() {
+          window.location.href = "/basic_user_home";
+      }
     </script>
 </head>
-<!--Table-->
+
 <body class="userList">
     <div>
-        <h1>Your Requested Forms</h1><br>
-        <table id="userTable">
+    <h1>Form Submission Status</h1>
+    <table id="userTable">
             <thead>
                 <tr>
-                    <th>Student Name</th>
-                    <th>Peoplesoft ID</th>
-                    <th>Signature URL</th>
-                    <th>PDF URL</th>
-                    <th>Status</th>
-                    <th>Submitted At</th>
-                </tr>
+                <th>ID</th>
+                <th>Approver ID</th>
+                <th>Status</th>
+                <th>Comments</th>
+                <th>Approved At</th>
+            </tr>
             </thead>
             <tbody id="userTableBody">
                 {% if requests %}
                     {% for request in requests %}
                     <tr>
-                        <td>{{ request.student_name }}</td>
-                        <td>{{ request.peoplesoft_id }}</td>
-                        <td>{{ request.signature_url }}</td>
-                        <td>
-                            {{ request.pdf_url }}
-                            <button onclick="viewPDF('{{ request.pdf_url }}')">View PDF</button>
-                        </td>
-                        <td>{{ request.approval_status }}</td>
-                        <td>{{ request.submitted_at }}</td>
-                    </tr>
+                <td>{{ request.id }}</td>
+                <td>{{ request.approver_id }}</td>
+                <td>{{ request.status }}</td>
+                <td>{{ request.comments }}</td>
+                <td>{{ request.approved_at }}</td>
+            </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="15">No forms have been submitted yet.</td>
+                        <td colspan="10">No forms have been submitted yet.</td>
                     </tr>
                 {% endif %}
             </tbody>
         </table>
-        
-        <!-- Add an iframe to display the PDF -->
-        <iframe id="pdfViewer" style="display:none; width: 100%; height: 600px;" frameborder="0"></iframe>
-        
-        <button class="back" onclick="window.location.href='/admin_home'">Back to Home</button>
+    <button class="back" onclick="redirectToAdmin()">Back to Home</button>
     </div>
 </body>
-
 </html>
