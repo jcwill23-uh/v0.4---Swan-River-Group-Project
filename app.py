@@ -217,6 +217,7 @@ def submit_release_form():
 
         # Store PDF URL in the database
         new_request.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        user.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
         db.session.commit()
 
         return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
