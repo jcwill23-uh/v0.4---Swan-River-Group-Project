@@ -24,12 +24,6 @@
       function redirectToAdmin() {
           window.location.href = "/basic_user_home";
       }
-        
-      function viewPDF(pdfUrl) {
-            const pdfViewer = document.getElementById('pdfViewer');
-            pdfViewer.src = pdfUrl;
-            pdfViewer.style.display = 'block';
-        }
     </script>
 </head>
 
@@ -39,28 +33,23 @@
     <table id="userTable">
             <thead>
                 <tr>
-                    <th>Student Name</th>
-                    <th>Peoplesoft ID</th>
-                    <th>Signature URL</th>
-                    <th>PDF URL</th>
-                    <th>Status</th>
-                    <th>Submitted At</th>
-                </tr>
+                <th>ID</th>
+                <th>Approver ID</th>
+                <th>Status</th>
+                <th>Comments</th>
+                <th>Approved At</th>
+            </tr>
             </thead>
             <tbody id="userTableBody">
                 {% if requests %}
                     {% for request in requests %}
                     <tr>
-                        <td>{{ request.student_name }}</td>
-                        <td>{{ request.peoplesoft_id }}</td>
-                        <td>{{ request.signature_url }}</td>
-                        <td>
-                            {{ request.pdf_url }}
-                            <button onclick="viewPDF('{{ request.pdf_url }}')">View PDF</button>
-                        </td>
-                        <td>{{ request.approval_status }}</td>
-                        <td>{{ request.submitted_at }}</td>
-                    </tr>
+                <td>{{ request.id }}</td>
+                <td>{{ request.approver_id }}</td>
+                <td>{{ request.status }}</td>
+                <td>{{ request.comments }}</td>
+                <td>{{ request.approved_at }}</td>
+            </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
