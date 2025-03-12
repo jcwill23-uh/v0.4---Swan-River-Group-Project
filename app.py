@@ -97,7 +97,6 @@ class ReleaseFormRequest(db.Model):
     pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     approval_status = db.Column(db.String(20), default="pending")
-    email = db.Column(db.String(100), nullable=False)
 
 # Request Form Model
 class RequestForm(db.Model):
@@ -142,10 +141,6 @@ def submit_release_form():
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
 
-        user_email = session.get("user", {}).get("email")
-        if not user_email:
-            return jsonify({"error": "User not authenticated"}), 403
-
         student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
         peoplesoft_id = (data.get('peoplesoftID') or "").strip()
         password = (data.get('password') or "").strip()
@@ -155,7 +150,6 @@ def submit_release_form():
         release_to = (data.get('releaseTo') or "").strip()
         purpose = ','.join(request.form.getlist('purpose'))
         signature_url = data.get('signature_url', None)
-        email=user_email
 
         # Save form request in database
         new_request = ReleaseFormRequest(
@@ -373,6 +367,17 @@ def basic_user_release():
     signature_url = user.signature_url if user and user.signature_url else ""
     return render_template("basic_user_release.html", user=session['user'], signature_url=signature_url)
 
+@app.route('/basic_user_ssn')
+def basic_user_ssn():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    # Fetch user's signature from the database
+    email = session['user']['email']
+    user = User.query.filter_by(email=email).first()
+    # Get the signature URL (if exists)
+    signature_url = user.signature_url if user and user.signature_url else ""
+    return render_template("basic_user_ssn.html", user=session['user'], signature_url=signature_url)
+
 @app.route('/basic_user_form_status')
 def basic_user_form_status():
     if 'user' not in session:
@@ -381,20 +386,6 @@ def basic_user_form_status():
     email = session['user']['email']
     user = User.query.filter_by(email=email).first()
     return render_template("basic_user_form_status.html", user=session['user'])
-
-@app.route('/basic_user_form_status')
-def basic_user_form_status():
-    if 'user' not in session:
-        return redirect(url_for('index'))
-    
-    email = session['user']['email']
-    user = User.query.filter_by(email=email).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    # Fetch requests for the logged-in user
-    requests = ReleaseFormRequest.query.filter_by(email=email).all()
-    return render_template("basic_user_form_status.html", user=user, requests=requests)
 
 # Generate PDF upon submission
 @app.route('/generate_pdf/<int:form_id>', methods=['GET'])
@@ -795,4 +786,4 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0', port=8000, debug=True)
+    app.run()
