@@ -34,10 +34,9 @@
             <thead>
                 <tr>
                 <th>ID</th>
-                <th>Approver ID</th>
+                <th>Student Name</th>
+                <th>Submitted Date</th>
                 <th>Status</th>
-                <th>Comments</th>
-                <th>Approved At</th>
             </tr>
             </thead>
             <tbody id="userTableBody">
@@ -45,10 +44,9 @@
                     {% for request in requests %}
                     <tr>
                 <td>{{ request.id }}</td>
-                <td>{{ request.approver_id }}</td>
+                <td>{{ request.student_name }}</td>
                 <td>{{ request.status }}</td>
-                <td>{{ request.comments }}</td>
-                <td>{{ request.approved_at }}</td>
+                <td>{{ request.submitted_at }}</td>
             </tr>
                     {% endfor %}
                 {% else %}
