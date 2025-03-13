@@ -98,37 +98,6 @@ class ReleaseFormRequest(db.Model):
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     approval_status = db.Column(db.String(20), default="pending")
 
-# Request Form Model
-class RequestForm(db.Model):
-    __tablename__ = 'request_form'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, nullable=False)
-    form_type = db.Column(db.String(100), nullable=False)
-    request_data = db.Column(db.Text, nullable=False)
-    approval_status = db.Column(db.String(20), default="pending")
-    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-# Approval Model
-class Approval(db.Model):
-    __tablename__ = 'approval'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    request_id = db.Column(db.Integer, db.ForeignKey('request_form.id'), nullable=False)
-    approver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    status = db.Column(db.String(20), default="pending")
-    comments = db.Column(db.Text, nullable=True)
-    approved_at = db.Column(db.DateTime, nullable=True)
-
-# User Signature Model
-class UserSignature(db.Model):
-    __tablename__ = 'user_signature'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
-    signature_url = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, nullable=True)
 
 # ---- API Routes ----
 
