@@ -77,6 +77,7 @@ class User(db.Model):
     status = db.Column(db.String(20), default="active")
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
+    pdf_url2 = db.Column(db.String(255), nullable=True)
 
 from datetime import datetime
 
@@ -434,119 +435,118 @@ def generate_pdf(form_id):
 
 # Generate latex content for release form
 def generate_latex_content(form, user):
-    # Get the user's signature URL from the database
-    signature_path = user.signature_url.strip() if user.signature_url else None
+    try:
+        # Get the user's signature URL from the database
+        signature_path = getattr(user, "signature_url", "").strip() if user and user.signature_url else None
 
-    print(f"Using signature path: {signature_path}")  # Debugging output
+        print(f"Using signature path: {signature_path}")  # Debugging output
 
-    # Define checked and unchecked checkboxes
-    def checkbox(value, selected_values):
-        return r"$\boxtimes$" if value in selected_values else r"$\square$"
+        # Define checked and unchecked checkboxes
+        def checkbox(value, selected_values):
+            return r"$\boxtimes$" if value.strip() in selected_values else r"$\square$"
 
-    # Convert comma-separated strings into lists
-    categories = form.categories.split(",") if form.categories else []
-    specific_info = form.specific_info.split(",") if form.specific_info else []
-    purpose = form.purpose.split(",") if form.purpose else []
+        # Convert comma-separated strings into lists (ensure they are lists)
+        categories = form.categories.split(",") if form.categories else []
+        specific_info = form.specific_info.split(",") if form.specific_info else []
+        purpose = form.purpose.split(",") if form.purpose else []
 
-    # LaTeX document structure
-    latex_content = f"""
-    \\documentclass[12pt]{{article}}
-    \\usepackage[a4paper, margin=0.75in]{{geometry}}
-    \\usepackage{{graphicx}}
-    \\usepackage{{amssymb}}
-    \\usepackage{{array}}
-    \\usepackage{{setspace}}
-    \\usepackage{{lmodern}}
-    
-    % Define checkbox symbols
-    \\newcommand{{\\checkbox}}{{\\square}}  % Unchecked box
-    \\newcommand{{\\checkedbox}}{{\\boxtimes}}  % Checked box
-    
-    \\pagestyle{{empty}}
+        # Sanitize all lists to remove extra spaces
+        categories = [c.strip() for c in categories]
+        specific_info = [s.strip() for s in specific_info]
+        purpose = [p.strip() for p in purpose]
 
-    \\begin{{document}}
-    \\begin{{center}}
-        {{\\Large \\textbf{{AUTHORIZATION TO RELEASE EDUCATIONAL RECORDS}}}} \\\\
-        {{\\small Family Educational Rights and Privacy Act of 1974 as Amended (FERPA)}}
-    \\end{{center}}
+        # LaTeX document structure
+        latex_content = f"""
+        \\documentclass[12pt]{{article}}
+        \\usepackage[a4paper, margin=0.75in]{{geometry}}
+        \\usepackage{{graphicx}}
+        \\usepackage{{amssymb}}
+        \\usepackage{{array}}
+        \\usepackage{{setspace}}
+        \\usepackage{{lmodern}}
+        
+        % Define checkbox symbols
+        \\newcommand{{\\checkbox}}{{\\square}}  % Unchecked box
+        \\newcommand{{\\checkedbox}}{{\\boxtimes}}  % Checked box
+        
+        \\pagestyle{{empty}}
 
-    \\vspace{{0.5em}}
+        \\begin{{document}}
+        \\begin{{center}}
+            {{\\Large \\textbf{{AUTHORIZATION TO RELEASE EDUCATIONAL RECORDS}}}} \\\\
+            {{\\small Family Educational Rights and Privacy Act of 1974 as Amended (FERPA)}}
+        \\end{{center}}
 
-    \\noindent
-    I \\underline{{\\hspace{{3in}} {form.student_name} \\hspace{{3in}}}} authorize officials in the University of Houston - \\underline{{{form.campus}}} to disclose my educational records.
+        \\vspace{{0.5em}}
 
-    \\vspace{{0.5em}}
+        \\noindent
+        I \\underline{{\\hspace{{3in}} {form.student_name} \\hspace{{3in}}}} authorize officials in the University of Houston - \\underline{{{form.campus}}} to disclose my educational records.
 
-    \\textbf{{Categories of Information to Release:}}
-    \\begin{{flushleft}}
-        \\hspace{{1em}} {checkbox("Registrar", categories)} Office of the University Registrar \\\\
-        \\hspace{{1em}} {checkbox("Financial Aid", categories)} Scholarships and Financial Aid \\\\
-        \\hspace{{1em}} {checkbox("Student Financial Services", categories)} Student Financial Services \\\\
-        \\hspace{{1em}} {checkbox("Undergraduate Scholars", categories)} Undergraduate Scholars @ UH \\\\
-        \\hspace{{1em}} {checkbox("Advancement", categories)} University Advancement \\\\
-        \\hspace{{1em}} {checkbox("Dean of Students", categories)} Dean of Students Office \\\\
-        \\hspace{{1em}} {checkbox("Other", categories)} Other (Please Specify): \\underline{{\\hspace{{3in}}}}
-    \\end{{flushleft}}
+        \\vspace{{0.5em}}
 
-    \\vspace{{0.5em}}
+        \\textbf{{Categories of Information to Release:}}
+        \\begin{{flushleft}}
+            \\hspace{{1em}} {checkbox("Registrar", categories)} Office of the University Registrar \\\\
+            \\hspace{{1em}} {checkbox("Financial Aid", categories)} Scholarships and Financial Aid \\\\
+            \\hspace{{1em}} {checkbox("Student Financial Services", categories)} Student Financial Services \\\\
+            \\hspace{{1em}} {checkbox("Undergraduate Scholars", categories)} Undergraduate Scholars @ UH \\\\
+            \\hspace{{1em}} {checkbox("Advancement", categories)} University Advancement \\\\
+            \\hspace{{1em}} {checkbox("Dean of Students", categories)} Dean of Students Office \\\\
+            \\hspace{{1em}} {checkbox("Other", categories)} Other (Please Specify): \\underline{{\\hspace{{3in}}}}
+        \\end{{flushleft}}
 
-    \\textbf{{Specifically Authorized Information:}}
-    \\begin{{flushleft}}
-        \\hspace{{1em}} {checkbox("Advising", specific_info)} Academic Advising Profile/Information \\\\
-        \\hspace{{1em}} {checkbox("Academic Records", specific_info)} Academic Records \\\\
-        \\hspace{{1em}} {checkbox("All Records", specific_info)} All University Records \\\\
-        \\hspace{{1em}} {checkbox("Billing", specific_info)} Billing/Financial Aid \\\\
-        \\hspace{{1em}} {checkbox("Disciplinary", specific_info)} Disciplinary \\\\
-        \\hspace{{1em}} {checkbox("Grades", specific_info)} Grades/Transcripts \\\\
-        \\hspace{{1em}} {checkbox("Housing", specific_info)} Housing \\\\
-        \\hspace{{1em}} {checkbox("Photos", specific_info)} Photos \\\\
-        \\hspace{{1em}} {checkbox("Scholarships", specific_info)} Scholarship and/or Honors \\\\
-        \\hspace{{1em}} {checkbox("Other", specific_info)} Other (Please Specify): \\underline{{\\hspace{{3in}}}}
-    \\end{{flushleft}}
+        \\vspace{{0.5em}}
 
-    \\vspace{{0.5em}}
+        \\textbf{{Specifically Authorized Information:}}
+        \\begin{{flushleft}}
+            \\hspace{{1em}} {checkbox("Advising", specific_info)} Academic Advising Profile/Information \\\\
+            \\hspace{{1em}} {checkbox("Academic Records", specific_info)} Academic Records \\\\
+            \\hspace{{1em}} {checkbox("All Records", specific_info)} All University Records \\\\
+            \\hspace{{1em}} {checkbox("Billing", specific_info)} Billing/Financial Aid \\\\
+            \\hspace{{1em}} {checkbox("Disciplinary", specific_info)} Disciplinary \\\\
+            \\hspace{{1em}} {checkbox("Grades", specific_info)} Grades/Transcripts \\\\
+            \\hspace{{1em}} {checkbox("Housing", specific_info)} Housing \\\\
+            \\hspace{{1em}} {checkbox("Photos", specific_info)} Photos \\\\
+            \\hspace{{1em}} {checkbox("Scholarships", specific_info)} Scholarship and/or Honors \\\\
+            \\hspace{{1em}} {checkbox("Other", specific_info)} Other (Please Specify): \\underline{{\\hspace{{3in}}}}
+        \\end{{flushleft}}
 
-    % Fixes alignment issue using a table
-    \\begin{{flushleft}}
-        \\begin{{tabular}}{{@{{}}l l@{{}}}}
-            \\textbf{{Release To:}} & \\underline{{\\hspace{{5in}} {form.release_to} }} \\\\
-            \\textbf{{For the purpose of:}} & \\underline{{\\hspace{{5in}} {form.purpose} }}
-        \\end{{tabular}}
-    \\end{{flushleft}}
+        \\vspace{{0.5em}}
 
-    \\vspace{{0.5em}}
+        % Fixes alignment issue using a table
+        \\begin{{flushleft}}
+            \\begin{{tabular}}{{@{{}}l l@{{}}}}
+                \\textbf{{Release To:}} & \\underline{{\\hspace{{5in}} {form.release_to} }} \\\\
+                \\textbf{{For the purpose of:}} & \\underline{{\\hspace{{5in}} {form.purpose} }}
+            \\end{{tabular}}
+        \\end{{flushleft}}
 
-    \\textbf{{Purpose of Disclosure:}}
-    \\begin{{flushleft}}
-        \\hspace{{1em}} {checkbox("Family", purpose)} Family \\\\
-        \\hspace{{1em}} {checkbox("Educational Institution", purpose)} Educational Institution \\\\
-        \\hspace{{1em}} {checkbox("Honor or Award", purpose)} Honor or Award \\\\
-        \\hspace{{1em}} {checkbox("Employer", purpose)} Employer/Prospective Employer \\\\
-        \\hspace{{1em}} {checkbox("Public/Media", purpose)} Public or Media of Scholarship \\\\
-        \\hspace{{1em}} {checkbox("Other", purpose)} Other (Please Specify): \\underline{{\\hspace{{3in}}}}
-    \\end{{flushleft}}
+        \\vspace{{0.5em}}
 
-    \\vspace{{0.5em}}
+        \\textbf{{Password for Phone Verification:}} \\underline{{\\hspace{{3in}} {form.password} }}
 
-    \\textbf{{Password for Phone Verification:}} \\underline{{\\hspace{{3in}} {form.password} }}
+        \\vspace{{1em}}
 
-    \\vspace{{1em}}
+        \\textbf{{Student Signature:}} \\newline
+        \\begin{{center}}
+            {f"\\includegraphics[width=2in]{{{signature_path}}}" if signature_path else "\\textbf{No signature provided}"}
+        \\end{{center}}
 
-    \\textbf{{Student Signature:}} \\newline
-    \\begin{{center}}
-        {f"\\includegraphics[width=2in]{{{signature_path}}}" if signature_path else "\\textbf{No signature provided}"}
-    \\end{{center}}
+        \\vspace{{1em}}
 
-    \\vspace{{1em}}
+        \\noindent
+        \\textbf{{PeopleSoft I.D. Number:}} \\underline{{\\hspace{{3in}} {form.peoplesoft_id} }} \\\\
+        \\textbf{{Student Name (Print):}} \\underline{{ {form.student_name} }} \\\\
+        \\textbf{{Date:}} \\underline{{\\today}}
 
-    \\noindent
-    \\textbf{{PeopleSoft I.D. Number:}} \\underline{{\\hspace{{3in}} {form.peoplesoft_id} }} \\\\
-    \\textbf{{Student Name (Print):}} \\underline{{ {form.student_name} }} \\\\
-    \\textbf{{Date:}} \\underline{{\\today}}
+        \\end{{document}}
+        """
 
-    \\end{{document}}
-    """
-    return latex_content
+        return latex_content
+
+    except Exception as e:
+        print(f"Error in generate_latex_content: {str(e)}")
+        return None
 
 # Admin Routes
 @app.route('/admin_home')
