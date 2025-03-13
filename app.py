@@ -77,7 +77,6 @@ class User(db.Model):
     status = db.Column(db.String(20), default="active")
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
-    pdf_url2 = db.Column(db.String(255), nullable=True)
 
 from datetime import datetime
 
@@ -796,5 +795,4 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0', port=8000)
-
+    app.run(debug=True)
