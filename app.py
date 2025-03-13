@@ -232,6 +232,7 @@ CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
 TENANT_ID = "170bbabd-a2f0-4c90-ad4b-0e8f0f0c4259"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 REDIRECT_URI = "https://swan-river-group-project.azurewebsites.net/auth/callback"
+#REDIRECT_URI = "http://localhost:5000/auth/callback"
 SCOPE = ['User.Read']
 
 # Authentication Routes
@@ -382,10 +383,18 @@ def basic_user_ssn():
 def basic_user_form_status():
     if 'user' not in session:
         return redirect(url_for('index'))
-    # Fetch user's signature from the database
+    
+    # Fetch user's email from session
     email = session['user']['email']
     user = User.query.filter_by(email=email).first()
-    return render_template("basic_user_form_status.html", user=session['user'])
+    
+    # Fetch release form requests for this user by matching their name
+    user_full_name = f"{user.first_name} {user.middle_name or ''} {user.last_name}".strip()
+    requests = ReleaseFormRequest.query.filter(
+        ReleaseFormRequest.student_name.like(f"%{user_full_name}%")
+    ).all()
+    
+    return render_template("basic_user_form_status.html", user=session['user'], requests=requests)
 
 # Generate PDF upon submission
 @app.route('/generate_pdf/<int:form_id>', methods=['GET'])
