@@ -77,6 +77,7 @@ class User(db.Model):
     status = db.Column(db.String(20), default="active")
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
+    pdf_url2 = db.Column(db.String(255), nullable=True)
 
 from datetime import datetime
 
