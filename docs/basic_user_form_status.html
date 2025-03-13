@@ -35,8 +35,8 @@
                 <tr>
                 <th>ID</th>
                 <th>Student Name</th>
-                <th>Submitted Date</th>
                 <th>Status</th>
+                <th>Submitted Date</th>
             </tr>
             </thead>
             <tbody id="userTableBody">
@@ -45,7 +45,17 @@
                     <tr>
                 <td>{{ request.id }}</td>
                 <td>{{ request.student_name }}</td>
-                <td>{{ request.status }}</td>
+                <td>
+                        {% if request.approval_status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif request.approval_status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                        {% elif request.approval_status == 'declined' %}
+                            <span class="badge bg-danger">Declined</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ request.approval_status }}</span>
+                        {% endif %}
+                    </td>
                 <td>{{ request.submitted_at }}</td>
             </tr>
                     {% endfor %}
