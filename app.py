@@ -436,7 +436,7 @@ def generate_pdf(form_id):
 # Generate latex content for release form
 def generate_latex_content(form, user):
     try:
-        # Get the user's signature URL from the database
+        # Get the user's signature URL safely
         signature_path = getattr(user, "signature_url", "").strip() if user and user.signature_url else None
 
         print(f"Using signature path: {signature_path}")  # Debugging output
@@ -529,7 +529,7 @@ def generate_latex_content(form, user):
 
         \\textbf{{Student Signature:}} \\newline
         \\begin{{center}}
-            {f"\\includegraphics[width=2in]{{{signature_path}}}" if signature_path else "\\textbf{No signature provided}"}
+            {f"\\includegraphics[width=2in]{{{signature_path}}}" if signature_path else "\\textbf{{No signature provided}}"}
         \\end{{center}}
 
         \\vspace{{1em}}
@@ -545,7 +545,7 @@ def generate_latex_content(form, user):
         return latex_content
 
     except Exception as e:
-        print(f"Error in generate_latex_content: {str(e)}")
+        print(f"Error in generate_latex_content: {str(e)}")  # Debugging output
         return None
 
 # Admin Routes
