@@ -27,7 +27,7 @@ os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Configure database
 from models import db
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
