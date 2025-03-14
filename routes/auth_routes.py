@@ -1,7 +1,6 @@
 from flask import Blueprint, session, redirect, url_for, render_template, request, flash
 import logging
 from models import User, db
-from auth_helper import _build_auth_url, _get_token_from_code, _get_user_info
 import msal 
 import requests
 from config import Config
@@ -74,6 +73,23 @@ def authorized():
         logger.error(f"Error during authentication: {str(e)}")
         flash("An error occurred while logging in.", "error")
         return redirect(url_for('auth.login'))
+
+def _build_auth_url(scopes=None, state=None):
+    """Build Azure AD authentication URL."""
+    app = msal.PublicClientApplication(Config.CLIENT_ID, authority=Config.AUTHORITY)
+    return app.get_authorization_request_url(scopes or Config.SCOPE, state=state, redirect_uri=Config.REDIRECT_URI)
+
+def _get_token_from_code(code):
+    """Exchange authorization code for an access token."""
+    client = msal.ConfidentialClientApplication(Config.CLIENT_ID, authority=Config.AUTHORITY, client_credential=Config.CLIENT_SECRET)
+    result = client.acquire_token_by_authorization_code(code, scopes=Config.SCOPE, redirect_uri=Config.REDIRECT_URI)
+    return result.get("access_token")
+
+def _get_user_info(token):
+    """Retrieve user info from Microsoft Graph API."""
+    headers = {'Authorization': f'Bearer {token}'}
+    response = requests.get('https://graph.microsoft.com/v1.0/me', headers=headers)
+    return response.json()
 
 @auth_bp.route('/logout')
 def logout():
