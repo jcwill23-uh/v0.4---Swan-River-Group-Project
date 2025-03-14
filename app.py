@@ -4,44 +4,27 @@ from flask_session import Session
 from dotenv import load_dotenv
 import os
 import logging
-from config import Config
 
-# Load environment variables
+from config import Config
+from models import db
+from routes import auth_bp, user_bp, admin_bp
+
 load_dotenv()
 
-# Initialize logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Initialize Flask app
 app = Flask(__name__, template_folder='docs', static_folder='docs')
+app.config.from_object(Config)
 app.secret_key = os.getenv('SECRET_KEY')
 
-# Configure session storage
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_USE_SIGNER'] = True
-app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
-app.config['SESSION_FILE_THRESHOLD'] = 100
-os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
-
-# Configure database
-from models import db
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+# Configure database and session
 db.init_app(app)
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
 
-# Register blueprints
-from routes.auth_routes import auth_bp
-from routes.user_routes import user_bp
-from routes.admin_routes import admin_bp
+# Register Blueprints
+app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(user_bp, url_prefix='/user')
+app.register_blueprint(admin_bp, url_prefix='/admin')
 
-app.register_blueprint(auth_bp)
-app.register_blueprint(user_bp)
-app.register_blueprint(admin_bp)
-
-# Run Flask app
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
