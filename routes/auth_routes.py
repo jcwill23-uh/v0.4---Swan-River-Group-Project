@@ -22,22 +22,25 @@ def index():
 
 @auth_bp.route('/login')
 def login():
+    redirect_uri = url_for('auth.authorized', _external=True)
     return render_template('login.html')
 
 @auth_bp.route('/azure_login')
 def azure_login():
     session['state'] = 'random_state'
-    auth_url = _build_auth_url()
+    redirect_uri = url_for('auth.authorized', _external=True)
+    auth_url = _build_auth_url(redirect_uri=redirect_uri)
     return redirect(auth_url)
 
-@auth_bp.route('/auth/callback')
+@auth_bp.route('/callback')
 def authorized():
     try:
         code = request.args.get('code')
         if not code:
             return redirect(url_for('auth.index'))
 
-        token = _get_token_from_code(code)
+        redirect_uri = url_for('auth.authorized', _external=True)
+        token = _get_token_from_code(code, redirect_uri=redirect_uri)
         user_info = _get_user_info(token)
         email = user_info.get('mail') or user_info.get('userPrincipalName')
 
@@ -60,6 +63,7 @@ def authorized():
 
         session['user'] = {
             'first_name': user.first_name,
+            'middle_name': user.middle_name if user.middle_name else "",
             'last_name': user.last_name,
             'email': user.email,
             'role': user.role,
@@ -74,15 +78,13 @@ def authorized():
         flash("An error occurred while logging in.", "error")
         return redirect(url_for('auth.login'))
 
-def _build_auth_url(scopes=None, state=None):
-    """Build Azure AD authentication URL."""
+def _build_auth_url(scopes=None, state=None, redirect_uri=None):
     app = msal.PublicClientApplication(Config.CLIENT_ID, authority=Config.AUTHORITY)
-    return app.get_authorization_request_url(scopes or Config.SCOPE, state=state, redirect_uri=Config.REDIRECT_URI)
+    return app.get_authorization_request_url(scopes or Config.SCOPE, state=state, redirect_uri=redirect_uri)
 
-def _get_token_from_code(code):
-    """Exchange authorization code for an access token."""
+def _get_token_from_code(code, redirect_uri):
     client = msal.ConfidentialClientApplication(Config.CLIENT_ID, authority=Config.AUTHORITY, client_credential=Config.CLIENT_SECRET)
-    result = client.acquire_token_by_authorization_code(code, scopes=Config.SCOPE, redirect_uri=Config.REDIRECT_URI)
+    result = client.acquire_token_by_authorization_code(code, scopes=Config.SCOPE, redirect_uri=redirect_uri)
     return result.get("access_token")
 
 def _get_user_info(token):
@@ -95,3 +97,4 @@ def _get_user_info(token):
 def logout():
     session.clear()
     return redirect(url_for('auth.index'))
+
