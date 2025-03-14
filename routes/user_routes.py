@@ -94,32 +94,17 @@ def basic_user_form_status():
 @user_bp.route('/submit_release_form', methods=['POST'])
 def submit_release_form():
     try:
-        import os
-
         data = request.form
-        is_final_submission = data.get("final_submission") == "true"
-
-        student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
-        peoplesoft_id = (data.get('peoplesoftID') or "").strip()
-        password = (data.get('password') or "").strip()
-        campus = (data.get('campus') or "").strip()
-        categories = ','.join(request.form.getlist('categories'))
-        specific_info = ','.join(request.form.getlist('info'))
-        release_to = (data.get('releaseTo') or "").strip()
-        purpose = ','.join(request.form.getlist('purpose'))
-        signature_url = data.get('signature_url', None)
-
         new_request = ReleaseFormRequest(
-            student_name=student_name,
-            peoplesoft_id=peoplesoft_id,
-            password=password,
-            campus=campus,
-            categories=categories,
-            specific_info=specific_info,
-            release_to=release_to,
-            purpose=purpose,
-            signature_url=signature_url,
-            submitted_at=None if not is_final_submission else datetime.utcnow()
+            student_name=data.get('first_name', '') + " " + data.get('last_name', ''),
+            peoplesoft_id=data.get('peoplesoftID', ''),
+            password=data.get('password', ''),
+            campus=data.get('campus', ''),
+            categories=','.join(request.form.getlist('categories')),
+            specific_info=','.join(request.form.getlist('info')),
+            release_to=data.get('releaseTo', ''),
+            purpose=','.join(request.form.getlist('purpose')),
+            signature_url=data.get('signature_url', None),
         )
         db.session.add(new_request)
         db.session.commit()
