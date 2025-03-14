@@ -65,8 +65,13 @@
                 <label><input type="checkbox" name="categories" value="Undergraduate Scholars"> Undergraduate Scholars @ UH (formerly USD)</label>
                 <label><input type="checkbox" name="categories" value="Advancement"> University Advancement</label>
                 <label><input type="checkbox" name="categories" value="Dean of Students"> Dean of Students Office</label>
-                <label><input type="checkbox" id="otherCategoryCheckbox" onclick="document.getElementById('otherCategoryText') = this.checked;"> Other (Please Specify)</label>
-                <input type="text" id="otherCategoryText" name="otherCategoryText" style="display: none;" placeholder="Specify other category">
+                <label>
+                    <input type="checkbox" id="otherCategoryCheckbox" name="categories" value="Other" onclick="toggleOtherField('otherCategoryCheckbox', 'otherCategoryText')">
+                    Other (Please Specify)
+                </label>
+                <input type="text" id="otherCategoryText" name="otherCategoryText" placeholder="Specify other category">
+                <input type="hidden" id="hiddenOtherCategoryText" name="hiddenOtherCategoryText" value="">
+
             </div>
 
             <!-- Specific Disclosure Authorization -->
@@ -81,8 +86,12 @@
                 <label><input type="checkbox" name="info" value="Housing"> Housing</label>
                 <label><input type="checkbox" name="info" value="Photos"> Photos</label>
                 <label><input type="checkbox" name="info" value="Scholarships"> Scholarship and/or Honors</label>
-                <label><input type="checkbox" id="otherInfoCheckbox" onclick="document.getElementById('otherInfoText') = this.checked;"> Other (Please Specify)</label>
-                <input type="text" id="otherInfoText" name="otherInfoText" style="display: none;" placeholder="Specify other information">
+                <label>
+                    <input type="checkbox" id="otherInfoCheckbox" name="info" value="Other" onclick="toggleOtherField('otherInfoCheckbox', 'otherInfoText')">
+                    Other (Please Specify)
+                </label>
+                <input type="text" id="otherInfoText" name="otherInfoText" placeholder="Specify other information">
+                <input type="hidden" id="hiddenOtherInfoText" name="hiddenOtherInfoText" value="">
             </div>
 
             <!-- Release Information To -->
@@ -97,8 +106,12 @@
                 <label><input type="checkbox" name="purpose" value="Honor or Award"> Honor or Award</label>
                 <label><input type="checkbox" name="purpose" value="Employer"> Employer/Prospective Employer</label>
                 <label><input type="checkbox" name="purpose" value="Public/Media"> Public or Media of Scholarship</label>
-                <label><input type="checkbox" id="otherPurposeCheckbox" onclick="document.getElementById('otherPurposeText') = this.checked;"> Other (Please Specify)</label>
-                <input type="text" id="otherPurposeText" name="otherPurposeText" style="display: none;" placeholder="Specify other purpose">
+                <label>
+                    <input type="checkbox" id="otherPurposeCheckbox" name="purpose" value="Other" onclick="toggleOtherField('otherPurposeCheckbox', 'otherPurposeText')">
+                    Other (Please Specify)
+                </label>
+                <input type="text" id="otherPurposeText" name="otherPurposeText" placeholder="Specify other purpose">
+                <input type="hidden" id="hiddenOtherPurposeText" name="hiddenOtherPurposeText" value="">
             </div>
 
             <!-- Password Requirement -->
@@ -117,14 +130,13 @@
     <!-- END OF FORM INFORMATION -->
 
     <h3>Please upload a picture of your signature below.</h3>
-    <input type="file" id="signatureInput" accept="image/png, image/jpeg">
+    <input type="file" id="signatureInput" name="signature" accept="image/png, image/jpeg">
     <br><br>
     <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>  
     <!-- Signature Preview -->
     <div class="signature-container">
         {% if signature_url %}
-            <img id="signaturePreview" src="{{ signature_url }}" 
-                 alt="Signature Image">
+            <img id="signaturePreview" src="{{ signature_url }}" alt="Signature Image" style="max-width: 200px; max-height: 100px;">
         {% else %}
             <img id="signaturePreview" src="" 
                  alt="Signature Image" style="display: none;">
@@ -145,45 +157,34 @@
         <button class ="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button>
 
         <!-- When clicked Submit, it should send the form to admin"-->
-        <form id="releaseForm" action="/submit_release_form" method="POST">
-    <!-- Form elements -->
-    <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
-</form>
+        <form id="releaseForm" action="/submit_release_form" method="POST" enctype="multipart/form-data">
+            <!-- Form elements -->
+            <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
+        </form>
 
 <div id="successMessage" style="display: none; color: green;">Form submitted successfully!</div>
 <div id="errorMessage" style="display: none; color: red;">An error occurred while submitting the form. Please try again.</div>
 
 <script>
-    document.getElementById("releaseForm").addEventListener("submit", async function (event) {
+    document.getElementById("releaseForm").addEventListener("submit", function () {
         event.preventDefault(); // Prevent default form submission
-
-        const formData = new FormData(this);
-        
-        try {
-            const response = await fetch("/submit_release_form", {
-                method: "POST",
-                body: formData
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                document.getElementById("successMessage").style.display = "block";
-                document.getElementById("errorMessage").style.display = "none";
-
-                // Optionally, clear the form or redirect the user
-                this.reset();
-            } else {
-                throw new Error(data.error || "Submission failed");
+        // Ensure unchecked checkboxes are submitted
+        document.querySelectorAll("input[type=checkbox]").forEach(checkbox => {
+            if (!checkbox.checked) {
+                let hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
+                hiddenInput.name = checkbox.name;
+                hiddenInput.value = "off";  // Mark as 'off' if unchecked
+                this.appendChild(hiddenInput);
             }
-        } catch (error) {
-            console.error("Error submitting form:", error);
-            document.getElementById("successMessage").style.display = "none";
-            document.getElementById("errorMessage").style.display = "block";
-        }
+        });
+    
+        // Ensure "Other" fields are always submitted
+        document.getElementById("hiddenOtherCategoryText").value = document.getElementById("otherCategoryText").value;
+        document.getElementById("hiddenOtherInfoText").value = document.getElementById("otherInfoText").value;
+        document.getElementById("hiddenOtherPurposeText").value = document.getElementById("otherPurposeText").value;
     });
 </script>
-
-
         
         <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
     </div>
