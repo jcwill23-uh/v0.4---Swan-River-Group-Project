@@ -12,4 +12,5 @@ class Config:
   AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
   REDIRECT_URI = "https://swan-river-group-project.azurewebsites.net/auth/callback"
   SCOPE = ['User.Read']
-  
+  SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI")
+  SQLALCHEMY_TRACK_MODIFICATIONS = False
