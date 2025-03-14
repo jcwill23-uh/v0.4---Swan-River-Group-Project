@@ -199,6 +199,11 @@ def generate_latex_content(form, user):
     """
     return latex_content
 
+@user_bp.route('/submit_ssn_form', methods=['POST'])
+def submit_ssn_form():
+    # handle form submission logic here
+    return redirect(url_for('user.basic_user_view'))
+
 # Update user profile
 @user_bp.route('/user/profile/update', methods=['PUT'])
 def update_user_profile():
@@ -275,3 +280,4 @@ def upload_user_signature():
     except Exception as e:
         logging.error(f"Error uploading signature: {str(e)}")
         return jsonify({"error": f"Error uploading signature: {str(e)}"}), 500
+
