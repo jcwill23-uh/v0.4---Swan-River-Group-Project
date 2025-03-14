@@ -5,12 +5,6 @@ import logging
 admin_bp = Blueprint('admin', __name__)
 logger = logging.getLogger(__name__)
 
-@admin_bp.route('/admin_home')
-def admin_home():
-    if 'user' not in session or session['user']['role'] != 'admin':
-        return redirect(url_for('auth.index'))
-    return render_template('admin.html', user=session['user'])
-
 @admin_bp.route('/admin_view_users')
 def admin_view_users():
     if 'user' not in session or session['user']['role'] != 'admin':
@@ -103,12 +97,6 @@ def admin_view_profile():
     if 'user' not in session:
         return redirect(url_for('index'))
     return render_template('admin-view-profile.html', user=session['user'])
-
-@admin_bp.route('/admin_view_users')
-def admin_view_users():
-    if 'user' not in session:
-        return redirect(url_for('index'))
-    return render_template('admin-view-user.html')
 
 @admin_bp.route('/admin_user_forms')
 def admin_user_forms():
@@ -247,21 +235,3 @@ def admin_get_pdf(form_id):
     if not form or not form.pdf_url:
         return jsonify({"error": "PDF not found"}), 404
     return redirect(form.pdf_url)
-
-@admin_bp.route('/approve_request/<int:request_id>', methods=['POST'])
-def approve_request(request_id):
-    request = ReleaseFormRequest.query.get(request_id)
-    if request:
-        request.approval_status = "approved"
-        db.session.commit()
-        return jsonify({"message": "Request approved successfully"}), 200
-    return jsonify({"error": "Request not found"}), 404
-
-@admin_bp.route('/decline_request/<int:request_id>', methods=['POST'])
-def decline_request(request_id):
-    request = ReleaseFormRequest.query.get(request_id)
-    if request:
-        request.approval_status = "declined"
-        db.session.commit()
-        return jsonify({"message": "Request declined successfully"}), 200
-    return jsonify({"error": "Request not found"}), 404
