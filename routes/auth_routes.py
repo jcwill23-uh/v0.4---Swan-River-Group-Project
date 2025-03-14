@@ -1,10 +1,16 @@
 from flask import Blueprint, session, redirect, url_for, render_template, request, flash
-from config import CLIENT_ID, CLIENT_SECRET, AUTHORITY, REDIRECT_URI, SCOPE
 import logging
 from models import User, db
 from auth_helper import _build_auth_url, _get_token_from_code, _get_user_info
 import msal 
 import requests
+from config import Config
+
+CLIENT_ID = Config.CLIENT_ID
+CLIENT_SECRET = Config.CLIENT_SECRET
+AUTHORITY = Config.AUTHORITY
+REDIRECT_URI = Config.REDIRECT_URI
+SCOPE = Config.SCOPE
 
 # Initialize logger
 logger = logging.getLogger(__name__)
