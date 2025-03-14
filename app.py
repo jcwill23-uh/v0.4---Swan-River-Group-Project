@@ -13,13 +13,20 @@ load_dotenv()
 
 app = Flask(__name__, template_folder='docs', static_folder='docs')
 
-# Configure session storage
+# Flask configuration variables
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+app.config['REDIRECT_PATH'] = "/auth/callback"
+
+# Session configuration
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
-os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)  # Ensure session directory exists
-Session(app)  # Initialize session
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+Session(app)
 
 # Initialize database AFTER loading config
 db.init_app(app)
