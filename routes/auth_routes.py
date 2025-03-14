@@ -49,11 +49,9 @@ def authorized():
             db.session.add(user)
             db.session.commit()
 
-        # Check if the user is suspended
         if user.status.lower() != "active":
-            logger.warning(f"User {email} is suspended. Redirecting to login.")
             flash("Account suspended. Please contact support.", "error")
-            return redirect(url_for('login'))
+            return redirect(url_for('auth.login'))
 
         session['user'] = {
             'first_name': user.first_name,
@@ -75,16 +73,3 @@ def authorized():
 def logout():
     session.clear()
     return redirect(url_for('auth.index'))
-
-# Helper functions
-def _build_auth_url(scopes=None, state=None):
-    return msal.PublicClientApplication(CLIENT_ID, authority=AUTHORITY).get_authorization_request_url(
-        scopes, state=state, redirect_uri=REDIRECT_URI)
-
-def _get_token_from_code(code):
-    client = msal.ConfidentialClientApplication(CLIENT_ID, authority=AUTHORITY, client_credential=CLIENT_SECRET)
-    result = client.acquire_token_by_authorization_code(code, scopes=SCOPE, redirect_uri=REDIRECT_URI)
-    return result.get("access_token")
-
-def _get_user_info(token):
-    return requests.get('https://graph.microsoft.com/v1.0/me', headers={'Authorization': 'Bearer ' + token}).json()
