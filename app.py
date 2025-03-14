@@ -4,6 +4,7 @@ from flask_session import Session
 from dotenv import load_dotenv
 import os
 import logging
+from config import Config
 
 # Load environment variables
 load_dotenv()
