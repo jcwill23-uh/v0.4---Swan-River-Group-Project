@@ -65,8 +65,8 @@
                 <label><input type="checkbox" name="categories" value="Undergraduate Scholars"> Undergraduate Scholars @ UH (formerly USD)</label>
                 <label><input type="checkbox" name="categories" value="Advancement"> University Advancement</label>
                 <label><input type="checkbox" name="categories" value="Dean of Students"> Dean of Students Office</label>
-                <label><input type="checkbox" id="otherCategoryCheckbox" onclick="toggleOtherText('otherCategoryText', 'otherCategoryCheckbox')"> Other (Please Specify)</label>
-                <input type="text" id="otherCategoryText" style="display: none;" placeholder="Specify other category">
+                <label><input type="checkbox" id="otherCategoryCheckbox" onclick="document.getElementById('otherCategoryText') = this.checked;"> Other (Please Specify)</label>
+                <input type="text" id="otherCategoryText" name="otherCategoryText" style="display: none;" placeholder="Specify other category">
             </div>
 
             <!-- Specific Disclosure Authorization -->
@@ -81,8 +81,8 @@
                 <label><input type="checkbox" name="info" value="Housing"> Housing</label>
                 <label><input type="checkbox" name="info" value="Photos"> Photos</label>
                 <label><input type="checkbox" name="info" value="Scholarships"> Scholarship and/or Honors</label>
-                <label><input type="checkbox" id="otherInfoCheckbox" onclick="toggleOtherText('otherInfoText', 'otherInfoCheckbox')"> Other (Please Specify)</label>
-                <input type="text" id="otherInfoText" style="display: none;" placeholder="Specify other information">
+                <label><input type="checkbox" id="otherInfoCheckbox" onclick="document.getElementById('otherInfoText') = this.checked;"> Other (Please Specify)</label>
+                <input type="text" id="otherInfoText" name="otherInfoText" style="display: none;" placeholder="Specify other information">
             </div>
 
             <!-- Release Information To -->
@@ -97,8 +97,8 @@
                 <label><input type="checkbox" name="purpose" value="Honor or Award"> Honor or Award</label>
                 <label><input type="checkbox" name="purpose" value="Employer"> Employer/Prospective Employer</label>
                 <label><input type="checkbox" name="purpose" value="Public/Media"> Public or Media of Scholarship</label>
-                <label><input type="checkbox" id="otherPurposeCheckbox" onclick="toggleOtherText('otherPurposeText', 'otherPurposeCheckbox')"> Other (Please Specify)</label>
-                <input type="text" id="otherPurposeText" style="display: none;" placeholder="Specify other purpose">
+                <label><input type="checkbox" id="otherPurposeCheckbox" onclick="document.getElementById('otherPurposeText') = this.checked;"> Other (Please Specify)</label>
+                <input type="text" id="otherPurposeText" name="otherPurposeText" style="display: none;" placeholder="Specify other purpose">
             </div>
 
             <!-- Password Requirement -->
