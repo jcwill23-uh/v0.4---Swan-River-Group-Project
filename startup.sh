@@ -1,5 +1,4 @@
-# Update package list and install LaTeX
-apt-get update && apt-get install -y texlive-latex-base texlive-fonts-recommended texlive-extra-utils texlive-latex-extra
+#!/bin/bash
 
-# Start Gunicorn to serve Flask app
+# Start Gunicorn Server
 gunicorn -w 4 -b 0.0.0.0:8000 app:app
