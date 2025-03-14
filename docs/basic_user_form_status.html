@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project.">
+    <meta name="keywords" content="swan river, group project, cosc 4353">
+    <meta property="og:title" content="Swan River Group Project">
+    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+
+    <title>Swan River Group Project</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> 
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Cropper.js (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <script>
+      function redirectToAdmin() {
+          window.location.href = "/basic_user_home";
+      }
+    </script>
+</head>
+
+<body class="userList">
+    <div>
+    <h1>Form Submission Status</h1>
+    <table id="userTable">
+            <thead>
+                <tr>
+                <th>ID</th>
+                <th>Student Name</th>
+                <th>Status</th>
+                <th>Submitted Date</th>
+            </tr>
+            </thead>
+            <tbody id="userTableBody">
+                {% if requests %}
+                    {% for request in requests %}
+                    <tr>
+                <td>{{ request.id }}</td>
+                <td>{{ request.student_name }}</td>
+                <td>
+                        {% if request.approval_status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif request.approval_status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                        {% elif request.approval_status == 'declined' %}
+                            <span class="badge bg-danger">Declined</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ request.approval_status }}</span>
+                        {% endif %}
+                    </td>
+                <td>{{ request.submitted_at }}</td>
+            </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10">No forms have been submitted yet.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    <button class="back" onclick="redirectToAdmin()">Back to Home</button>
+    </div>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project.">
+    <meta name="keywords" content="swan river, group project, cosc 4353">
+    <meta property="og:title" content="Swan River Group Project">
+    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+
+    <title>Swan River Group Project</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <script src="script.js" defer></script>
+    <script>
+      function redirectToAdmin() {
+          window.location.href = "/admin_home";
+      }
+      </script>
+</head>
+
+<body class="userList">
+    <div>
+        <h1>List of Users</h1>
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Name &#x25B2;&#x25BC;</th>
+                    <th onclick="sortTable(1)">Email &#x25B2;&#x25BC;</th>
+                    <th onclick="sortTable(2)">Role &#x25B2;&#x25BC;</th>
+                    <th onclick="sortTable(3)">Status &#x25B2;&#x25BC;</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                <!-- User rows will be inserted dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <button class="back" onclick="redirectToAdmin()">Back to Home</button>
+
+    <script>
+        let users = []; // Store users for sorting
+        let sortDirections = [true, true, true, true]; // Track sorting directions per column
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/admin/all_users');
+                users = await response.json();
+
+                if (users.error) {
+                    alert("Error fetching users: " + users.error);
+                    return;
+                }
+
+                renderUserList(users);
+            } catch (error) {
+                console.error("Failed to fetch users", error);
+            }
+        }
+
+        function renderUserList(users) {
+            const userTable = document.getElementById("userTableBody");
+            userTable.innerHTML = ""; // Clear the table before rendering
+
+            users.forEach(user => {
+                const fullName = `${user.first_name} ${user.middle_name ? user.middle_name + ' ' : ''}${user.last_name}`.trim();
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${fullName}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td>${user.status}</td>
+                `;
+                userTable.appendChild(row);
+            });
+        }
+
+        function sortTable(columnIndex) {
+            const sortAscending = sortDirections[columnIndex];
+            sortDirections[columnIndex] = !sortDirections[columnIndex]; // Toggle sorting order
+
+            users.sort((a, b) => {
+                let valueA, valueB;
+
+                switch (columnIndex) {
+                    case 0: // Name
+                        valueA = `${a.first_name} ${a.middle_name ? a.middle_name + ' ' : ''}${a.last_name}`.toLowerCase();
+                        valueB = `${b.first_name} ${b.middle_name ? b.middle_name + ' ' : ''}${b.last_name}`.toLowerCase();
+                        break;
+                    case 1: // Email
+                        valueA = a.email.toLowerCase();
+                        valueB = b.email.toLowerCase();
+                        break;
+                    case 2: // Role (Fixed Sorting for Role Column)
+                        valueA = a.role.toLowerCase();
+                        valueB = b.role.toLowerCase();
+                        break;
+                    case 3: // Status
+                        valueA = a.status.toLowerCase();
+                        valueB = b.status.toLowerCase();
+                        break;
+                    default:
+                        return 0; // Do nothing if columnIndex is out of bounds
+                }
+
+                return sortAscending ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+            });
+
+            renderUserList(users);
+        }
+
+
+        window.onload = fetchUsers;
+    </script>
+</body>
+</html>

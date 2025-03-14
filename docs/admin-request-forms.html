@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project.">
+    <meta name="keywords" content="swan river, group project, cosc 4353">
+    <meta property="og:title" content="Swan River Group Project">
+    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+
+    <title>Swan River Group Project - Admin</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <script>
+        function redirectToAdmin() {
+            window.location.href = "/admin_home";
+        }
+
+        /*function viewPDF(requestId) {
+            // Fetch the PDF URL from the server
+            fetch(`/generate_pdf/${requestId}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json(); // Expecting JSON response with PDF URL
+                    } else {
+                        alert("Failed to fetch PDF.");
+                    }
+                })
+                .then(data => {
+                    // Set the iframe source to the PDF URL and display it
+                    const pdfViewer = document.getElementById('pdfViewer');
+                    pdfViewer.src = data.pdf_url; // Use the PDF URL from the response
+                    pdfViewer.style.display = 'block'; // Show the iframe
+                })
+                .catch(error => {
+                    console.error("Error fetching PDF:", error);
+                });
+        }*/
+        function viewPDF(pdfUrl) {
+            const pdfViewer = document.getElementById('pdfViewer');
+            pdfViewer.src = pdfUrl;
+            pdfViewer.style.display = 'block';
+        }
+
+        function deleteRequest(requestId) {
+            if (confirm("Are you sure you want to delete this request?")) {
+                fetch(`/admin/delete_request/${requestId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload(); // Reload the page to see the changes
+                    } else {
+                        alert("Failed to delete the request.");
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+
+<body class="userList">
+    <div>
+        <h1>View New Requested Forms</h1><br>
+        <table id="userTable">
+            <thead>
+                 <tr>
+                <th>ID</th>
+                <th>Request ID</th>
+                <th>Student Name</th>
+                <th>Peoplesoft ID</th>
+                <th>Password</th>
+                <th>Campus</th>
+                <th>Categories</th>
+                <th>Specific Info</th>
+                <th>Release To</th>
+                <th>Purpose</th>
+                <th>Signature URL</th>
+                <th>PDF URL</th>
+                <th>Status</th>
+                <th>Action</th>
+                <th>Submitted At</th>
+            </tr>
+            </thead>
+            <tbody id="userTableBody">
+                {% if requests %}
+                    {% for request in requests %}
+                    <tr>
+                <td>{{ request.id }}</td>
+                <td>{{ request.request_id }}</td>
+                <td>{{ request.student_name }}</td>
+                <td>{{ request.peoplesoft_id }}</td>
+                <td>{{ request.password }}</td>
+                <td>{{ request.campus }}</td>
+                <td>{{ request.categories }}</td>
+                <td>{{ request.specific_info }}</td>
+                <td>{{ request.release_to }}</td>
+                <td>{{ request.purpose }}</td>
+                <td>{{ request.signature_url }}</td>
+                <td><button onclick="viewPDF('{{ request.pdf_url }}')">View PDF</button></td>
+                <!--<td>{{ request.pdf_url }}</td>-->
+                <td>{{ request.approval_status }}</td>
+                <td class="action-buttons">
+                    <button onclick="approveRequest({{ request.id }})">Approve</button>
+                    <button onclick="declineRequest({{ request.id }})">Decline</button>
+                </td>
+                <td>{{ request.submitted_at }}</td>
+            </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10">No forms have been submitted yet.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <script>
+        function approveRequest(id) {
+            fetch(`/approve_request/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                location.reload();  // Reload the page to see the updated status
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function declineRequest(id) {
+            fetch(`/decline_request/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                location.reload();  // Reload the page to see the updated status
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+        <!-- Add an iframe to display the PDF -->
+        <iframe id="pdfViewer" style="display:none; width: 100%; height: 600px;" frameborder="0"></iframe>
+        
+        <button class="back" onclick="redirectToAdmin()">Back to Home</button>
+    </div>
+</body>
+
+</html>
