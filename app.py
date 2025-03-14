@@ -78,8 +78,6 @@ class User(db.Model):
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
 
-from datetime import datetime
-
 # Release Form Request Model
 class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
@@ -104,8 +102,6 @@ class ReleaseFormRequest(db.Model):
 @app.route('/submit_release_form', methods=['POST'])
 def submit_release_form():
     try:
-        import os
-
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
 
