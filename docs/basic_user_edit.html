@@ -75,10 +75,9 @@
                 alert("Error: " + data.error);
             } else {
                 alert(data.message);
-                window.location.href = "{{ url_for('basic_user_view') }}";
+                window.location.href = "{{ url_for('user.basic_user_view') }}";
             }
         }
     </script>
 </body>
 </html>
-
