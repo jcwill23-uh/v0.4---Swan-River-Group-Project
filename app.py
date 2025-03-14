@@ -25,7 +25,7 @@ app.config['SESSION_FILE_THRESHOLD'] = 100
 os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
 
 # Configure database
-from database import db
+from models import db
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
