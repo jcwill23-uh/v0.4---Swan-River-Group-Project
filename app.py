@@ -12,19 +12,24 @@ from routes import auth_bp, user_bp, admin_bp
 load_dotenv()
 
 app = Flask(__name__, template_folder='docs', static_folder='docs')
-app.config.from_object(Config)
-app.secret_key = os.getenv('SECRET_KEY')
 
-# Configure database and session
-db.init_app(app)
+# Configure session storage
 app.config['SESSION_TYPE'] = 'filesystem'
-Session(app)
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)  # Ensure session directory exists
+Session(app)  # Initialize session
+
+# Initialize database AFTER loading config
+db.init_app(app)
 
 # Register Blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(user_bp, url_prefix='/user')
 app.register_blueprint(admin_bp, url_prefix='/admin')
 
+# Run Flask app
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
