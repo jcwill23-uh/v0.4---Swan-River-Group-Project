@@ -4,6 +4,7 @@ from flask_session import Session
 from dotenv import load_dotenv
 import os
 import logging
+from config import Config
 
 # Load environment variables
 load_dotenv()
@@ -32,9 +33,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
 # Register blueprints
-from auth_routes import auth_bp
-from user_routes import user_bp
-from admin_routes import admin_bp
+from routes.auth_routes import auth_bp
+from routes.user_routes import user_bp
+from routes.admin_routes import admin_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(user_bp)
