@@ -396,55 +396,128 @@ def generate_pdf(form_id):
 
     return send_file(pdf_file_path, as_attachment=True)
 
+def download_signature(signature_url, user_id):
+    local_path = f"/mnt/data/signature_{user_id}.png"
+    try:
+        response = requests.get(signature_url)
+        if response.status_code == 200:
+            with open(local_path, "wb") as file:
+                file.write(response.content)
+            return local_path
+    except Exception as e:
+        print(f"Error downloading signature: {e}")
+    return None
+
 # Generate latex content for release form
 def generate_latex_content(form, user):
-    # Ensure signature file path is valid
-    if form.signature_url and form.signature_url.strip():
-        signature_path = form.signature_url
-    else:
-        signature_path = "/mnt/data/default-signature.png"  # Ensure a default exists
+    # Handle signature URL
+    signature_path = download_signature(form.signature_url, user.id) if form.signature_url else "/mnt/data/default-signature.png"
+    
+    # Define LaTeX checkbox symbols
+    def latex_checkbox(condition):
+        return r"$\boxtimes$" if condition else r"$\square$"
 
-    print(f"Using signature path: {signature_path}")  # Debugging output
+    # Process selected checkboxes
+    categories = form.categories.split(",") if form.categories else []
+    specific_info = form.specific_info.split(",") if form.specific_info else []
+    purpose = form.purpose.split(",") if form.purpose else []
 
     latex_content = f"""
-    \\documentclass{{article}}
+    \\documentclass[12pt]{{article}}
+    \\usepackage[a4paper, margin=0.75in]{{geometry}}
     \\usepackage{{graphicx}}
+    \\usepackage{{fancyhdr}}
     \\usepackage{{datetime}}
+    \\usepackage{{array}}
+    \\usepackage{{titlesec}}
+    \\usepackage{{setspace}}
+    \\usepackage{{lmodern}}
+    \\usepackage{{amssymb}}
+
+    \\newcommand{{\\checkbox}}[1]{{#1}}
     
+    \\pagestyle{{empty}}
+
     \\begin{{document}}
-    
-    \\title{{Authorization to Release Educational Records}}
-    \\author{{University of Houston}}
-    \\date{{\\today}}
-    
-    \\maketitle
-    
-    \\noindent
-    I \\textbf{{{form.student_name}}}, hereby voluntarily authorize officials in the University of Houston - {form.campus} to disclose personally identifiable information from my educational records.
-    
-    \\section*{{Categories of Information to Release}}
-    {form.categories}
-    
-    \\section*{{Specifically Authorized Information}}
-    {form.specific_info}
-    
-    \\section*{{Release To}}
-    \\textbf{{{form.release_to}}} for the purpose of \\textbf{{{form.purpose}}}.
-    
-    \\section*{{Password for Phone Verification}}
-    {form.password}
-    
-    \\section*{{Signature}}
     \\begin{{center}}
-        \\IfFileExists{{{signature_path}}}{{\\includegraphics[width=0.3\\textwidth]{{{signature_path}}}}}{{\\textbf{{No signature on file.}}}}
+        {{\\Large \\textbf{{AUTHORIZATION TO RELEASE EDUCATIONAL RECORDS}}}} \\\\
+        {{\\small Family Educational Rights and Privacy Act of 1974 as Amended (FERPA)}}
     \\end{{center}}
-    
-    \\vfill
+
+    \\vspace{{0.5em}}
+
     \\noindent
-    Date: \\today
-    
+    I \\underline{{\\hspace{{3in}} {form.student_name} \\hspace{{3in}}}} authorize officials in the University of Houston - \\underline{{{form.campus}}} to disclose my educational records.
+
+    \\vspace{{0.5em}}
+
+    \\textbf{{Categories of Information to Release:}}
+    \\begin{{flushleft}}
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Registrar' in categories)}}} Office of the University Registrar \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Financial Aid' in categories)}}} Scholarships and Financial Aid \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Student Financial Services' in categories)}}} Student Financial Services \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Undergraduate Scholars' in categories)}}} Undergraduate Scholars @ UH \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Advancement' in categories)}}} University Advancement \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Dean of Students' in categories)}}} Dean of Students Office \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Other' in categories)}}} Other (Please Specify): \\underline{{\\hspace{{3in}} {form.categories if 'Other' in categories else ''}}}
+    \\end{{flushleft}}
+
+    \\vspace{{0.5em}}
+
+    \\textbf{{Specifically Authorized Information:}}
+    \\begin{{flushleft}}
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Advising' in specific_info)}}} Academic Advising Profile/Information \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Academic Records' in specific_info)}}} Academic Records \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('All Records' in specific_info)}}} All University Records \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Billing' in specific_info)}}} Billing/Financial Aid \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Disciplinary' in specific_info)}}} Disciplinary \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Grades' in specific_info)}}} Grades/Transcripts \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Housing' in specific_info)}}} Housing \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Photos' in specific_info)}}} Photos \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Scholarships' in specific_info)}}} Scholarship and/or Honors \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Other' in specific_info)}}} Other (Please Specify): \\underline{{\\hspace{{3in}} {form.specific_info if 'Other' in specific_info else ''}}}
+    \\end{{flushleft}}
+
+    \\vspace{{0.5em}}
+
+    \\textbf{{Release To:}} \\underline{{\\hspace{{5in}} {form.release_to} }} \\\\
+    \\textbf{{For the purpose of:}} \\underline{{\\hspace{{5in}} {form.purpose} }}
+
+    \\vspace{{0.5em}}
+
+    \\textbf{{Purpose of Disclosure:}}
+    \\begin{{flushleft}}
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Family' in purpose)}}} Family \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Educational Institution' in purpose)}}} Educational Institution \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Honor or Award' in purpose)}}} Honor or Award \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Employer' in purpose)}}} Employer/Prospective Employer \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Public/Media' in purpose)}}} Public or Media of Scholarship \\\\
+        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Other' in purpose)}}} Other (Please Specify): \\underline{{\\hspace{{3in}} {form.purpose if 'Other' in purpose else ''}}}
+    \\end{{flushleft}}
+
+    \\vspace{{0.5em}}
+
+    \\textbf{{Password for Phone Verification:}} \\underline{{\\hspace{{3in}} {form.password} }}
+
+    \\vspace{{1em}}
+
+    \\textbf{{Student Signature:}} \\\\[0.5em]
+    \\begin{{center}}
+        \\IfFileExists{{{signature_path}}}
+            {{\\includegraphics[width=2in]{{{signature_path}}}}}
+            {{\\textbf{{No signature on file.}}}}
+    \\end{{center}}
+
+    \\vspace{{1em}}
+
+    \\noindent
+    \\textbf{{PeopleSoft I.D. Number:}} \\underline{{\\hspace{{3in}} {form.peoplesoft_id} }} \\\\
+    \\textbf{{Student Name (Print):}} \\underline{{ {form.student_name} }} \\\\
+    \\textbf{{Date:}} \\underline{{\\today}}
+
     \\end{{document}}
     """
+
     return latex_content
 
 # Admin Routes
