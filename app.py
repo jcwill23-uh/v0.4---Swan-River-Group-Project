@@ -95,8 +95,6 @@ class ReleaseFormRequest(db.Model):
     pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     approval_status = db.Column(db.String(20), default="pending")
-
-    # Add missing fields for 'Other' inputs
     other_category_text = db.Column(db.Text, nullable=True)  
     other_info_text = db.Column(db.Text, nullable=True)
     other_purpose_text = db.Column(db.Text, nullable=True)
@@ -110,6 +108,7 @@ def submit_release_form():
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
 
+        # Build student name
         student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
         peoplesoft_id = (data.get('peoplesoftID') or "").strip()
         password = (data.get('password') or "").strip()
@@ -123,12 +122,12 @@ def submit_release_form():
         other_info_text = request.form.get("hiddenOtherInfoText", "").strip()
         other_purpose_text = request.form.get("hiddenOtherPurposeText", "").strip()
 
-        # If "Other" is selected, replace it with user input
+        # Replace "Other" selection with actual input text
         categories = [c if c != "Other" else f"Other: {other_category_text}" for c in categories]
         specific_info = [s if s != "Other" else f"Other: {other_info_text}" for s in specific_info]
         purpose = [p if p != "Other" else f"Other: {other_purpose_text}" for p in purpose]
 
-        # Convert list back to comma-separated string
+        # Convert list to comma-separated string
         categories = ", ".join(categories)
         specific_info = ", ".join(specific_info)
         purpose = ", ".join(purpose)
@@ -136,88 +135,84 @@ def submit_release_form():
         release_to = (data.get('releaseTo') or "").strip()
         signature_url = data.get('signature_url', None)
 
-        # Save form request in database
-        new_request = ReleaseFormRequest(
-            student_name=student_name,
-            peoplesoft_id=peoplesoft_id,
-            password=password,
-            campus=campus,
-            categories=categories,
-            specific_info=specific_info,
-            release_to=release_to,
-            purpose=purpose,
-            signature_url=signature_url,
-            submitted_at=None if not is_final_submission else datetime.utcnow(),
-            other_category_text=other_category_text,
-            other_info_text=other_info_text,
-            other_purpose_text=other_purpose_text
-        )
-        db.session.add(new_request)
-        db.session.commit()
+        # Determine approval status
+        approval_status = "pending" if is_final_submission else "draft"
 
-        # Fetch User Object Before PDF Generation
+        # Check if a draft already exists for this user
+        existing_request = ReleaseFormRequest.query.filter_by(peoplesoft_id=peoplesoft_id, approval_status="draft").first()
+
+        if existing_request:
+            # Update existing draft
+            existing_request.student_name = student_name
+            existing_request.password = password
+            existing_request.campus = campus
+            existing_request.categories = categories
+            existing_request.specific_info = specific_info
+            existing_request.purpose = purpose
+            existing_request.release_to = release_to
+            existing_request.signature_url = signature_url
+            existing_request.approval_status = approval_status
+            existing_request.submitted_at = datetime.utcnow() if is_final_submission else None
+            existing_request.other_category_text = other_category_text
+            existing_request.other_info_text = other_info_text
+            existing_request.other_purpose_text = other_purpose_text
+            db.session.commit()
+            form_id = existing_request.id
+        else:
+            # Create a new form request
+            new_request = ReleaseFormRequest(
+                student_name=student_name,
+                peoplesoft_id=peoplesoft_id,
+                password=password,
+                campus=campus,
+                categories=categories,
+                specific_info=specific_info,
+                release_to=release_to,
+                purpose=purpose,
+                signature_url=signature_url,
+                submitted_at=datetime.utcnow() if is_final_submission else None,
+                approval_status=approval_status,
+                other_category_text=other_category_text,
+                other_info_text=other_info_text,
+                other_purpose_text=other_purpose_text
+            )
+            db.session.add(new_request)
+            db.session.commit()
+            form_id = new_request.id
+
+        # Fetch user object before PDF generation
         user = User.query.filter_by(email=session["user"]["email"]).first()
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        # Ensure the directory exists
+        # Ensure directory exists
         pdf_dir = "/mnt/data"
-        if not os.path.exists(pdf_dir):
-            os.makedirs(pdf_dir, exist_ok=True)  # Create directory if it doesn't exist
+        os.makedirs(pdf_dir, exist_ok=True)
 
         # Define file paths
-        tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
-        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
-        #pdf_file_path = os.path.abspath(os.path.join("mnt", "data", f"form_{new_request.id}.pdf"))
+        tex_file_path = os.path.join(pdf_dir, f"form_{form_id}.tex")
+        pdf_file_path = os.path.join(pdf_dir, f"form_{form_id}.pdf")
 
-        # Write LaTeX content to the file
+        # Write LaTeX content to file
         with open(tex_file_path, "w") as tex_file:
-            tex_file.write(generate_latex_content(new_request, user))
+            tex_file.write(generate_latex_content(new_request if not existing_request else existing_request, user))
 
         # Run pdflatex to generate PDF
         try:
-            # FOR LOCAL TESTING
-            #pdflatex_path = r"C:\Users\jackc\AppData\Local\Programs\MiKTeX\miktex\bin\x64\pdflatex.EXE" 
             pdflatex_path = "pdflatex"
             os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
 
-            print(f"Checking if LaTeX file exists: {tex_file_path}")
             if not os.path.exists(tex_file_path):
-                print("ERROR: LaTeX file was not created!")
                 return jsonify({"error": "LaTeX file was not created."}), 500
-            else:
-                print("SUCCESS: LaTeX file exists.")
 
-            os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
-
-            print(f"Checking if LaTeX file exists: {tex_file_path}")
-            if not os.path.exists(tex_file_path):
-                print("ERROR: LaTeX file was not created!")
-                return jsonify({"error": "LaTeX file was not created."}), 500
-            else:
-                print("SUCCESS: LaTeX file exists.")
-
-            print("Running pdflatex...")
-            result = subprocess.run(
-                [pdflatex_path, "-output-directory", pdf_dir, tex_file_path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True
-            )
-
-            print("PDFLaTeX Output:", result.stdout.decode())  # Debugging
+            subprocess.run([pdflatex_path, "-output-directory", pdf_dir, tex_file_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         except subprocess.CalledProcessError as e:
-            print("PDF Generation Failed!")
-            print("STDOUT:", e.stdout.decode())  # Output
-            print("STDERR:", e.stderr.decode())  # Error details
             return jsonify({"error": f"PDF generation failed: {e.stderr.decode()}"}), 500
         except FileNotFoundError:
-            print("ERROR: pdflatex not found in Python!")
-            print("Current PATH:", os.environ["PATH"])  # Debugging
-            return jsonify({"error": "pdflatex not found, but the PDF was created successfully."}), 200  # Change to 200
+            return jsonify({"error": "pdflatex not found"}), 500
 
         # Upload PDF to Azure Blob Storage
-        blob_name = f"release_forms/form_{new_request.id}.pdf"
+        blob_name = f"release_forms/form_{form_id}.pdf"
         blob_client = pdf_container_client.get_blob_client(blob_name)
 
         with open(pdf_file_path, "rb") as data:
@@ -226,18 +221,27 @@ def submit_release_form():
             blob_client.upload_blob(data, overwrite=True)
 
         # Store PDF URL in the database
-        new_request.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
-        user.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        if existing_request:
+            existing_request.pdf_url = pdf_url
+        else:
+            new_request.pdf_url = pdf_url
         db.session.commit()
 
-        return jsonify({
-            "message": "Form submitted successfully",
-            "pdf_url": f"/mnt/data/form_{new_request.id}.pdf"
-        }), 200
+        return jsonify({"message": "Form saved successfully", "pdf_url": pdf_url}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Route to edit a form that was saved for later
+@app.route('/edit_draft/<int:form_id>', methods=['GET'])
+def edit_draft_form(form_id):
+    form = ReleaseFormRequest.query.get(form_id)
+    if not form or form.approval_status != "draft":
+        flash("Draft not found or already submitted.", "error")
+        return redirect(url_for('basic_user_form_status'))
+
+    return render_template("basic_user_release.html", form=form)
 
 # Route to handle form submission
 @app.route('/submit_ssn_form', methods=['POST'])
@@ -525,8 +529,8 @@ def basic_user_form_status():
     # Fetch user's email from session
     email = session['user']['email']
     user = User.query.filter_by(email=email).first()
-    
-    # Fetch release form requests for this user by matching their name
+
+    # Fetch all forms (Drafts + Submitted Forms)
     user_full_name = f"{user.first_name} {user.middle_name or ''} {user.last_name}".strip()
     requests = ReleaseFormRequest.query.filter(
         ReleaseFormRequest.student_name.like(f"%{user_full_name}%")
