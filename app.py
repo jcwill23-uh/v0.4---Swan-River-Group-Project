@@ -96,6 +96,11 @@ class ReleaseFormRequest(db.Model):
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     approval_status = db.Column(db.String(20), default="pending")
 
+    # Add missing fields for 'Other' inputs
+    other_category_text = db.Column(db.Text, nullable=True)  
+    other_info_text = db.Column(db.Text, nullable=True)
+    other_purpose_text = db.Column(db.Text, nullable=True)
+
 # ---- API Routes ----
 
 # Route to handle form submission
@@ -109,10 +114,26 @@ def submit_release_form():
         peoplesoft_id = (data.get('peoplesoftID') or "").strip()
         password = (data.get('password') or "").strip()
         campus = (data.get('campus') or "").strip()
-        categories = ','.join(request.form.getlist('categories'))
-        specific_info = ','.join(request.form.getlist('info'))
+        categories = request.form.getlist('categories')
+        specific_info = request.form.getlist('info')
+        purpose = request.form.getlist('purpose')
+
+        # Append "Other" input text if applicable
+        other_category_text = request.form.get("hiddenOtherCategoryText", "").strip()
+        other_info_text = request.form.get("hiddenOtherInfoText", "").strip()
+        other_purpose_text = request.form.get("hiddenOtherPurposeText", "").strip()
+
+        # If "Other" is selected, replace it with user input
+        categories = [c if c != "Other" else f"Other: {other_category_text}" for c in categories]
+        specific_info = [s if s != "Other" else f"Other: {other_info_text}" for s in specific_info]
+        purpose = [p if p != "Other" else f"Other: {other_purpose_text}" for p in purpose]
+
+        # Convert list back to comma-separated string
+        categories = ", ".join(categories)
+        specific_info = ", ".join(specific_info)
+        purpose = ", ".join(purpose)
+
         release_to = (data.get('releaseTo') or "").strip()
-        purpose = ','.join(request.form.getlist('purpose'))
         signature_url = data.get('signature_url', None)
 
         # Save form request in database
@@ -126,7 +147,10 @@ def submit_release_form():
             release_to=release_to,
             purpose=purpose,
             signature_url=signature_url,
-            submitted_at=None if not is_final_submission else datetime.utcnow()
+            submitted_at=None if not is_final_submission else datetime.utcnow(),
+            other_category_text=other_category_text,
+            other_info_text=other_info_text,
+            other_purpose_text=other_purpose_text
         )
         db.session.add(new_request)
         db.session.commit()
@@ -143,7 +167,8 @@ def submit_release_form():
 
         # Define file paths
         tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
-        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
+        #pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
+        pdf_file_path = os.path.abspath(os.path.join("mnt", "data", f"form_{new_request.id}.pdf"))
 
         # Write LaTeX content to the file
         with open(tex_file_path, "w") as tex_file:
@@ -151,6 +176,11 @@ def submit_release_form():
 
         # Run pdflatex to generate PDF
         try:
+            # FOR LOCAL TESTING
+            #pdflatex_path = r"C:\Users\jackc\AppData\Local\Programs\MiKTeX\miktex\bin\x64\pdflatex.EXE" 
+            pdflatex_path = "pdflatex"
+            os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
+
             print(f"Checking if LaTeX file exists: {tex_file_path}")
             if not os.path.exists(tex_file_path):
                 print("ERROR: LaTeX file was not created!")
@@ -158,18 +188,33 @@ def submit_release_form():
             else:
                 print("SUCCESS: LaTeX file exists.")
 
+            os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
+
+            print(f"Checking if LaTeX file exists: {tex_file_path}")
+            if not os.path.exists(tex_file_path):
+                print("ERROR: LaTeX file was not created!")
+                return jsonify({"error": "LaTeX file was not created."}), 500
+            else:
+                print("SUCCESS: LaTeX file exists.")
+
+            print("Running pdflatex...")
             result = subprocess.run(
-                ["/usr/bin/pdflatex", "-output-directory", "/mnt/data/", tex_file_path],
+                [pdflatex_path, "-output-directory", "C:\\Users\\jackc\\Documents\\University of Houston\\Spring 2025\\COSC 4353\\Group Project\\mnt\\data", tex_file_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 check=True
             )
-            print("PDF Generation Output:", result.stdout.decode())  # Debugging
+
+            print("PDFLaTeX Output:", result.stdout.decode())  # Debugging
         except subprocess.CalledProcessError as e:
-            print("PDF Generation Error:", e.stderr.decode())  # Debugging
+            print("PDF Generation Failed!")
+            print("STDOUT:", e.stdout.decode())  # Output
+            print("STDERR:", e.stderr.decode())  # Error details
             return jsonify({"error": f"PDF generation failed: {e.stderr.decode()}"}), 500
         except FileNotFoundError:
-            return jsonify({"error": "pdflatex not found. Make sure LaTeX is installed."}), 500
+            print("ERROR: pdflatex not found in Python!")
+            print("Current PATH:", os.environ["PATH"])  # Debugging
+            return jsonify({"error": "pdflatex not found, but the PDF was created successfully."}), 200  # Change to 200
 
         # Upload PDF to Azure Blob Storage
         blob_name = f"release_forms/form_{new_request.id}.pdf"
@@ -185,7 +230,10 @@ def submit_release_form():
         user.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
         db.session.commit()
 
-        return jsonify({"message": "Form submitted successfully", "pdf_url": new_request.pdf_url}), 200
+        return jsonify({
+            "message": "Form submitted successfully",
+            "pdf_url": f"/mnt/data/form_{new_request.id}.pdf"
+        }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -360,59 +408,32 @@ def basic_user_form_status():
     
     return render_template("basic_user_form_status.html", user=session['user'], requests=requests)
 
-# Generate PDF upon submission
-@app.route('/generate_pdf/<int:form_id>', methods=['GET'])
-def generate_pdf(form_id):
-    # Retrieve form data
-    form = ReleaseFormRequest.query.get(form_id)
-    if not form:
-        return jsonify({"error": "Form not found"}), 404
-
-    user = User.query.filter_by(email=session["user"]["email"]).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    # Prepare data for LaTeX
-    tex_file_path = f"/mnt/data/form_{form_id}.tex"
-    with open(tex_file_path, "w") as tex_file:
-        tex_file.write(generate_latex_content(form, user))
-
-    # Compile LaTeX to PDF using Makefile
-    try:
-        subprocess.run(["make", f"form_{form_id}.pdf"], check=True, cwd="/mnt/data")
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": f"PDF generation failed: {e}"}), 500
-
-    pdf_file_path = f"/mnt/data/form_{form_id}.pdf"
-
-    # Save to database (assuming we store the file in Azure)
-    blob_name = f"release_forms/form_{form_id}.pdf"
-    blob_client = pdf_container_client.get_blob_client(blob_name)
-    with open(pdf_file_path, "rb") as data:
-        blob_client.upload_blob(data, overwrite=True)
-
-    form.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
-    db.session.commit()
-
-    return send_file(pdf_file_path, as_attachment=True)
-
 def download_signature(signature_url, user_id):
+    """
+    Downloads the user's signature from Azure Blob Storage and saves it locally.
+    Returns the local file path to be used in LaTeX.
+    """
     local_path = f"/mnt/data/signature_{user_id}.png"
-    try:
-        response = requests.get(signature_url)
-        if response.status_code == 200:
-            with open(local_path, "wb") as file:
-                file.write(response.content)
-            return local_path
-    except Exception as e:
-        print(f"Error downloading signature: {e}")
-    return None
+    if signature_url and signature_url.startswith("http"):
+        try:
+            response = requests.get(signature_url, stream=True)
+            if response.status_code == 200:
+                with open(local_path, "wb") as file:
+                    for chunk in response.iter_content(1024):
+                        file.write(chunk)
+                return local_path
+        except Exception as e:
+            print(f"Error downloading signature: {e}")
+    return "/mnt/data/default-signature.png"  # Fallback if the download fails
 
-# Generate latex content for release form
+# Update generate_latex_content function
 def generate_latex_content(form, user):
-    # Handle signature URL
-    signature_path = download_signature(form.signature_url, user.id) if form.signature_url else "/mnt/data/default-signature.png"
-    
+    """
+    Generates a one-page LaTeX document for the authorization form.
+    """
+    # Download signature locally if it's a URL
+    signature_path = download_signature(user.signature_url, user.id) if user.signature_url else "/mnt/data/default-signature.png"
+
     # Define LaTeX checkbox symbols
     def latex_checkbox(condition):
         return r"$\boxtimes$" if condition else r"$\square$"
@@ -423,101 +444,121 @@ def generate_latex_content(form, user):
     purpose = form.purpose.split(",") if form.purpose else []
 
     latex_content = f"""
-    \\documentclass[12pt]{{article}}
+    \\documentclass[10pt]{{article}}
     \\usepackage[a4paper, margin=0.75in]{{geometry}}
     \\usepackage{{graphicx}}
-    \\usepackage{{fancyhdr}}
-    \\usepackage{{datetime}}
     \\usepackage{{array}}
     \\usepackage{{titlesec}}
     \\usepackage{{setspace}}
     \\usepackage{{lmodern}}
     \\usepackage{{amssymb}}
+    \\usepackage{{multicol}}
+    \\usepackage{{ragged2e}}
 
-    \\newcommand{{\\checkbox}}[1]{{#1}}
-    
+    % Define checkbox formatting
+    \\newcommand{{\\checkbox}}[1]{{\\hspace{{2em}} #1}}
+
+    % Remove default footer and page number
     \\pagestyle{{empty}}
 
     \\begin{{document}}
+
+    % Form Number at the Top Left
+    \\noindent
+    {{\\small \\textbf{{Form No. OGC-SF-2006-02}}}}
+
     \\begin{{center}}
-        {{\\Large \\textbf{{AUTHORIZATION TO RELEASE EDUCATIONAL RECORDS}}}} \\\\
-        {{\\small Family Educational Rights and Privacy Act of 1974 as Amended (FERPA)}}
+        {{\\textbf{{AUTHORIZATION TO RELEASE EDUCATIONAL RECORDS}}}} \\\\
+        {{\\textbf{{Family Educational Rights and Privacy Act of 1974 as Amended (FERPA)}}}}
     \\end{{center}}
 
-    \\vspace{{0.5em}}
+    \\vspace{{0.2em}}
 
     \\noindent
-    I \\underline{{\\hspace{{3in}} {form.student_name} \\hspace{{3in}}}} authorize officials in the University of Houston - \\underline{{{form.campus}}} to disclose my educational records.
+    I \\textbf{{({form.student_name})}} hereby voluntarily authorize officials in the University of Houston - \\textbf{{({form.campus})}} identified below to disclose personally identifiable information from my educational records. (Please check the box or boxes that apply):
 
-    \\vspace{{0.5em}}
-
-    \\textbf{{Categories of Information to Release:}}
     \\begin{{flushleft}}
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Registrar' in categories)}}} Office of the University Registrar \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Financial Aid' in categories)}}} Scholarships and Financial Aid \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Student Financial Services' in categories)}}} Student Financial Services \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Undergraduate Scholars' in categories)}}} Undergraduate Scholars @ UH \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Advancement' in categories)}}} University Advancement \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Dean of Students' in categories)}}} Dean of Students Office \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Other' in categories)}}} Other (Please Specify): \\underline{{\\hspace{{3in}} {form.categories if 'Other' in categories else ''}}}
+        \\checkbox{{{latex_checkbox('Registrar' in categories)}}} Office of the University Registrar \\\\
+        \\checkbox{{{latex_checkbox('Financial Aid' in categories)}}} Scholarships and Financial Aid \\\\
+        \\checkbox{{{latex_checkbox('Student Financial Services' in categories)}}} Student Financial Services \\\\
+        \\checkbox{{{latex_checkbox('Undergraduate Scholars' in categories)}}} Undergraduate Scholars @ UH \\\\
+        \\checkbox{{{latex_checkbox('Advancement' in categories)}}} University Advancement \\\\
+        \\checkbox{{{latex_checkbox('Dean of Students' in categories)}}} Dean of Students Office \\\\
+        \\checkbox{{{latex_checkbox(any('Other:' in c for c in categories))}}} Other (Please Specify): \\textbf{{\\underline{{{form.other_category_text}}}}}
     \\end{{flushleft}}
-
-    \\vspace{{0.5em}}
-
-    \\textbf{{Specifically Authorized Information:}}
-    \\begin{{flushleft}}
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Advising' in specific_info)}}} Academic Advising Profile/Information \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Academic Records' in specific_info)}}} Academic Records \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('All Records' in specific_info)}}} All University Records \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Billing' in specific_info)}}} Billing/Financial Aid \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Disciplinary' in specific_info)}}} Disciplinary \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Grades' in specific_info)}}} Grades/Transcripts \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Housing' in specific_info)}}} Housing \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Photos' in specific_info)}}} Photos \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Scholarships' in specific_info)}}} Scholarship and/or Honors \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Other' in specific_info)}}} Other (Please Specify): \\underline{{\\hspace{{3in}} {form.specific_info if 'Other' in specific_info else ''}}}
-    \\end{{flushleft}}
-
-    \\vspace{{0.5em}}
-
-    \\textbf{{Release To:}} \\underline{{\\hspace{{5in}} {form.release_to} }} \\\\
-    \\textbf{{For the purpose of:}} \\underline{{\\hspace{{5in}} {form.purpose} }}
-
-    \\vspace{{0.5em}}
-
-    \\textbf{{Purpose of Disclosure:}}
-    \\begin{{flushleft}}
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Family' in purpose)}}} Family \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Educational Institution' in purpose)}}} Educational Institution \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Honor or Award' in purpose)}}} Honor or Award \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Employer' in purpose)}}} Employer/Prospective Employer \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Public/Media' in purpose)}}} Public or Media of Scholarship \\\\
-        \\hspace{{1em}} \\checkbox{{{latex_checkbox('Other' in purpose)}}} Other (Please Specify): \\underline{{\\hspace{{3in}} {form.purpose if 'Other' in purpose else ''}}}
-    \\end{{flushleft}}
-
-    \\vspace{{0.5em}}
-
-    \\textbf{{Password for Phone Verification:}} \\underline{{\\hspace{{3in}} {form.password} }}
-
-    \\vspace{{1em}}
-
-    \\textbf{{Student Signature:}} \\\\[0.5em]
-    \\begin{{center}}
-        \\IfFileExists{{{signature_path}}}
-            {{\\includegraphics[width=2in]{{{signature_path}}}}}
-            {{\\textbf{{No signature on file.}}}}
-    \\end{{center}}
-
-    \\vspace{{1em}}
 
     \\noindent
-    \\textbf{{PeopleSoft I.D. Number:}} \\underline{{\\hspace{{3in}} {form.peoplesoft_id} }} \\\\
-    \\textbf{{Student Name (Print):}} \\underline{{ {form.student_name} }} \\\\
-    \\textbf{{Date:}} \\underline{{\\today}}
+    Specifically, I authorize disclosure of the following information or category of information. (Please check the box or boxes that apply):
+    \\begin{{flushleft}}
+        \\checkbox{{{latex_checkbox('Advising' in specific_info)}}} Academic Advising Profile/Information \\\\
+        \\checkbox{{{latex_checkbox('Academic Records' in specific_info)}}} Academic Records \\\\
+        \\checkbox{{{latex_checkbox('All Records' in specific_info)}}} All University Records \\\\
+        \\checkbox{{{latex_checkbox('Billing' in specific_info)}}} Billing/Financial Aid \\\\
+        \\checkbox{{{latex_checkbox('Disciplinary' in specific_info)}}} Disciplinary \\\\
+        \\checkbox{{{latex_checkbox('Grades' in specific_info)}}} Grades/Transcripts \\\\
+        \\checkbox{{{latex_checkbox('Housing' in specific_info)}}} Housing \\\\
+        \\checkbox{{{latex_checkbox('Photos' in specific_info)}}} Photos \\\\
+        \\checkbox{{{latex_checkbox('Scholarships' in specific_info)}}} Scholarship and/or Honors \\\\
+        \\checkbox{{{latex_checkbox(any('Other:' in s for s in specific_info))}}} Other (Please Specify): \\textbf{{\\underline{{{form.other_info_text}}}}}
+    \\end{{flushleft}}
+
+    \\noindent
+    This information may be released to: \\textbf{{({form.release_to})}} for the purpose of informing:
+
+    \\begin{{flushleft}}
+        \\checkbox{{{latex_checkbox('Family' in purpose)}}} Family \\\\
+        \\checkbox{{{latex_checkbox('Educational Institution' in purpose)}}} Educational Institution \\\\
+        \\checkbox{{{latex_checkbox('Honor or Award' in purpose)}}} Honor or Award \\\\
+        \\checkbox{{{latex_checkbox('Employer' in purpose)}}} Employer/Prospective Employer \\\\
+        \\checkbox{{{latex_checkbox('Public/Media' in purpose)}}} Public or Media of Scholarship \\\\
+        \\checkbox{{{latex_checkbox(any('Other:' in p for p in purpose))}}} Other (Please Specify): \\textbf{{\\underline{{{form.other_purpose_text}}}}}
+    \\end{{flushleft}}
+
+    \\noindent
+    Please provide a password to obtain information via the phone: \\textbf{{({form.password})}}. The password should not contain more than ten (10) letters. You must provide the password to the individuals or agencies listed above. The University will not release information to the caller if the caller does not have the password. A new form must be completed to change your password. \\\\
+    
+    \\noindent
+    \\textbf{{This is to attest that I am the student signing this form. I understand the information may be released orally or in the form of copies of written records, as preferred by the requester. This authorization will remain in effect from the date it is executed until revoked by me, in writing, and delivered to Department(s) identified above.}} \\\\
+
+    \\vfill
+
+    % Student Information Section
+    \\noindent
+    \\noindent
+    \\begin{{tabular}}{{ p{{3in}} p{{3in}} }}
+        \\textbf{{\\underline{{{form.student_name}}}}} & \\textbf{{\\underline{{{form.peoplesoft_id}}}}} \\\\
+        \\textbf{{Student Name [Please Print]}} & \\textbf{{PeopleSoft I.D. Number}} \\\\[1.5em]
+
+        % Signature and Date row
+        \\begin{{minipage}}{{3in}}
+            
+            \\IfFileExists{{{signature_path}}}
+                {{\\includegraphics[width=2in]{{{signature_path}}}}}
+                {{\\textbf{{No signature on file.}}}}
+        \\end{{minipage}} 
+        & 
+        \\begin{{minipage}}{{3in}}
+            
+            \\textbf{{\\underline{{\\today}}}}
+        \\end{{minipage}} \\\\
+        
+        \\textbf{{Student Signature}} & \\textbf{{Date:}} \\\\
+    \\end{{tabular}} \\\\
+
+    \\vfill
+
+    % Bottom Section
+    \\noindent
+    \\begin{{tabular}}{{ p{{3in}} p{{3in}} }}
+        \\textbf{{Please Retain a Copy for your Records}} & \\\\
+        \\textbf{{Document may be Submitted to Registrar's Office}} & \\\\
+        FERPA Authorization Form & \\\\
+        OGC-SF-2006-02 Revised 11.10.2022 & \\textbf{{Note: Modification of this Form requires approval of OGC}} \\\\
+        Page 1 of 1 & \\\\
+    \\end{{tabular}}
 
     \\end{{document}}
     """
-
     return latex_content
 
 # Admin Routes
@@ -833,3 +874,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host='0.0.0.0', port=8000, debug=True) 
+    #app.run(host='localhost', port=5000, debug=True) 
