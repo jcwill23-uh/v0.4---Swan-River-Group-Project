@@ -66,12 +66,10 @@
                 <label><input type="checkbox" name="categories" value="Advancement"> University Advancement</label>
                 <label><input type="checkbox" name="categories" value="Dean of Students"> Dean of Students Office</label>
                 <label>
-                    <input type="checkbox" id="otherCategoryCheckbox" name="categories" value="Other" onclick="toggleOtherField('otherCategoryCheckbox', 'otherCategoryText')">
-                    Other (Please Specify)
+                    <input type="checkbox" name="categories" value="Other" id="category_other" onclick="toggleOtherField('category_other_text', this)">
+                    Other (Please Specify):
                 </label>
-                <input type="text" id="otherCategoryText" name="otherCategoryText" placeholder="Specify other category">
-                <input type="hidden" id="hiddenOtherCategoryText" name="hiddenOtherCategoryText" value="">
-
+                <input type="text" name="hiddenOtherCategoryText" id="category_other_text" style="display:none;">
             </div>
 
             <!-- Specific Disclosure Authorization -->
@@ -87,11 +85,10 @@
                 <label><input type="checkbox" name="info" value="Photos"> Photos</label>
                 <label><input type="checkbox" name="info" value="Scholarships"> Scholarship and/or Honors</label>
                 <label>
-                    <input type="checkbox" id="otherInfoCheckbox" name="info" value="Other" onclick="toggleOtherField('otherInfoCheckbox', 'otherInfoText')">
-                    Other (Please Specify)
+                    <input type="checkbox" name="info" value="Other" id="info_other" onclick="toggleOtherField('info_other_text', this)">
+                    Other (Please Specify):
                 </label>
-                <input type="text" id="otherInfoText" name="otherInfoText" placeholder="Specify other information">
-                <input type="hidden" id="hiddenOtherInfoText" name="hiddenOtherInfoText" value="">
+                <input type="text" name="hiddenOtherInfoText" id="info_other_text" style="display:none;">
             </div>
 
             <!-- Release Information To -->
@@ -107,11 +104,10 @@
                 <label><input type="checkbox" name="purpose" value="Employer"> Employer/Prospective Employer</label>
                 <label><input type="checkbox" name="purpose" value="Public/Media"> Public or Media of Scholarship</label>
                 <label>
-                    <input type="checkbox" id="otherPurposeCheckbox" name="purpose" value="Other" onclick="toggleOtherField('otherPurposeCheckbox', 'otherPurposeText')">
-                    Other (Please Specify)
+                    <input type="checkbox" name="purpose" value="Other" id="purpose_other" onclick="toggleOtherField('purpose_other_text', this)">
+                    Other (Please Specify):
                 </label>
-                <input type="text" id="otherPurposeText" name="otherPurposeText" placeholder="Specify other purpose">
-                <input type="hidden" id="hiddenOtherPurposeText" name="hiddenOtherPurposeText" value="">
+                <input type="text" name="hiddenOtherPurposeText" id="purpose_other_text" style="display:none;">
             </div>
 
             <!-- Password Requirement -->
@@ -346,6 +342,32 @@
                 alert("An error occurred while submitting the form.");
             }
         }
+
+        function toggleOtherField(inputId, checkbox) {
+            var inputField = document.getElementById(inputId);
+            if (checkbox.checked) {
+                inputField.style.display = "inline";
+            } else {
+                inputField.style.display = "none";
+                inputField.value = "";  // Clear the field when unchecked
+            }
+        }
+
+        // Ensure "Other" fields are always submitted
+        document.getElementById("releaseForm").addEventListener("submit", function () {
+            // Ensure the values are only copied when the checkbox is checked
+            var categoryCheckbox = document.getElementById("category_other");
+            var infoCheckbox = document.getElementById("info_other");
+            var purposeCheckbox = document.getElementById("purpose_other");
+
+            var categoryText = document.getElementById("category_other_text");
+            var infoText = document.getElementById("info_other_text");
+            var purposeText = document.getElementById("purpose_other_text");
+
+            document.getElementById("hiddenOtherCategoryText").value = categoryCheckbox.checked ? categoryText.value : "";
+            document.getElementById("hiddenOtherInfoText").value = infoCheckbox.checked ? infoText.value : "";
+            document.getElementById("hiddenOtherPurposeText").value = purposeCheckbox.checked ? purposeText.value : "";
+        });
 
     </script>
     
