@@ -199,7 +199,7 @@ def submit_release_form():
 
             print("Running pdflatex...")
             result = subprocess.run(
-                [pdflatex_path, "-output-directory", "C:\\Users\\jackc\\Documents\\University of Houston\\Spring 2025\\COSC 4353\\Group Project\\mnt\\data", tex_file_path],
+                [pdflatex_path, "-output-directory", "/mnt/data", tex_file_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 check=True
