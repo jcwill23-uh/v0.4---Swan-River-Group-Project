@@ -236,12 +236,28 @@ def submit_release_form():
 # Route to edit a form that was saved for later
 @app.route('/edit_draft/<int:form_id>', methods=['GET'])
 def edit_draft_form(form_id):
-    form = ReleaseFormRequest.query.get(form_id)
-    if not form or form.approval_status != "draft":
-        flash("Draft not found or already submitted.", "error")
-        return redirect(url_for('basic_user_form_status'))
+    try:
+        print(f"Attempting to load draft with ID: {form_id}")  # Debugging
 
-    return render_template("basic_user_release.html", form=form)
+        form = ReleaseFormRequest.query.get(form_id)
+
+        if not form:
+            print(f"Error: No form found with ID {form_id}")  # Log missing form error
+            flash("Error: Draft not found.", "error")
+            return redirect(url_for('basic_user_form_status'))
+
+        if form.approval_status != "draft":
+            print(f"Error: Form {form_id} is not a draft, current status: {form.approval_status}")  # Log status issue
+            flash("Error: This form is no longer a draft.", "error")
+            return redirect(url_for('basic_user_form_status'))
+
+        print(f"Draft {form_id} loaded successfully")  # Confirm successful retrieval
+        return render_template("basic_user_release.html", form=form)
+
+    except Exception as e:
+        print(f"Unexpected error while loading draft {form_id}: {str(e)}")  # Log full error message
+        flash("An unexpected error occurred while loading the draft.", "error")
+        return redirect(url_for('basic_user_form_status'))
 
 # Route to handle form submission
 @app.route('/submit_ssn_form', methods=['POST'])
