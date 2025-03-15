@@ -577,7 +577,7 @@ def generate_ssn_form(form, user):
 
     to_change = form.toChange.split(",") if form.toChange else []
 
-    latex_content = r"""
+    latex_content = f"""
     \\documentclass[10pt]{{article}}
     \\usepackage[a4paper, margin=0.75in]{{geometry}}
     \\usepackage{{graphicx}}
@@ -595,7 +595,7 @@ def generate_ssn_form(form, user):
 
     % Remove default footer and page number
     \\pagestyle{{empty}}
-
+    
     \\begin{{document}}
 
     \\begin{{center}}
@@ -613,27 +613,21 @@ def generate_ssn_form(form, user):
     \\normalsize
     \\begin{{tblr}}
     {{
-    colspec = {{X[l]X[l]X[l]}},
+    colspec = {{@{{}}X[l]X[l]X[l]@{{}}}},
     row{{1}} = {{cmd=\\scriptsize\\textit}}
     }}
-        First name & Middle name & Last name \\\\
-        {form.first_name} & {form.middle_name} & {form.last_name} \\\\
+    First name & Middle name & Last name \\\\
+    {form.first_name} & {form.middle_name} & {form.last_name} \\\\
+    myUH ID Number & \\SetCell[c=2]{{l}} What are you requesting to add or update? \\\\
+    {form.uhid} & \\SetCell[c=2]{{l}} {latex_checkbox('name' in to_change)} \\\\ & \\SetCell[c=2]{{l}} {latex_checkbox('ssn' in to_change)} \\\\
     \\end{{tblr}}
-
-    \\begin{{tblr}}
-    {{
-        colspec = {{X[l]X[2,l]}}
-    }}
-        \large{{myUH ID Number}} & What are you requesting to add or update? \\\\
-        {form.uhid} & \\checkbox{{{latex_checkbox('name') in to_change}}} \\\\
-                    & \\checkbox{{{latex_checkbox('ssn') in to_change}}} \\\\
-    \\end{{tblr}}
-
     \\hrulefill
-
     \\noindent
     \\large\\textbf{{Section A: Student Name Change}}
-    \\vspace{{5pt}} \\\\
+
+    \\vspace{{-0.5em}}
+
+    \\hrulefill
 
     \\noindent
     \\normalsize
@@ -654,14 +648,12 @@ def generate_ssn_form(form, user):
     \\vspace{{0em}}
     \\begin{{tblr}}
     {{
-        colspec = {{XX[-1]X[-1]X[-1]}}
+           colspec = {{@{{}}XX[-1]X[-1]X[-1]@{{}}}}
     }}
-        Check reason for name change request: 
-        & \\checkbox{{{form.name_change_reason == 'Marriage/Divorce'}}} Marriage/Divorce 
-        & \\checkbox{{{form.name_change_reason == 'Court Order'}}} Court Order 
-        & \\checkbox{{{form.name_change_reason == 'Correction of Error'}}} \\\\
+    Check reason for name change request: 
+    & {latex_checkbox(form.name_change_reason == 'Marriage/Divorce')} Marriage/Divorce & \usym{2610} Court Order & \usym{2610} Correction of Error
     \\end{{tblr}}
-    \begin{tblr}
+    \begin{{tblr}}
     {{
         colspec = X[-1]X[c]X[c]X[c]X[c],
         row{1} = {{cmd=\\scriptsize\textit}},
@@ -673,6 +665,29 @@ def generate_ssn_form(form, user):
         \\SetCell[r=2]{{l}} \\normalsize To: & {{First name}} & {{Middle name}} & {{Last name}} & {{Suffix}} \\\\
             & {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix}
     \\end{{tblr}}
+
+    \\hrulefill
+    
+    \\noindent
+    \\large\\textbf{{Section B: Student Social Security Number Change}}
+
+    \\vspace{{-0.5em}}
+
+    \\hrulefill
+
+    The University of Houston record of your Social Security Number was originally taken from your application for admission and may be changed only if the student has obtained a new social security number or an error was made. In either case, the student must provide a copy of the Social Security Card.
+    \\textbf{{The Social Security card must include the student's signature and must be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID).}}
+
+    \\noindent
+    \\textbf{{\\underline{{Please print and complete the following information: }}}}
+    I request that my Social Security Number be changed and reflected on University of Houston records as listed below: \\\\
+
+    \\noindent
+    Check reason for Social Security Number change request: \\\\
+    \\checkbox{{{form.ssn_change_reason == 'Correction of Error'}}} Correction of Error \\hspace{{}} \\checkbox{{{form.ssn_change_reason == 'Addition'}}} Addition of SSN to University Records \\\\
+
+    FROM: {form.old_ssn_1}-{form.old_ssn_2}-{form.old_ssn_3}
+    
     \\noindent
     \\textbf{{This is to attest that I am the student signing this form. I understand the information may be released orally or in the form of copies of written records, as preferred by the requester. This authorization will remain in effect from the date it is executed until revoked by me, in writing, and delivered to Department(s) identified above.}} \\\\
 
