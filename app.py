@@ -241,13 +241,14 @@ def edit_draft_form(form_id):
             flash("Error: Draft not found.", "error")
             return redirect(url_for('basic_user_form_status'))
 
+        user = User.query.filter_by(email=session["user"]["email"]).first()
         if form.approval_status != "draft":
             print(f"Error: Form {form_id} is not a draft, current status: {form.approval_status}")  # Log status issue
             flash("Error: This form is no longer a draft.", "error")
             return redirect(url_for('basic_user_form_status'))
 
         print(f"Draft {form_id} loaded successfully")  # Confirm successful retrieval
-        return render_template("basic_user_release.html", form=form)
+        return render_template("basic_user_release.html", form=form, user=user)
 
     except Exception as e:
         print(f"Unexpected error while loading draft {form_id}: {str(e)}")  # Log full error message
