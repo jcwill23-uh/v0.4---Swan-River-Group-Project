@@ -238,11 +238,6 @@ def submit_release_form():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# This route needs to have content for SSN form
-@app.route(/submit_ssn_form)
-def submit_ssn_form():
-    return render_template('index.html')
-
 # Azure AD Configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
 CLIENT_SECRET = "x2T8Q~yVzAOoC~r6FYtzK6sqCJQR_~RCVH5-dcw8"
