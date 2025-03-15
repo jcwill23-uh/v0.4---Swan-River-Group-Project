@@ -167,8 +167,8 @@ def submit_release_form():
 
         # Define file paths
         tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
-        #pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
-        pdf_file_path = os.path.abspath(os.path.join("mnt", "data", f"form_{new_request.id}.pdf"))
+        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
+        #pdf_file_path = os.path.abspath(os.path.join("mnt", "data", f"form_{new_request.id}.pdf"))
 
         # Write LaTeX content to the file
         with open(tex_file_path, "w") as tex_file:
@@ -199,7 +199,7 @@ def submit_release_form():
 
             print("Running pdflatex...")
             result = subprocess.run(
-                [pdflatex_path, "-output-directory", "/mnt/data", tex_file_path],
+                [pdflatex_path, "-output-directory", pdf_dir, tex_file_path],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 check=True
