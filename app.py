@@ -651,19 +651,20 @@ def generate_ssn_form(form, user):
            colspec = {{@{{}}XX[-1]X[-1]X[-1]@{{}}}}
     }}
     Check reason for name change request: 
-    & {latex_checkbox(form.name_change_reason == 'Marriage/Divorce')} Marriage/Divorce & \usym{2610} Court Order & \usym{2610} Correction of Error
+    & {latex_checkbox(form.name_change_reason == 'Marriage/Divorce')} Marriage/Divorce
+    & {latex_checkbox(form.name_change_reason == 'Court Order')} Court Order
+    & {latex_checkbox(form.name_change_reason == 'Correction of Error')} Correction of Error \\\\
     \\end{{tblr}}
     \begin{{tblr}}
     {{
-        colspec = X[-1]X[c]X[c]X[c]X[c],
+        colspec = {{@{{}}X[-1]X[c]X[c]X[c]X[c]@{{}}}},
         row{1} = {{cmd=\\scriptsize\textit}},
         row{3} = {{cmd=\\scriptsize\textit}},
     }}
         \\SetCell[r=2]{{l}} \\normalsize From: & {{First name}} & {{Middle name}} & {{Last name}} & {{Suffix}} \\\\
-            & {form.old_first_name} & {form.old_middle_name} & {form.old_last_name} & {form.old_suffix}
-        \\\\
+            & {form.old_first_name} & {form.old_middle_name} & {form.old_last_name} & {form.old_suffix} \\\\
         \\SetCell[r=2]{{l}} \\normalsize To: & {{First name}} & {{Middle name}} & {{Last name}} & {{Suffix}} \\\\
-            & {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix}
+            & {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix} \\\\
     \\end{{tblr}}
 
     \\hrulefill
@@ -684,25 +685,23 @@ def generate_ssn_form(form, user):
 
     \\noindent
     Check reason for Social Security Number change request: \\\\
-    \\checkbox{{{form.ssn_change_reason == 'Correction of Error'}}} Correction of Error \\hspace{{}} \\checkbox{{{form.ssn_change_reason == 'Addition'}}} Addition of SSN to University Records \\\\
+    {latex_checkbox(form.ssn_change_reason == 'Correction of Error')} Correction of Error \\hspace{{}} {latex_checkbox(form.ssn_change_reason == 'Addition')} Addition of SSN to University Records \\\\
 
-    FROM: {form.old_ssn_1}-{form.old_ssn_2}-{form.old_ssn_3}
+    FROM: {form.old_ssn_1}-{form.old_ssn_2}-{form.old_ssn_3} \\hspace{{0.5\textwidth}} TO: {form.new_ssn_1}-{form.new_ssn_2}-{form.new_ssn_3}
+
+    \\hrulefill
     
     \\noindent
-    \\textbf{{This is to attest that I am the student signing this form. I understand the information may be released orally or in the form of copies of written records, as preferred by the requester. This authorization will remain in effect from the date it is executed until revoked by me, in writing, and delivered to Department(s) identified above.}} \\\\
-
+    I authorize the University of Houston Main Campus to make the updates/changes to my student record as requested above. 
+    
     \\vfill
 
     % Student Information Section
     \\noindent
     \\noindent
     \\begin{{tabular}}{{ p{{3in}} p{{3in}} }}
-        \\textbf{{\\underline{{{form.student_name}}}}} & \\textbf{{\\underline{{{form.peoplesoft_id}}}}} \\\\
-        \\textbf{{Student Name [Please Print]}} & \\textbf{{PeopleSoft I.D. Number}} \\\\[1.5em]
-
         % Signature and Date row
         \\begin{{minipage}}{{3in}}
-            
             \\IfFileExists{{{signature_path}}}
                 {{\\includegraphics[width=2in]{{{signature_path}}}}}
                 {{\\textbf{{No signature on file.}}}}
@@ -719,14 +718,7 @@ def generate_ssn_form(form, user):
     \\vfill
 
     % Bottom Section
-    \\noindent
-    \\begin{{tabular}}{{ p{{3in}} p{{3in}} }}
-        \\textbf{{Please Retain a Copy for your Records}} & \\\\
-        \\textbf{{Document may be Submitted to Registrar's Office}} & \\\\
-        FERPA Authorization Form & \\\\
-        OGC-SF-2006-02 Revised 11.10.2022 & \\textbf{{Note: Modification of this Form requires approval of OGC}} \\\\
-        Page 1 of 1 & \\\\
-    \\end{{tabular}}
+    \\footnotesize State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be informed about the information the University collects about you by use of this form; (2) under sections 552.021 and 552.023 of the Government Code, you are entitled to receive and review the information; and (3) under section 559.004 of the Government Code, you are entitled to have the University correct information about you that is incorrect.
 
     \\end{{document}}
     """
