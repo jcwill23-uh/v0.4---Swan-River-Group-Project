@@ -48,9 +48,7 @@
 
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
     <div class="release-form-container">
-        <!-- <form id="ssnForm" action="{{ url_for('submit_ssn_form') }}" method="POST"> -->
-        <!--<form id="ssnForm">-->
-        <form id="ssnForm" action="{{ url_for('submit_release_form') }}" method="POST">
+        <form id="ssnForm" action="{{ url_for('submit_ssn_form') }}" method="POST"> 
             <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
@@ -174,8 +172,10 @@
     <div class="button-container">
         <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
 
-        <!-- <button class ="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button> -->
-        <!-- <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button> -->
+         <button class ="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button> 
+         <form id="releaseForm" action="/submit_ssn_form" method="POST" enctype="multipart/form-data">
+           <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
+            
         <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
     </div>
 
