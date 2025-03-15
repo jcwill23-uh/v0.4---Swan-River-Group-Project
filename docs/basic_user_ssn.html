@@ -49,7 +49,8 @@
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
     <div class="release-form-container">
         <!-- <form id="ssnForm" action="{{ url_for('submit_ssn_form') }}" method="POST"> -->
-        <form id="ssnForm">
+        <!--<form id="ssnForm">-->
+        <form id="ssnForm" action="{{ url_for('submit_release_form') }}" method="POST">
             <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
