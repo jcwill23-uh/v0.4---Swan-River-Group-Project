@@ -50,75 +50,91 @@
             <!-- UH Campus Selection -->
             <h3>Please select your UH campus below:</h3>
             <div class="selection-group">
-                <label><input type="radio" name="campus" value="Clear Lake"> Clear Lake</label>
-                <label><input type="radio" name="campus" value="Downtown"> Downtown</label>
-                <label><input type="radio" name="campus" value="Main"> Main</label>
-                <label><input type="radio" name="campus" value="Victoria"> Victoria</label>
+                <label><input type="radio" name="campus" value="Clear Lake" {% if form and form.campus == "Clear Lake" %}checked{% endif %}> Clear Lake</label>
+                <label><input type="radio" name="campus" value="Downtown" {% if form and form.campus == "Downtown" %}checked{% endif %}> Downtown</label>
+                <label><input type="radio" name="campus" value="Main" {% if form and form.campus == "Main" %}checked{% endif %}> Main</label>
+                <label><input type="radio" name="campus" value="Victoria" {% if form and form.campus == "Victoria" %}checked{% endif %}> Victoria</label>
             </div>
 
             <!-- Categories of Information to Release -->
             <h3>Please select what categories of your information to release (One or many):</h3>
             <div class="selection-group">
-                <label><input type="checkbox" name="categories" value="Registrar"> Office of the University Registrar</label>
-                <label><input type="checkbox" name="categories" value="Financial Aid"> Scholarships and Financial Aid</label>
-                <label><input type="checkbox" name="categories" value="Student Financial Services"> Student Financial Services</label>
-                <label><input type="checkbox" name="categories" value="Undergraduate Scholars"> Undergraduate Scholars @ UH (formerly USD)</label>
-                <label><input type="checkbox" name="categories" value="Advancement"> University Advancement</label>
-                <label><input type="checkbox" name="categories" value="Dean of Students"> Dean of Students Office</label>
+                <label><input type="checkbox" name="categories" value="Registrar" {% if form and 'Registrar' in form.categories %}checked{% endif %}> Office of the University Registrar</label>
+                <label><input type="checkbox" name="categories" value="Financial Aid" {% if form and 'Financial Aid' in form.categories %}checked{% endif %}> Scholarships and Financial Aid</label>
+                <label><input type="checkbox" name="categories" value="Student Financial Services" {% if form and 'Student Financial Services' in form.categories %}checked{% endif %}> Student Financial Services</label>
+                <label><input type="checkbox" name="categories" value="Undergraduate Scholars" {% if form and 'Undergraduate Scholars' in form.categories %}checked{% endif %}> Undergraduate Scholars @ UH (formerly USD)</label>
+                <label><input type="checkbox" name="categories" value="Advancement" {% if form and 'Advancement' in form.categories %}checked{% endif %}> University Advancement</label>
+                <label><input type="checkbox" name="categories" value="Dean of Students" {% if form and 'Dean of Students' in form.categories %}checked{% endif %}> Dean of Students Office</label>
                 <label>
-                    <input type="checkbox" name="categories" value="Other" id="category_other" onclick="toggleOtherField('category_other_text', this)">
+                    <input type="checkbox" name="categories" value="Other" id="category_other" 
+                           {% if form and 'Other:' in form.categories %}checked{% endif %}
+                           onclick="toggleOtherField('category_other_text', this)">
                     Other (Please Specify):
                 </label>
-                <input type="text" name="hiddenOtherCategoryText" id="category_other_text" style="display:none;">
+                <input type="text" name="hiddenOtherCategoryText" id="category_other_text"
+                       value="{% if form and form.other_category_text %}{{ form.other_category_text }}{% endif %}"
+                       style="{% if form and form.other_category_text %}display:block;{% else %}display:none;{% endif %}">
             </div>
 
             <!-- Specific Disclosure Authorization -->
             <h3>Specifically, I authorize disclosure of the following information or category of information (One or many):</h3>
             <div class="selection-group">
-                <label><input type="checkbox" name="info" value="Advising"> Academic Advising Profile/Information</label>
-                <label><input type="checkbox" name="info" value="Academic Records"> Academic Records</label>
-                <label><input type="checkbox" name="info" value="All Records"> All University Records</label>
-                <label><input type="checkbox" name="info" value="Billing"> Billing/Financial Aid</label>
-                <label><input type="checkbox" name="info" value="Disciplinary"> Disciplinary</label>
-                <label><input type="checkbox" name="info" value="Grades"> Grades/Transcripts</label>
-                <label><input type="checkbox" name="info" value="Housing"> Housing</label>
-                <label><input type="checkbox" name="info" value="Photos"> Photos</label>
-                <label><input type="checkbox" name="info" value="Scholarships"> Scholarship and/or Honors</label>
+                <label><input type="checkbox" name="info" value="Advising" {% if form and 'Advising' in form.specific_info %}checked{% endif %}> Academic Advising Profile/Information</label>
+                <label><input type="checkbox" name="info" value="Academic Records" {% if form and 'Academic Records' in form.specific_info %}checked{% endif %}> Academic Records</label>
+                <label><input type="checkbox" name="info" value="All Records" {% if form and 'All Records' in form.specific_info %}checked{% endif %}> All University Records</label>
+                <label><input type="checkbox" name="info" value="Billing" {% if form and 'Billing' in form.specific_info %}checked{% endif %}> Billing/Financial Aid</label>
+                <label><input type="checkbox" name="info" value="Disciplinary" {% if form and 'Disciplinary' in form.specific_info %}checked{% endif %}> Disciplinary</label>
+                <label><input type="checkbox" name="info" value="Grades" {% if form and 'Grades' in form.specific_info %}checked{% endif %}> Grades/Transcripts</label>
+                <label><input type="checkbox" name="info" value="Housing" {% if form and 'Housing' in form.specific_info %}checked{% endif %}> Housing</label>
+                <label><input type="checkbox" name="info" value="Photos" {% if form and 'Photos' in form.specific_info %}checked{% endif %}> Photos</label>
+                <label><input type="checkbox" name="info" value="Scholarships" {% if form and 'Scholarships' in form.specific_info %}checked{% endif %}> Scholarship and/or Honors</label>
                 <label>
-                    <input type="checkbox" name="info" value="Other" id="info_other" onclick="toggleOtherField('info_other_text', this)">
+                    <input type="checkbox" name="info" value="Other" id="info_other" 
+                           {% if form and 'Other:' in form.specific_info %}checked{% endif %}
+                           onclick="toggleOtherField('info_other_text', this)">
                     Other (Please Specify):
                 </label>
-                <input type="text" name="hiddenOtherInfoText" id="info_other_text" style="display:none;">
+                <input type="text" name="hiddenOtherInfoText" id="info_other_text"
+                       value="{% if form and form.other_info_text %}{{ form.other_info_text }}{% endif %}"
+                       style="{% if form and form.other_info_text %}display:block;{% else %}display:none;{% endif %}">
             </div>
 
             <!-- Release Information To -->
             <h3>This information may be released to (Print Name(s) of Individuals To Whom University May Disclose Information):</h3>
-            <input type="text" name="releaseTo" placeholder="Enter names">
+            <input type="text" name="releaseTo" placeholder="Enter names" value="{% if form and form.release_to %}{{ form.release_to }}{% endif %}">
 
             <!-- Purpose of Informing -->
             <h3>The above names may be used for the purpose of informing:</h3>
             <div class="selection-group">
-                <label><input type="checkbox" name="purpose" value="Family"> Family</label>
-                <label><input type="checkbox" name="purpose" value="Educational Institution"> Educational Institution</label>
-                <label><input type="checkbox" name="purpose" value="Honor or Award"> Honor or Award</label>
-                <label><input type="checkbox" name="purpose" value="Employer"> Employer/Prospective Employer</label>
-                <label><input type="checkbox" name="purpose" value="Public/Media"> Public or Media of Scholarship</label>
+                <label><input type="checkbox" name="purpose" value="Family" {% if form and 'Family' in form.purpose %}checked{% endif %}> Family</label>
+                <label><input type="checkbox" name="purpose" value="Educational Institution" {% if form and 'Educational Institution' in form.purpose %}checked{% endif %}> Educational Institution</label>
+                <label><input type="checkbox" name="purpose" value="Honor or Award" {% if form and 'Honor or Award' in form.purpose %}checked{% endif %}> Honor or Award</label>
+                <label><input type="checkbox" name="purpose" value="Employer" {% if form and 'Employer' in form.purpose %}checked{% endif %}> Employer/Prospective Employer</label>
+                <label><input type="checkbox" name="purpose" value="Public/Media" {% if form and 'Public/Media' in form.purpose %}checked{% endif %}> Public or Media of Scholarship</label>
                 <label>
-                    <input type="checkbox" name="purpose" value="Other" id="purpose_other" onclick="toggleOtherField('purpose_other_text', this)">
+                    <input type="checkbox" name="purpose" value="Other" id="purpose_other" 
+                           {% if form and 'Other:' in form.purpose %}checked{% endif %}
+                           onclick="toggleOtherField('purpose_other_text', this)">
                     Other (Please Specify):
                 </label>
-                <input type="text" name="hiddenOtherPurposeText" id="purpose_other_text" style="display:none;">
+                <input type="text" name="hiddenOtherPurposeText" id="purpose_other_text"
+                       value="{% if form and form.other_purpose_text %}{{ form.other_purpose_text }}{% endif %}"
+                       style="{% if form and form.other_purpose_text %}display:block;{% else %}display:none;{% endif %}">
             </div>
 
             <!-- Password Requirement -->
             <h3>Please provide a password to obtain information via the phone.</h3>
             <h3>The password should not contain more than ten letters. You must provide the password to the individuals or agencies listed above. The University will not release information to the caller if the caller does not have the password. A new form must be completed to change your password.</h3>
-            <input type="text" name="password" placeholder="Enter password" onblur="validatePassword(this)">
-
+            <input type="text" name="password" placeholder="Enter password" 
+                   value="{% if form and form.password %}{{ form.password }}{% endif %}" 
+                   onblur="validatePassword(this)">
+            
             <!-- PeopleSoft ID -->
             <h3>PeopleSoft I.D. Number:</h3>
-            <input type="text" name="peoplesoftID" placeholder="7-digit PeopleSoft ID" onblur="validatePeopleSoftID(this)">
-
+            <input type="text" name="peoplesoftID" placeholder="7-digit PeopleSoft ID" 
+                   value="{% if form and form.peoplesoft_id %}{{ form.peoplesoft_id }}{% endif %}" 
+                   onblur="validatePeopleSoftID(this)">
+            
             <h3>Date:</h3>
             <input type="text" name="submission_date" id="submission_date" readonly>
         </form>
@@ -334,7 +350,10 @@
                 const data = await response.json();
         
                 if (response.ok) {
-                    alert(isFinalSubmission ? "Form submitted successfully!" : "Form saved for later.");
+                    alert(isFinalSubmission ? "Form submitted successfully!" : "Form saved as a draft.");
+                    if (!isFinalSubmission) {
+                        window.location.href = "/basic_user_form_status";  // Redirect user to form status page
+                    }
                 } else {
                     alert("Error: " + data.error);
                 }
@@ -343,13 +362,13 @@
             }
         }
 
-        function toggleOtherField(inputId, checkbox) {
-            var inputField = document.getElementById(inputId);
+        function toggleOtherField(textboxId, checkbox) {
+            const textbox = document.getElementById(textboxId);
             if (checkbox.checked) {
-                inputField.style.display = "inline";
+                textbox.style.display = "block";
             } else {
-                inputField.style.display = "none";
-                inputField.value = "";  // Clear the field when unchecked
+                textbox.style.display = "none";
+                textbox.value = "";
             }
         }
 
@@ -369,6 +388,13 @@
             document.getElementById("hiddenOtherPurposeText").value = purposeCheckbox.checked ? purposeText.value : "";
         });
 
+        document.addEventListener("DOMContentLoaded", function() {
+            const dateField = document.getElementById("submission_date");
+            if (dateField) {
+                const today = new Date().toISOString().split('T')[0];
+                dateField.value = today;
+            }
+        });
     </script>
     
 </body>
