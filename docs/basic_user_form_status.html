@@ -60,7 +60,7 @@
                     <td>{{ request.submitted_at }}</td>
                     <td>
                         {% if request.pdf_url %}
-                            <a href="{{ request.pdf_url }}" target="_blank" class="btn btn-primary">Download</a>
+                            <a href="{{ request.pdf_url }}" target="_blank" class="btn btn-primary" style="color: var(--secondary-color);">Download</a>
                         {% else %}
                             <span class="text-muted">Not Available</span>
                         {% endif %}
