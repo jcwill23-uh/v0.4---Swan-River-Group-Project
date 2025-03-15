@@ -713,9 +713,9 @@ def generate_latex_content(form, user):
         return r"$\boxtimes$" if condition else r"$\square$"
 
     # Process selected checkboxes
-    categories = form.categories.split(",") if form.categories else []
-    specific_info = form.specific_info.split(",") if form.specific_info else []
-    purpose = form.purpose.split(",") if form.purpose else []
+    categories = [c.strip() for c in form.categories.split(",") if c] if form.categories else []
+    specific_info = [s.strip() for s in form.specific_info.split(",") if s] if form.specific_info else []
+    purpose = [p.strip() for p in form.purpose.split(",") if p] if form.purpose else []
 
     latex_content = f"""
     \\documentclass[10pt]{{article}}
