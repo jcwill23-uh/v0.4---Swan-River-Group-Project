@@ -218,13 +218,15 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     previewImage.src = e.target.result;
-                    initializeCropper();
-                    editPhotoButton.style.display = "block"; // Show Edit button after selecting a file
+                    previewImage.style.display = "block";
                 };
                 reader.readAsDataURL(file);
+            } else {
+                // Keep the existing signature image
+                previewImage.src = previewImage.getAttribute("data-original") || "";
             }
         });
-    
+
         // Toggle Edit Controls
         function toggleEditControls() {
             if (editControls.style.display === "none") {
