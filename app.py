@@ -114,9 +114,9 @@ def submit_release_form():
         peoplesoft_id = (data.get('peoplesoftID') or "").strip()
         password = (data.get('password') or "").strip()
         campus = (data.get('campus') or "").strip()
-        categories = request.form.getlist('categories')
-        specific_info = request.form.getlist('info')
-        purpose = request.form.getlist('purpose')
+        categories = [c.strip() for c in request.form.getlist('categories') if c]
+        specific_info = [s.strip() for s in request.form.getlist('info') if s]
+        purpose = [p.strip() for p in request.form.getlist('purpose') if p]
 
         # Append "Other" input text if applicable
         other_category_text = request.form.get("hiddenOtherCategoryText", "").strip()
@@ -699,6 +699,7 @@ def generate_ssn_form(form, user):
     \\end{{document}}
     """
     return latex_content
+    
 # Update generate_latex_content function
 def generate_latex_content(form, user):
     """
