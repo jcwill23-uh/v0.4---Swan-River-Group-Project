@@ -107,8 +107,8 @@ def submit_release_form():
     try:
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
+        form_id = data.get("form_id")  # Get form ID (if editing a draft)
 
-        # Build student name
         student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
         peoplesoft_id = (data.get('peoplesoftID') or "").strip()
         password = (data.get('password') or "").strip()
@@ -117,17 +117,17 @@ def submit_release_form():
         specific_info = [s.strip() for s in request.form.getlist('info') if s]
         purpose = [p.strip() for p in request.form.getlist('purpose') if p]
 
-        # Append "Other" input text if applicable
+        # Handle "Other" fields
         other_category_text = request.form.get("hiddenOtherCategoryText", "").strip()
         other_info_text = request.form.get("hiddenOtherInfoText", "").strip()
         other_purpose_text = request.form.get("hiddenOtherPurposeText", "").strip()
 
-        # Replace "Other" selection with actual input text
+        # Replace "Other" selection with user input
         categories = [c if c != "Other" else f"Other: {other_category_text}" for c in categories]
         specific_info = [s if s != "Other" else f"Other: {other_info_text}" for s in specific_info]
         purpose = [p if p != "Other" else f"Other: {other_purpose_text}" for p in purpose]
 
-        # Convert list to comma-separated string
+        # Convert lists to comma-separated strings
         categories = ", ".join(categories)
         specific_info = ", ".join(specific_info)
         purpose = ", ".join(purpose)
@@ -135,31 +135,32 @@ def submit_release_form():
         release_to = (data.get('releaseTo') or "").strip()
         signature_url = data.get('signature_url', None)
 
-        # Determine approval status
         approval_status = "pending" if is_final_submission else "draft"
 
-        # Check if a draft already exists for this user
-        existing_request = ReleaseFormRequest.query.filter_by(peoplesoft_id=peoplesoft_id, approval_status="draft").first()
+        # Check if form_id exists (Updating a draft)
+        if form_id:
+            existing_request = ReleaseFormRequest.query.get(form_id)
 
-        if existing_request:
-            # Update existing draft
-            existing_request.student_name = student_name
-            existing_request.password = password
-            existing_request.campus = campus
-            existing_request.categories = categories
-            existing_request.specific_info = specific_info
-            existing_request.purpose = purpose
-            existing_request.release_to = release_to
-            existing_request.signature_url = signature_url
-            existing_request.approval_status = approval_status
-            existing_request.submitted_at = datetime.utcnow() if is_final_submission else None
-            existing_request.other_category_text = other_category_text
-            existing_request.other_info_text = other_info_text
-            existing_request.other_purpose_text = other_purpose_text
-            db.session.commit()
-            form_id = existing_request.id
+            if existing_request:
+                existing_request.student_name = student_name
+                existing_request.password = password
+                existing_request.campus = campus
+                existing_request.categories = categories
+                existing_request.specific_info = specific_info
+                existing_request.purpose = purpose
+                existing_request.release_to = release_to
+                existing_request.signature_url = signature_url
+                existing_request.approval_status = approval_status
+                existing_request.submitted_at = datetime.utcnow() if is_final_submission else None
+                existing_request.other_category_text = other_category_text
+                existing_request.other_info_text = other_info_text
+                existing_request.other_purpose_text = other_purpose_text
+                db.session.commit()
+                form_instance = existing_request
+            else:
+                return jsonify({"error": "Draft not found."}), 404
         else:
-            # Create a new form request
+            # Creating a new form if no form_id is provided
             new_request = ReleaseFormRequest(
                 student_name=student_name,
                 peoplesoft_id=peoplesoft_id,
@@ -178,26 +179,23 @@ def submit_release_form():
             )
             db.session.add(new_request)
             db.session.commit()
-            form_id = new_request.id
+            form_instance = new_request
 
         # Fetch user object before PDF generation
         user = User.query.filter_by(email=session["user"]["email"]).first()
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        # Ensure directory exists
+        # Generate PDF
         pdf_dir = "/mnt/data"
         os.makedirs(pdf_dir, exist_ok=True)
 
-        # Define file paths
-        tex_file_path = os.path.join(pdf_dir, f"form_{form_id}.tex")
-        pdf_file_path = os.path.join(pdf_dir, f"form_{form_id}.pdf")
+        tex_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.tex")
+        pdf_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.pdf")
 
-        # Write LaTeX content to file
         with open(tex_file_path, "w") as tex_file:
-            tex_file.write(generate_latex_content(new_request if not existing_request else existing_request, user))
+            tex_file.write(generate_latex_content(form_instance, user))
 
-        # Run pdflatex to generate PDF
         try:
             pdflatex_path = "pdflatex"
             os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
@@ -212,7 +210,7 @@ def submit_release_form():
             return jsonify({"error": "pdflatex not found"}), 500
 
         # Upload PDF to Azure Blob Storage
-        blob_name = f"release_forms/form_{form_id}.pdf"
+        blob_name = f"release_forms/form_{form_instance.id}.pdf"
         blob_client = pdf_container_client.get_blob_client(blob_name)
 
         with open(pdf_file_path, "rb") as data:
@@ -222,10 +220,7 @@ def submit_release_form():
 
         # Store PDF URL in the database
         pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
-        if existing_request:
-            existing_request.pdf_url = pdf_url
-        else:
-            new_request.pdf_url = pdf_url
+        form_instance.pdf_url = pdf_url
         db.session.commit()
 
         return jsonify({"message": "Form saved successfully", "pdf_url": pdf_url}), 200
