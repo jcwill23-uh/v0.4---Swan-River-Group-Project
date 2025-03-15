@@ -173,7 +173,7 @@
         <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
 
          <button class ="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button> 
-         <form id="releaseForm" action="/submit_ssn_form" method="POST" enctype="multipart/form-data">
+         <form id="ssnForm" action="/submit_ssn_form" method="POST" enctype="multipart/form-data">
            <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
             
         <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
@@ -274,7 +274,7 @@
                 }
             }, "image/png");
         }
-        /*
+        
         async function handleFormSubmission(isFinalSubmission) {
             const form = document.getElementById("ssnForm");
             const formData = new FormData(form);
@@ -334,7 +334,7 @@
             alert("An unexpected error occurred. Please try again.");
         }
     }
-    */
+    
     </script>
     
 </body>
