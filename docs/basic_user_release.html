@@ -28,6 +28,7 @@
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
     <div class="release-form-container">
         <form id="releaseForm" action="{{ url_for('submit_release_form') }}" method="POST">
+            <input type="hidden" name="form_id" value="{{ form.id if form else '' }}">
             <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
@@ -340,6 +341,13 @@
         async function handleFormSubmission(isFinalSubmission) {
             const form = document.getElementById("releaseForm");
             const formData = new FormData(form);
+
+            // Ensure form_id is included for drafts
+            const formIdField = document.querySelector('input[name="form_id"]');
+            if (formIdField && formIdField.value) {
+                formData.append("form_id", formIdField.value);
+            }
+            
             formData.append("final_submission", isFinalSubmission ? "true" : "false");
         
             try {
