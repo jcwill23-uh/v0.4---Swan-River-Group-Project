@@ -48,7 +48,8 @@
 
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
     <div class="release-form-container">
-        <form id="ssnForm" action="{{ url_for('submit_ssn_form') }}" method="POST">
+        <!-- <form id="ssnForm" action="{{ url_for('submit_ssn_form') }}" method="POST"> -->
+        <form id="ssnForm">
             <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
@@ -272,7 +273,7 @@
                 }
             }, "image/png");
         }
-
+        /*
         async function handleFormSubmission(isFinalSubmission) {
             const form = document.getElementById("ssnForm");
             const formData = new FormData(form);
@@ -332,6 +333,7 @@
             alert("An unexpected error occurred. Please try again.");
         }
     }
+    */
     </script>
     
 </body>
