@@ -426,6 +426,153 @@ def download_signature(signature_url, user_id):
             print(f"Error downloading signature: {e}")
     return "/mnt/data/default-signature.png"  # Fallback if the download fails
 
+def generate_ssn_form(form, user):
+    signature_path = download_signature(user.signature_url, user.id) if user.signature_url else "/mnt/data/default-signature.png"
+
+    def latex_checkbox(condition):
+        return r"$\boxtimes$" if condition else r"$\square$"
+
+    to_change = form.toChange.split(",") if form.toChange else []
+
+    latex_content = f"""
+    \\documentclass[10pt]{{article}}
+    \\usepackage[a4paper, margin=0.75in]{{geometry}}
+    \\usepackage{{graphicx}}
+    \\usepackage{{array}}
+    \\usepackage{{titlesec}}
+    \\usepackage{{setspace}}
+    \\usepackage{{lmodern}}
+    \\usepackage{{amssymb}}
+    \\usepackage{{multicol}}
+    \\usepackage{{ragged2e}}
+    \\usepackage{{tabularray}}
+
+    % Define checkbox formatting
+    \\newcommand{{\\checkbox}}[1]{{\\hspace{{2em}} #1}}
+
+    % Remove default footer and page number
+    \\pagestyle{{empty}}
+
+    \\begin{{document}}
+
+    \\begin{{center}}
+        {{\\Large\\textbf{{NAME AND/OR SOCIAL SECURITY NUMBER CHANGE}}}} \\\\
+        {{\\large{{University of Houston | Office of the University Registrar}}}} \\\\
+        {{\\large{{Houston, Texas 77204-2027 | (713) 743-1010, option 7}}}}
+    \\end{{center}}
+
+    \\vspace{{-1.5em}}
+    \\hrulefill
+    \\vspace{{0.1em}}
+
+    \\noindent
+    \\large\\textbf{{*Student Name (as listed on university record):}} \\
+    \\normalsize
+    \\begin{{tblr}}
+    {{
+    colspec = {{X[l]X[l]X[l]}},
+    row{{1}} = {{cmd=\\scriptsize\\textit}}
+    }}
+        First name & Middle name & Last name \\\\
+        {form.first_name} & {form.middle_name} & {form.last_name} \\\\
+    \\end{{tblr}}
+
+    \\begin{{tblr}}
+    {{
+        colspec = {{X[l]X[2,l]}}
+    }}
+        \large{{myUH ID Number}} & What are you requesting to add or update? \\\\
+        {form.uhid} & \\checkbox{{{latex_checkbox('name') in to_change}}} \\\\
+                    & \\checkbox{{{latex_checkbox('ssn') in to_change}}} \\\\
+    \\end{{tblr}}
+
+    \\hrulefill
+
+    \\noindent
+    \\large\\textbf{{Section A: Student Name Change}}
+    \\vspace{{5pt}} \\\\
+
+    \\noindent
+    \\normalsize
+    The University of Houston record of your name was originally taken from your application and may be changed if:
+    \\vspace{{-0.5em}}
+    \\begin{{enumerate}}
+        \\itemsep 0em
+        \\item You have married, remarried, or divorced (a copy of marriage license or portion of divorce decree indicating new name must be provided)
+        \\item You have changed your name by court order (a copy of the court order must be provided)
+        \\item Your legal name is listed incorrectly and satisfactory evidence exists for its correction (driver license, state ID, birth certificate, valid passport, etc., must be provided)
+    \\end{{enumerate}}
+    
+    \\textit{{NOTE: A request to omit a first or middle name or to reverse the order of the first and middle names cannot be honored unless accompanied by appropriate documentation.
+    \\textbf{{All documents must also be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID). }}}} \\\\
+    \\noindent\\textbf{{\underline{{Please print and complete the following information:}}}} 
+    \\vspace{{0em}}
+    I request that my legal name be changed and reflected on University of Houston records as listed below: 
+    \\vspace{{0em}}
+    \\begin{{tblr}}
+    {{
+        colspec = {{XX[-1]X[-1]X[-1]}}
+    }}
+        Check reason for name change request: 
+        & \\checkbox{{{form.name_change_reason == 'Marriage/Divorce'}}} Marriage/Divorce 
+        & \\checkbox{{{form.name_change_reason == 'Court Order'}}} Court Order 
+        & \\checkbox{{{form.name_change_reason == 'Correction of Error'}}} \\\\
+    \\end{{tblr}}
+    \begin{tblr}
+    {{
+        colspec = X[-1]X[c]X[c]X[c]X[c],
+        row{1} = {{cmd=\\scriptsize\textit}},
+        row{3} = {{cmd=\\scriptsize\textit}},
+    }}
+        \\SetCell[r=2]{{l}} \\normalsize From: & {{First name}} & {{Middle name}} & {{Last name}} & {{Suffix}} \\\\
+            & {form.old_first_name} & {form.old_middle_name} & {form.old_last_name} & {form.old_suffix}
+        \\\\
+        \\SetCell[r=2]{{l}} \\normalsize To: & {{First name}} & {{Middle name}} & {{Last name}} & {{Suffix}} \\\\
+            & {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix}
+    \\end{{tblr}}
+    \\noindent
+    \\textbf{{This is to attest that I am the student signing this form. I understand the information may be released orally or in the form of copies of written records, as preferred by the requester. This authorization will remain in effect from the date it is executed until revoked by me, in writing, and delivered to Department(s) identified above.}} \\\\
+
+    \\vfill
+
+    % Student Information Section
+    \\noindent
+    \\noindent
+    \\begin{{tabular}}{{ p{{3in}} p{{3in}} }}
+        \\textbf{{\\underline{{{form.student_name}}}}} & \\textbf{{\\underline{{{form.peoplesoft_id}}}}} \\\\
+        \\textbf{{Student Name [Please Print]}} & \\textbf{{PeopleSoft I.D. Number}} \\\\[1.5em]
+
+        % Signature and Date row
+        \\begin{{minipage}}{{3in}}
+            
+            \\IfFileExists{{{signature_path}}}
+                {{\\includegraphics[width=2in]{{{signature_path}}}}}
+                {{\\textbf{{No signature on file.}}}}
+        \\end{{minipage}} 
+        & 
+        \\begin{{minipage}}{{3in}}
+            
+            \\textbf{{\\underline{{\\today}}}}
+        \\end{{minipage}} \\\\
+        
+        \\textbf{{Student Signature}} & \\textbf{{Date:}} \\\\
+    \\end{{tabular}} \\\\
+
+    \\vfill
+
+    % Bottom Section
+    \\noindent
+    \\begin{{tabular}}{{ p{{3in}} p{{3in}} }}
+        \\textbf{{Please Retain a Copy for your Records}} & \\\\
+        \\textbf{{Document may be Submitted to Registrar's Office}} & \\\\
+        FERPA Authorization Form & \\\\
+        OGC-SF-2006-02 Revised 11.10.2022 & \\textbf{{Note: Modification of this Form requires approval of OGC}} \\\\
+        Page 1 of 1 & \\\\
+    \\end{{tabular}}
+
+    \\end{{document}}
+    """
+    return latex_content
 # Update generate_latex_content function
 def generate_latex_content(form, user):
     """
