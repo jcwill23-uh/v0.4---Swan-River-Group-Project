@@ -241,7 +241,7 @@ def submit_release_form():
 
 # Route to handle form submission
 @app.route('/submit_ssn_form', methods=['POST'])
-def submit_release_form():
+def submit_ssn_form():
     try:
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
