@@ -378,14 +378,26 @@ def submit_ssn_form():
 
         latex_content = generate_ssn_form(new_request, user)
 
-        if not latex_content.strip():
+        # Debug: Check if LaTeX content is generated
+        if latex_content is None or not latex_content.strip():
             return jsonify({"error": "generate_ssn_form() returned empty content."}), 500
         
-        print(f"Generated LaTeX Content:\n{latex_content}")  # Debugging
-
+        print(f"Generated LaTeX Content:\n{latex_content}")
+        
+        # Set the LaTeX file path
+        tex_file_path = os.path.join("/mnt/data", f"form_{new_request.id}.tex")
+        print(f"Writing LaTeX file to: {tex_file_path}")
+        
         try:
             with open(tex_file_path, "w") as tex_file:
                 tex_file.write(latex_content)
+        
+            # Debug: Check if the file now exists
+            if not os.path.exists(tex_file_path):
+                return jsonify({"error": "LaTeX file was not found after writing."}), 500
+        
+            print(f"LaTeX file successfully written: {tex_file_path}")
+            
         except Exception as e:
             return jsonify({"error": f"Failed to write LaTeX file: {str(e)}"}), 500
 
