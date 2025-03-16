@@ -50,6 +50,7 @@
     <div class="release-form-container">
         <form id="ssnForm" action="{{ url_for('submit_ssn_form') }}" method="POST" enctype="multipart/form-data">
             <!-- Hidden fields for user tracking -->
+            <input type="hidden" name="form_id" value="{{ form.id if form else '' }}">
             <input type="hidden" name="user_email" value="{{ user.email }}">
             <input type="hidden" name="user_id" value="{{ user.id }}">
         
