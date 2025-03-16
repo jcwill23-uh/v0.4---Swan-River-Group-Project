@@ -598,20 +598,23 @@ def generate_ssn_form(form, user):
     def latex_checkbox(condition):
         return r"$\boxtimes$" if condition else r"$\square$"
 
-    to_change = form.toChange.split(",") if form.toChange else []
-
-    # Split SSN into sections
-    old_ssn_parts = [
-        form.old_ssn.split("-")[0] if form.old_ssn else "",
-        form.old_ssn.split("-")[1] if form.old_ssn else "",
-        form.old_ssn.split("-")[2] if form.old_ssn else ""
-    ]
+    # Ensure SSN values are properly formatted before splitting
+    old_ssn = form.old_ssn if form.old_ssn else "---"
+    new_ssn = form.new_ssn if form.new_ssn else "---"
     
-    new_ssn_parts = [
-        form.new_ssn.split("-")[0] if form.new_ssn else "",
-        form.new_ssn.split("-")[1] if form.new_ssn else "",
-        form.new_ssn.split("-")[2] if form.new_ssn else ""
-    ]
+    # Split SSN into sections safely
+    old_ssn_parts = old_ssn.split("-") if "-" in old_ssn else ["", "", ""]
+    new_ssn_parts = new_ssn.split("-") if "-" in new_ssn else ["", "", ""]
+    
+    # Ensure lists have exactly 3 elements
+    if len(old_ssn_parts) != 3:
+        old_ssn_parts = ["", "", ""]
+    
+    if len(new_ssn_parts) != 3:
+        new_ssn_parts = ["", "", ""]
+    
+    # Process checkboxes for changes
+    to_change = form.toChange.split(",") if form.toChange else []
 
     latex_content = f"""
     \\documentclass[10pt]{{article}}
@@ -667,12 +670,12 @@ def generate_ssn_form(form, user):
     - Birth Certificate\\
     - Government-issued ID\\
     
-    \\begin{{tblr}} {{colspec = {{XXXX}}, row{1} = {{cmd=\\textbf}}}}
+    \\begin{{tabular}} {{colspec = {{XXXX}}, row{1} = {{cmd=\\textbf}}}}
         From: & First Name & Middle Name & Last Name & Suffix \\\\
               & {form.old_first_name} & {form.old_middle_name} & {form.old_last_name} & {form.old_suffix} \\\\
         To:   & First Name & Middle Name & Last Name & Suffix \\\\
               & {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix} \\\\
-    \\end{{tblr}}
+    \\end{{tabular}}
     \\hrulefill
     
     \\textbf{{Section B: SSN Change}}
@@ -690,10 +693,10 @@ def generate_ssn_form(form, user):
     - Social Security Card\\
     - Government-issued ID\\
     
-    \\begin{{tblr}} {{colspec = {{XXX}}, row{1} = {{cmd=\\textbf}}}}
+    \\begin{{tabular}} {{colspec = {{XXX}}, row{1} = {{cmd=\\textbf}}}}
         From: & {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\\\
         To:   & {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\\\
-    \\end{{tblr}}
+    \\end{{tabular}}
     \\hrulefill
     
     \\noindent\\textbf{{Student Signature:}} \\includegraphics[width=2in]{{{signature_path}}} \\hfill \\textbf{{Date:}} \\today
