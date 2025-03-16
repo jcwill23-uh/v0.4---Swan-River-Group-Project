@@ -49,6 +49,10 @@
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
     <div class="release-form-container">
         <form id="ssnForm" action="{{ url_for('submit_ssn_form') }}" method="POST" enctype="multipart/form-data">
+            <!-- Hidden fields for user tracking -->
+            <input type="hidden" name="user_email" value="{{ user.email }}">
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+        
             <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
@@ -64,21 +68,21 @@
             
             <!-- UH ID Input -->
             <h3>UH ID Number:</h3>
-            <input type="text" name="uhid" placeholder="Enter 7-digit UH ID" required>
+            <input type="text" name="peoplesoft_id" placeholder="Enter 7-digit UH ID" onblur="validateUHID(this)" required>
         
             <!-- Request Type Selection -->
             <h3>What are you requesting to add or update?</h3>
             <div class="selection-group">
                 <label>
-                    <input type="checkbox" name="toChange" value="name"> Update Name (Complete Section A)
+                    <input type="checkbox" id="updateNameCheckbox" name="toChange" value="name" onclick="toggleSection('sectionA', 'updateNameCheckbox')"> Update Name (Complete Section A)
                 </label>
                 <label>
-                    <input type="checkbox" name="toChange" value="ssn"> Update/Add Social Security Number (Complete Section B)
+                    <input type="checkbox" id="updateSSNCheckbox" name="toChange" value="ssn" onclick="toggleSection('sectionB', 'updateSSNCheckbox')"> Update/Add Social Security Number (Complete Section B)
                 </label>
             </div>
         
             <!-- Section A: Name Change -->
-            <div id="sectionA">
+            <div id="sectionA" style="display: none;">
                 <h2>Section A: Student Name Change</h2>
         
                 <h3>Check reason for name change request:</h3>
@@ -89,20 +93,20 @@
                 </div>
         
                 <h3>FROM:</h3>
-                <input type="text" name="old_first_name" placeholder="First Name" required>
+                <input type="text" name="old_first_name" placeholder="First Name">
                 <input type="text" name="old_middle_name" placeholder="Middle Name">
-                <input type="text" name="old_last_name" placeholder="Last Name" required>
+                <input type="text" name="old_last_name" placeholder="Last Name">
                 <input type="text" name="old_suffix" placeholder="Suffix (Optional)">
         
                 <h3>TO:</h3>
-                <input type="text" name="new_first_name" placeholder="First Name" required>
+                <input type="text" name="new_first_name" placeholder="First Name">
                 <input type="text" name="new_middle_name" placeholder="Middle Name">
-                <input type="text" name="new_last_name" placeholder="Last Name" required>
+                <input type="text" name="new_last_name" placeholder="Last Name">
                 <input type="text" name="new_suffix" placeholder="Suffix (Optional)">
             </div>
         
             <!-- Section B: SSN Update -->
-            <div id="sectionB">
+            <div id="sectionB" style="display: none;">
                 <h2>Section B: Student Social Security Number Change</h2>
         
                 <h3>Check reason for Social Security Number change request:</h3>
@@ -125,15 +129,12 @@
                     <input type="text" name="new_ssn_3" maxlength="4" placeholder="XXXX" required>
                 </div>
             </div>
-        
-            <h3>Please upload a picture of your signature below.</h3>
-            <input type="file" id="signatureInput" name="signature" accept="image/png, image/jpeg" required>
-        
-            <button type="submit">Submit Form</button>
         </form>
     </div>
     <!-- END OF FORM INFORMATION -->
-
+    <!-- Signature Upload -->
+    <h3>Please upload a picture of your signature below.</h3>
+    <input type="file" name="signature" accept="image/png, image/jpeg" required>
     <br><br>
     <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>  
     <!-- Signature Preview -->
@@ -156,13 +157,11 @@
     
     <!-- Edit Photo Button (Hidden when no image) -->
     <div class="button-container">
-        <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
-
-         <button class ="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button> 
-         <form id="ssnForm" action="/submit_ssn_form" method="POST" enctype="multipart/form-data">
-           <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
-            
-        <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
+        <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>
+        
+        <button class="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button>
+        <button class="back" type="button" onclick="handleFormSubmission(true)">Submit Form</button>
+        <button class="back" onclick="redirectToBasicHome()">Back to Home</button>
     </div>
 
     <script>
