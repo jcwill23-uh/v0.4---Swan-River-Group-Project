@@ -48,7 +48,7 @@
 
     <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
     <div class="release-form-container">
-        <form id="ssnForm" action="{{ url_for('submit_ssn_form') }}" method="POST"> 
+        <form id="ssnForm" action="{{ url_for('submit_ssn_form') }}" method="POST" enctype="multipart/form-data">
             <!-- Name Auto Filled -->
             <h3>Name:</h3>
             <div class="selection-group">
@@ -56,13 +56,7 @@
                 <input type="text" name="first_name" value="{{ user.first_name }}" readonly>
         
                 <p>Middle Name: </p>
-                {% if user.middle_name.strip() %}
-                    <!-- Readonly middle name input if it exists -->
-                    <input type="text" name="middle_name" value="{{ user.middle_name }}" readonly>
-                {% else %}
-                    <!-- Editable middle name input if it's missing -->
-                    <input type="text" name="middle_name" placeholder="Enter Middle Name">
-                {% endif %}
+                <input type="text" name="middle_name" value="{{ user.middle_name }}" readonly>
         
                 <p>Last Name: </p>
                 <input type="text" name="last_name" value="{{ user.last_name }}" readonly>
@@ -70,84 +64,76 @@
             
             <!-- UH ID Input -->
             <h3>UH ID Number:</h3>
-            <input type="text" name="uhid" placeholder="Enter 7-digit UH ID" onblur="validateUHID(this)">
-
+            <input type="text" name="uhid" placeholder="Enter 7-digit UH ID" required>
+        
             <!-- Request Type Selection -->
             <h3>What are you requesting to add or update?</h3>
             <div class="selection-group">
-                <label><input type="checkbox" id="updateNameCheckbox" name="toChange" value="name" onclick="toggleSection('sectionA', 'updateNameCheckbox')"> Update Name (Complete Section A)</label>
-                <label><input type="checkbox" id="updateSSNCheckbox" name="toChange" value="ssn" onclick="toggleSection('sectionB', 'updateSSNCheckbox')"> Update/Add Social Security Number (Complete Section B)</label>
+                <label>
+                    <input type="checkbox" name="toChange" value="name"> Update Name (Complete Section A)
+                </label>
+                <label>
+                    <input type="checkbox" name="toChange" value="ssn"> Update/Add Social Security Number (Complete Section B)
+                </label>
             </div>
-
+        
             <!-- Section A: Name Change -->
-            <div id="sectionA" style="display: none;">
+            <div id="sectionA">
                 <h2>Section A: Student Name Change</h2>
-                <p>
-                    The University of Houston record of your name was originally taken from your application for admission and may be changed if:
-                </p>
-                <ul>
-                    <li>You have married, remarried, or divorced (a copy of marriage license or portion of divorce decree indicating new name must be provided).</li>
-                    <li>You have changed your name by court order (a copy of the court order must be provided).</li>
-                    <li>Your legal name is listed incorrectly and satisfactory evidence exists for its correction (driver license, state ID, birth certificate, valid passport, etc., must be provided).</li>
-                </ul>
-                <p><strong>NOTE:</strong> A request to omit a first or middle name or to reverse the order of the first and middle names cannot be honored unless accompanied by appropriate documentation. All documents must be submitted with a valid government-issued photo ID.</p>
-
+        
                 <h3>Check reason for name change request:</h3>
                 <div class="selection-group">
                     <label><input type="radio" name="name_change_reason" value="Marriage/Divorce"> Marriage/Divorce</label>
                     <label><input type="radio" name="name_change_reason" value="Court Order"> Court order</label>
                     <label><input type="radio" name="name_change_reason" value="Correction of Error"> Correction of error</label>
                 </div>
-
+        
                 <h3>FROM:</h3>
-                <input type="text" name="old_first_name" placeholder="First Name">
+                <input type="text" name="old_first_name" placeholder="First Name" required>
                 <input type="text" name="old_middle_name" placeholder="Middle Name">
-                <input type="text" name="old_last_name" placeholder="Last Name">
+                <input type="text" name="old_last_name" placeholder="Last Name" required>
                 <input type="text" name="old_suffix" placeholder="Suffix (Optional)">
-
+        
                 <h3>TO:</h3>
-                <input type="text" name="new_first_name" placeholder="First Name">
+                <input type="text" name="new_first_name" placeholder="First Name" required>
                 <input type="text" name="new_middle_name" placeholder="Middle Name">
-                <input type="text" name="new_last_name" placeholder="Last Name">
+                <input type="text" name="new_last_name" placeholder="Last Name" required>
                 <input type="text" name="new_suffix" placeholder="Suffix (Optional)">
             </div>
-
+        
             <!-- Section B: SSN Update -->
-            <div id="sectionB" style="display: none;">
+            <div id="sectionB">
                 <h2>Section B: Student Social Security Number Change</h2>
-                <p>The University of Houston record of your Social Security Number was originally taken from your application for admission and may be changed only if:</p>
-                <ul>
-                    <li>The student has obtained a new social security number.</li>
-                    <li>An error was made.</li>
-                </ul>
-                <p><strong>NOTE:</strong> The student must provide a copy of the Social Security Card, which must include the student's signature and be submitted with a valid government-issued photo ID.</p>
-
+        
                 <h3>Check reason for Social Security Number change request:</h3>
                 <div class="selection-group">
                     <label><input type="radio" name="ssn_change_reason" value="Correction of Error"> Correction of error</label>
                     <label><input type="radio" name="ssn_change_reason" value="Addition"> Addition of SSN to university records</label>
                 </div>
-
+        
                 <h3>FROM:</h3>
                 <div class="ssn-container">
-                    <input type="text" name="old_ssn_1" maxlength="3" placeholder="XXX" onblur="validateSSN(this, 3)"> -
-                    <input type="text" name="old_ssn_2" maxlength="2" placeholder="XX" onblur="validateSSN(this, 2)"> -
-                    <input type="text" name="old_ssn_3" maxlength="4" placeholder="XXXX" onblur="validateSSN(this, 4)">
+                    <input type="text" name="old_ssn_1" maxlength="3" placeholder="XXX" required> -
+                    <input type="text" name="old_ssn_2" maxlength="2" placeholder="XX" required> -
+                    <input type="text" name="old_ssn_3" maxlength="4" placeholder="XXXX" required>
                 </div>
-
+        
                 <h3>TO:</h3>
                 <div class="ssn-container">
-                    <input type="text" name="new_ssn_1" maxlength="3" placeholder="XXX" onblur="validateSSN(this, 3)"> -
-                    <input type="text" name="new_ssn_2" maxlength="2" placeholder="XX" onblur="validateSSN(this, 2)"> -
-                    <input type="text" name="new_ssn_3" maxlength="4" placeholder="XXXX" onblur="validateSSN(this, 4)">
+                    <input type="text" name="new_ssn_1" maxlength="3" placeholder="XXX" required> -
+                    <input type="text" name="new_ssn_2" maxlength="2" placeholder="XX" required> -
+                    <input type="text" name="new_ssn_3" maxlength="4" placeholder="XXXX" required>
                 </div>
             </div>
+        
+            <h3>Please upload a picture of your signature below.</h3>
+            <input type="file" id="signatureInput" name="signature" accept="image/png, image/jpeg" required>
+        
+            <button type="submit">Submit Form</button>
         </form>
     </div>
     <!-- END OF FORM INFORMATION -->
 
-    <p>Please upload a picture of your signature below.</p>
-    <input type="file" id="signatureInput" accept="image/png, image/jpeg">
     <br><br>
     <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>  
     <!-- Signature Preview -->
