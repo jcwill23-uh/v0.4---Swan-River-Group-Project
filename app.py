@@ -577,7 +577,7 @@ def generate_ssn_form(form, user):
 
     to_change = form.toChange.split(",") if form.toChange else []
 
-    latex_content = f"""
+    latex_content = r"""
     \\documentclass[10pt]{{article}}
     \\usepackage[a4paper, margin=0.75in]{{geometry}}
     \\usepackage{{graphicx}}
