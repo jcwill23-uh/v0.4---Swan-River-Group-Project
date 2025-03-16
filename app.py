@@ -290,7 +290,6 @@ def edit_draft_form(form_id):
         flash("An unexpected error occurred while loading the draft.", "error")
         return redirect(url_for('basic_user_form_status'))
 
-
 # Route to handle form submission
 @app.route('/submit_ssn_form', methods=['POST'])
 def submit_ssn_form():
@@ -301,7 +300,9 @@ def submit_ssn_form():
 
         # Extract and format names
         student_name = f"{data.get('first_name', '').strip()} {data.get('middle_name', '').strip()} {data.get('last_name', '').strip()}"
-        uhid = data.get("uhid", "").strip()
+        uhid = data.get("peoplesoft_id", "").strip()
+        user_email = data.get("user_email", "").strip()
+        user_id = data.get("user_id", "").strip()
 
         # Process checkboxes for changes
         to_update = ",".join([u.strip() for u in data.getlist("toChange") if u])
@@ -309,18 +310,14 @@ def submit_ssn_form():
         ssn_change_reason = data.get("ssn_change_reason", "").strip()
 
         # Process name change fields
-        old_name = ",".join([
-            data.get("old_first_name", "").strip(),
-            data.get("old_middle_name", "").strip(),
-            data.get("old_last_name", "").strip(),
-            data.get("old_suffix", "").strip()
-        ])
-        new_name = ",".join([
-            data.get("new_first_name", "").strip(),
-            data.get("new_middle_name", "").strip(),
-            data.get("new_last_name", "").strip(),
-            data.get("new_suffix", "").strip()
-        ])
+        old_first_name = data.get("old_first_name", "").strip()
+        old_middle_name = data.get("old_middle_name", "").strip()
+        old_last_name = data.get("old_last_name", "").strip()
+        old_suffix = data.get("old_suffix", "").strip()
+        new_first_name = data.get("new_first_name", "").strip()
+        new_middle_name = data.get("new_middle_name", "").strip()
+        new_last_name = data.get("new_last_name", "").strip()
+        new_suffix = data.get("new_suffix", "").strip()
 
         # Process SSN change fields
         old_ssn = "-".join([
@@ -341,11 +338,19 @@ def submit_ssn_form():
         new_request = ReleaseFormRequest(
             student_name=student_name,
             peoplesoft_id=uhid,
+            user_email=user_email,
+            user_id=user_id,
             toChange=to_update,
             name_change_reason=name_change_reason,
             ssn_change_reason=ssn_change_reason,
-            old_name=old_name,
-            new_name=new_name,
+            old_first_name=old_first_name,
+            old_middle_name=old_middle_name,
+            old_last_name=old_last_name,
+            old_suffix=old_suffix,
+            new_first_name=new_first_name,
+            new_middle_name=new_middle_name,
+            new_last_name=new_last_name,
+            new_suffix=new_suffix,
             old_ssn=old_ssn,
             new_ssn=new_ssn,
             signature_url=signature_url,
@@ -489,7 +494,6 @@ def authorized():
         flash("An error occurred while logging in. Please try again.", "error")
         return redirect(url_for('login'))
 
-
 @app.route('/logout')
 def logout():
     session.clear()
@@ -597,10 +601,6 @@ def generate_ssn_form(form, user):
     old_ssn_parts = form.old_ssn.split("-") if form.old_ssn else ["", "", ""]
     new_ssn_parts = form.new_ssn.split("-") if form.new_ssn else ["", "", ""]
 
-    # Split names into individual components
-    old_name_parts = form.old_name.split(",") if form.old_name else ["", "", "", ""]
-    new_name_parts = form.new_name.split(",") if form.new_name else ["", "", "", ""]
-    
     latex_content = f"""
     \\documentclass[10pt]{{article}}
     \\usepackage[a4paper, margin=0.75in]{{geometry}}
@@ -615,15 +615,15 @@ def generate_ssn_form(form, user):
     \\usepackage{{tabularray}}
     \\usepackage{{xcolor}}
     
-    \\newcommand{{\checkbox}}[1]{{\hspace{{2em}} #1}}
+    \\newcommand{{\\checkbox}}[1]{{\\hspace{{2em}} #1}}
     
     \\pagestyle{{empty}}
     \\begin{{document}}
 
     \\begin{{center}}
-        {{\Large\textbf{{CHANGE OF NAME AND/OR SOCIAL SECURITY NUMBER}}}} \\\\
-        {{\large{{University of Houston | Office of the University Registrar}}}} \\\\
-        {{\large{{Houston, Texas 77204-2027 | (713) 743-1010, option 7}}}}
+        {{\\Large\\textbf{{CHANGE OF NAME AND/OR SOCIAL SECURITY NUMBER}}}} \\\\
+        {{\\large{{University of Houston | Office of the University Registrar}}}} \\\\
+        {{\\large{{Houston, Texas 77204-2027 | (713) 743-1010, option 7}}}}
     \\end{{center}}
     \\hrulefill
 
@@ -655,11 +655,11 @@ def generate_ssn_form(form, user):
     - Birth Certificate\\
     - Government-issued ID\\
     
-    \\begin{{tblr}} {{colspec = {{XXXX}}, row{1} = {{cmd=\textbf}}}}
-        From: & First Name & Middle Name & Last Name & Suffix \\
-              & {old_name_parts[0]} & {old_name_parts[1]} & {old_name_parts[2]} & {old_name_parts[3]} \\
-        To:   & First Name & Middle Name & Last Name & Suffix \\
-              & {new_name_parts[0]} & {new_name_parts[1]} & {new_name_parts[2]} & {new_name_parts[3]} \\
+    \\begin{{tblr}} {{colspec = {{XXXX}}, row{1} = {{cmd=\\textbf}}}}
+        From: & First Name & Middle Name & Last Name & Suffix \\\\
+              & {form.old_first_name} & {form.old_middle_name} & {form.old_last_name} & {form.old_suffix} \\\\
+        To:   & First Name & Middle Name & Last Name & Suffix \\\\
+              & {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix} \\\\
     \\end{{tblr}}
     \\hrulefill
     
@@ -678,9 +678,9 @@ def generate_ssn_form(form, user):
     - Social Security Card\\
     - Government-issued ID\\
     
-    \\begin{{tblr}} {{colspec = {{XXX}}, row{1} = {{cmd=\textbf}}}}
-        From: & {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\
-        To:   & {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\
+    \\begin{{tblr}} {{colspec = {{XXX}}, row{1} = {{cmd=\\textbf}}}}
+        From: & {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\\\
+        To:   & {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\\\
     \\end{{tblr}}
     \\hrulefill
     
