@@ -78,6 +78,24 @@ class User(db.Model):
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
 
+# SSN Form Request Model
+class SSNFormRequest(db.Model):
+    __tablename__ = 'ssn_form_request'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False) # Comma-separated name
+    uhid = db.Column(db.String(10), nullable=False)
+    to_update=db.Column(db.String(15), nullable=False) # Comma-separated list
+    name_change_reason=db.Column(db.String(255), nullable=False)
+    old_name = db.Column(db.String(255), nullable=False) # Comma-separated name
+    new_name = db.Column(db.String(255), nullable=False) # Comma-separated name
+    ssn_change_reason = db.Column(db.String(255), nullable=False)
+    old_ssn = db.Column(db.String(20), nullable=False) # Hyphen-separated SSN
+    new_ssn = db.Column(db.String(20), nullable=False) # Hyphen-separated SSN
+    pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 # Release Form Request Model
 class ReleaseFormRequest(db.Model):
     __tablename__ = 'release_form_request'
@@ -262,36 +280,30 @@ def submit_ssn_form():
     try:
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
+        form_id = data.get("form_id")
 
         student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
-        peoplesoft_id = (data.get('peoplesoftID') or "").strip()
-        password = (data.get('password') or "").strip()
-        campus = (data.get('campus') or "").strip()
-        categories = request.form.getlist('categories')
-        specific_info = request.form.getlist('info')
-        purpose = request.form.getlist('purpose')
-
-        # Append "Other" input text if applicable
-        other_category_text = request.form.get("hiddenOtherCategoryText", "").strip()
-        other_info_text = request.form.get("hiddenOtherInfoText", "").strip()
-        other_purpose_text = request.form.get("hiddenOtherPurposeText", "").strip()
-
-        # If "Other" is selected, replace it with user input
-        categories = [c if c != "Other" else f"Other: {other_category_text}" for c in categories]
-        specific_info = [s if s != "Other" else f"Other: {other_info_text}" for s in specific_info]
-        purpose = [p if p != "Other" else f"Other: {other_purpose_text}" for p in purpose]
-
-        # Convert list back to comma-separated string
-        categories = ", ".join(categories)
-        specific_info = ", ".join(specific_info)
-        purpose = ", ".join(purpose)
-
-        release_to = (data.get('releaseTo') or "").strip()
+        uhid = (data.get('uhid') or "").strip()
+        to_update = ",".join([u.strip() for u in data.getlist("toChange") if u])
+        name_change_reason = (data.get("name_change_reason") or "").strip()
+        ssn_change_reason = (data.get("ssn_change_reason") or "").strip()
+        old_name = (data.get("old_first_name") or "").strip() + "," + (data.get("old_middle_name") or "").strip() + "," + (data.get("old_last_name") or "").strip() + "," + (data.get("old_suffix") or "").strip()
+        new_name = (data.get("new_first_name") or "").strip() + "," + (data.get("new_middle_name") or "").strip() + "," + (data.get("new_last_name") or "").strip() + "," + (data.get("new_suffix") or "").strip()
+        old_ssn = (data.get("old_ssn_1").strip() + "-" + data.get("old_ssn_2").strip() + "-" + data.get("old_ssn_3").strip()) if data.get("old_ssn_1").strip() and data.get("old_ssn_2").strip() and data.get("old_ssn_3") else ""
+        new_ssn = (data.get("new_ssn_1").strip() + "-" + data.get("new_ssn_2").strip() + "-" + data.get("new_ssn_3").strip()) if data.get("new_ssn_1").strip() and data.get("new_ssn_2").strip() and data.get("new_ssn_3") else ""
         signature_url = data.get('signature_url', None)
 
         # Save form request in database
         new_request = ReleaseFormRequest(
-            student_name=student_name,
+            name=student_name,
+            peoplesoft_id=uhid,
+            to_update=to_update,
+            name_change_reason=name_change_reason,
+            ssn_change_reason=ssn_change_reason,
+            old_name=old_name,
+            new_name=new_name,
+            old_ssn=old_ssn,
+            new_ssn=new_ssn,
             signature_url=signature_url,
             submitted_at=None if not is_final_submission else datetime.utcnow()
         )
