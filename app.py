@@ -292,7 +292,7 @@ def submit_ssn_form():
         new_request = ReleaseFormRequest(
             student_name=student_name,
             peoplesoft_id=uhid,
-            to=to_update,
+            toChange=to_update,
             name_change_reason=name_change_reason,
             ssn_change_reason=ssn_change_reason,
             old_name=old_name,
