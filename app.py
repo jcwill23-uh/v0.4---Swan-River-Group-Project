@@ -658,119 +658,119 @@ def generate_ssn_form(form, user):
     new_last_name = latex_escape(form.new_last_name)
     new_suffix = latex_escape(form.new_suffix)
 
-latex_content = f"""
-    \\documentclass[10pt]{{article}}
-    \\usepackage[a4paper, margin=0.75in]{{geometry}}
-    \\usepackage{{graphicx}}
-    \\usepackage{{array}}
-    \\usepackage{{titlesec}}
-    \\usepackage{{setspace}}
-    \\usepackage{{lmodern}}
-    \\usepackage{{amssymb}}
-    \\usepackage{{xcolor}}
-    \\usepackage{{colortbl}}
-    \\usepackage{{multicol}}
-    \\usepackage{{ragged2e}}
-
-    % Define Colors
-    \\definecolor{{uhred}}{{RGB}}{{200,16,46}}
-    \\definecolor{{uhgray}}{{RGB}}{{102,102,102}}
-
-    % Define checkbox formatting
-    \\newcommand{{\\checkbox}}[1]{{\\hspace{{2em}} #1}}
-
-    % Remove default footer and page number
-    \\pagestyle{{empty}}
-
-    \\begin{{document}}
-
-    % === Header ===
-    \\begin{{center}}
-        {{\\color{{uhgray}} \\textbf{{\\LARGE UNIVERSITY of }} }} 
-        {{\\color{{uhred}} \\textbf{{\\LARGE HOUSTON}} }} \\\\
-        {{\\color{{uhgray}} \\large \\textbf{{OFFICE OF THE UNIVERSITY REGISTRAR}} }} \\\\
-        \\vspace{{0.5em}}
-        \\large Name and/or Social Security Number Change \\\\
-        \\large University of Houston | Office of the University Registrar \\\\
-        \\large Houston, Texas 77204-2027 | (713) 743-1010, option 7
-    \\end{{center}}
-
-    % Solid Black Line
-    \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
-
-    % === Student Name Section ===
-    \\textbf{{Student Name (as listed on university record)}}\\\\
-    \\begin{{tabular}}{{|c|c|c|}}
-        \\hline
-        \\textbf{{First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} \\\\
-        \\hline
-        {user_first_name} & {user_middle_name} & {user_last_name} \\\\
-        \\hline
-    \\end{{tabular}}\\\\
-
-    % === UH ID & Request Type ===
-    \\vspace{{1em}}
-    \\begin{{tabular}}{{|p{{3in}}|p{{3in}}|}}
-        \\hline
-        \\textbf{{myUH ID Number}} & \\textbf{{What are you requesting to add or update?}} \\\\
-        \\hline
-        {peoplesoft_id} & \\checkbox{{{latex_checkbox('name' in to_change)}}} Update Name (Complete Section A) \\\\
-        & \\checkbox{{{latex_checkbox('ssn' in to_change)}}} Update/Add Social Security Number (Complete Section B) \\\\
-        \\hline
-    \\end{{tabular}}
-
-    % Solid Black Line
-    \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
-
-    % === Section A: Name Change ===
-    \\textbf{{\\underline{{Section A: Student Name Change}}}} \\\\
-    The University of Houston record of your name was originally taken from your application for admission and may be changed if: \\\\
-    1. You have married, remarried, or divorced (a copy of marriage license or portion of divorce decree indicating new name must be provided) \\\\
-    2. You have changed your name by court order (a copy of the court order must be provided) \\\\
-    3. Your legal name is listed incorrectly and satisfactory evidence exists for its correction (driver license, state ID, birth certificate, valid passport, etc., must be provided) \\\\
-
-    \\textit{{NOTE: A request to omit a first or middle name or to reverse the order of the first and middle names cannot be honored unless accompanied by appropriate documentation. }} 
-    \\textbf{{\\underline{{ All documents must also be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID).}}}} \\\\
-
-    \\textbf{{\\underline{{Please print and complete the following information:}}}} \\\\
-    I request that my legal name be changed and reflected on University of Houston records as listed below: \\\\
-    \\textbf{{Check reason for name change request:}} 
-    \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}} Marriage/Divorce \\hspace{{2em}}
-    \\checkbox{{{latex_checkbox(name_change_reason == 'Court Order')}}} Court Order \\hspace{{2em}}
-    \\checkbox{{{latex_checkbox(name_change_reason == 'Correction of Error')}}} Correction of Error
-    \\begin{{tabular}}{{|c|c|c|c|}}
-        \\hline
-        \\textbf{{FROM: First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
-        \\hline
-        \\textbf{{\\underline{{{form.old_first_name}}}}} & \\textbf{{\\underline{{{form.old_middle_name}}}}} & \\textbf{{\\underline{{{form.old_last_name}}}}} & \\textbf{{\\underline{{{form.old_suffix}}}}} \\\\
-        \\hline
-        \\textbf{{TO: First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
-        \\hline
-        \\textbf{{\\underline{{{form.new_first_name}}}}} & \\textbf{{\\underline{{{form.new_middle_name}}}}} & \\textbf{{\\underline{{{form.new_last_name}}}}} & \\textbf{{\\underline{{{form.new_suffix}}}}} \\\\
-        \\hline
-    \\end{{tabular}}
-
-    % Solid Black Line
-    \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
-
-    % === Section B: SSN Change ===
-    \\textbf{{\\underline{{Section B: Student Social Security Number Change}}}} \\\\
-    The University of Houston record of your Social Security Number was originally taken from your application for admission and may be changed only if the student has obtained a new social security number or an error was made. In either case, the student must provide a copy of the Social Security Card. \\\\
-    \\textbf{{\\underline{{The Social Security card must include the student's signature and must be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID).}}}} \\\\
-
-    \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
-
-    I authorize the University of Houston Main Campus to make the updates/changes to my student record as requested above. \\\\
-
-    \\textbf{{SIGNATURE (REQUIRED):}} \\includegraphics[width=2in]{{{signature_path}}} \\hfill \\textbf{{Date:}} \\today \\\\
-
-    \\vfill
-    \\tiny{{"State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be informed about the information the University collects about you by use of this form; (2) under sections 552.021 and 552.023 of the Government Code, you are entitled to receive and review the information; and (3) under section 559.004 of the Government Code, you are entitled to have the University correct information about you that is incorrect.}} \\\\
-
-    \\end{{document}}
-    """
+    latex_content = f"""
+        \\documentclass[10pt]{{article}}
+        \\usepackage[a4paper, margin=0.75in]{{geometry}}
+        \\usepackage{{graphicx}}
+        \\usepackage{{array}}
+        \\usepackage{{titlesec}}
+        \\usepackage{{setspace}}
+        \\usepackage{{lmodern}}
+        \\usepackage{{amssymb}}
+        \\usepackage{{xcolor}}
+        \\usepackage{{colortbl}}
+        \\usepackage{{multicol}}
+        \\usepackage{{ragged2e}}
     
-    return latex_content
+        % Define Colors
+        \\definecolor{{uhred}}{{RGB}}{{200,16,46}}
+        \\definecolor{{uhgray}}{{RGB}}{{102,102,102}}
+    
+        % Define checkbox formatting
+        \\newcommand{{\\checkbox}}[1]{{\\hspace{{2em}} #1}}
+    
+        % Remove default footer and page number
+        \\pagestyle{{empty}}
+    
+        \\begin{{document}}
+    
+        % === Header ===
+        \\begin{{center}}
+            {{\\color{{uhgray}} \\textbf{{\\LARGE UNIVERSITY of }} }} 
+            {{\\color{{uhred}} \\textbf{{\\LARGE HOUSTON}} }} \\\\
+            {{\\color{{uhgray}} \\large \\textbf{{OFFICE OF THE UNIVERSITY REGISTRAR}} }} \\\\
+            \\vspace{{0.5em}}
+            \\large Name and/or Social Security Number Change \\\\
+            \\large University of Houston | Office of the University Registrar \\\\
+            \\large Houston, Texas 77204-2027 | (713) 743-1010, option 7
+        \\end{{center}}
+    
+        % Solid Black Line
+        \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
+    
+        % === Student Name Section ===
+        \\textbf{{Student Name (as listed on university record)}}\\\\
+        \\begin{{tabular}}{{|c|c|c|}}
+            \\hline
+            \\textbf{{First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} \\\\
+            \\hline
+            {user_first_name} & {user_middle_name} & {user_last_name} \\\\
+            \\hline
+        \\end{{tabular}}\\\\
+    
+        % === UH ID & Request Type ===
+        \\vspace{{1em}}
+        \\begin{{tabular}}{{|p{{3in}}|p{{3in}}|}}
+            \\hline
+            \\textbf{{myUH ID Number}} & \\textbf{{What are you requesting to add or update?}} \\\\
+            \\hline
+            {peoplesoft_id} & \\checkbox{{{latex_checkbox('name' in to_change)}}} Update Name (Complete Section A) \\\\
+            & \\checkbox{{{latex_checkbox('ssn' in to_change)}}} Update/Add Social Security Number (Complete Section B) \\\\
+            \\hline
+        \\end{{tabular}}
+    
+        % Solid Black Line
+        \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
+    
+        % === Section A: Name Change ===
+        \\textbf{{\\underline{{Section A: Student Name Change}}}} \\\\
+        The University of Houston record of your name was originally taken from your application for admission and may be changed if: \\\\
+        1. You have married, remarried, or divorced (a copy of marriage license or portion of divorce decree indicating new name must be provided) \\\\
+        2. You have changed your name by court order (a copy of the court order must be provided) \\\\
+        3. Your legal name is listed incorrectly and satisfactory evidence exists for its correction (driver license, state ID, birth certificate, valid passport, etc., must be provided) \\\\
+    
+        \\textit{{NOTE: A request to omit a first or middle name or to reverse the order of the first and middle names cannot be honored unless accompanied by appropriate documentation. }} 
+        \\textbf{{\\underline{{ All documents must also be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID).}}}} \\\\
+    
+        \\textbf{{\\underline{{Please print and complete the following information:}}}} \\\\
+        I request that my legal name be changed and reflected on University of Houston records as listed below: \\\\
+        \\textbf{{Check reason for name change request:}} 
+        \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}} Marriage/Divorce \\hspace{{2em}}
+        \\checkbox{{{latex_checkbox(name_change_reason == 'Court Order')}}} Court Order \\hspace{{2em}}
+        \\checkbox{{{latex_checkbox(name_change_reason == 'Correction of Error')}}} Correction of Error
+        \\begin{{tabular}}{{|c|c|c|c|}}
+            \\hline
+            \\textbf{{FROM: First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
+            \\hline
+            \\textbf{{\\underline{{{form.old_first_name}}}}} & \\textbf{{\\underline{{{form.old_middle_name}}}}} & \\textbf{{\\underline{{{form.old_last_name}}}}} & \\textbf{{\\underline{{{form.old_suffix}}}}} \\\\
+            \\hline
+            \\textbf{{TO: First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
+            \\hline
+            \\textbf{{\\underline{{{form.new_first_name}}}}} & \\textbf{{\\underline{{{form.new_middle_name}}}}} & \\textbf{{\\underline{{{form.new_last_name}}}}} & \\textbf{{\\underline{{{form.new_suffix}}}}} \\\\
+            \\hline
+        \\end{{tabular}}
+    
+        % Solid Black Line
+        \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
+    
+        % === Section B: SSN Change ===
+        \\textbf{{\\underline{{Section B: Student Social Security Number Change}}}} \\\\
+        The University of Houston record of your Social Security Number was originally taken from your application for admission and may be changed only if the student has obtained a new social security number or an error was made. In either case, the student must provide a copy of the Social Security Card. \\\\
+        \\textbf{{\\underline{{The Social Security card must include the student's signature and must be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID).}}}} \\\\
+    
+        \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
+    
+        I authorize the University of Houston Main Campus to make the updates/changes to my student record as requested above. \\\\
+    
+        \\textbf{{SIGNATURE (REQUIRED):}} \\includegraphics[width=2in]{{{signature_path}}} \\hfill \\textbf{{Date:}} \\today \\\\
+    
+        \\vfill
+        \\tiny{{"State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be informed about the information the University collects about you by use of this form; (2) under sections 552.021 and 552.023 of the Government Code, you are entitled to receive and review the information; and (3) under section 559.004 of the Government Code, you are entitled to have the University correct information about you that is incorrect.}} \\\\
+    
+        \\end{{document}}
+        """
+    
+        return latex_content
     
 # Update generate_latex_content function
 def generate_latex_content(form, user):
