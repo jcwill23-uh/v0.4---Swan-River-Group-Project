@@ -645,7 +645,6 @@ def generate_ssn_form(form, user):
     peoplesoft_id = latex_escape(form.peoplesoft_id)
     name_change_reason = latex_escape(form.name_change_reason)
     ssn_change_reason = latex_escape(form.ssn_change_reason)
-    release_to = latex_escape(form.release_to)
 
     old_first_name = latex_escape(form.old_first_name)
     old_middle_name = latex_escape(form.old_middle_name)
@@ -720,14 +719,13 @@ def generate_ssn_form(form, user):
 
     \\begin{{tabular}}{{|c|c|c|c|}}
         \\hline
-        \\textbf{First Name} & \\textbf{Middle Name} & \\textbf{Last Name} & \\textbf{Suffix} \\\\
+        \\textbf{{First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
         \\hline
-        {form.old_first_name} & {form.old_middle_name} & {form.old_last_name} & {form.old_suffix} \\\\
+        {old_first_name} & {old_middle_name} & {old_last_name} & {old_suffix} \\\\
         \\hline
-        {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix} \\\\
+        {new_first_name} & {new_middle_name} & {new_last_name} & {new_suffix} \\\\
         \\hline
-    \\end{tabular}
-
+    \\end{{tabular}}
 
     \\hrulefill
 
@@ -751,14 +749,13 @@ def generate_ssn_form(form, user):
 
     \\begin{{tabular}}{{|c|c|c|}}
         \\hline
-        \\textbf{SSN Part 1} & \\textbf{SSN Part 2} & \\textbf{SSN Part 3} \\\\
+        \\textbf{{SSN Part 1}} & \\textbf{{SSN Part 2}} & \\textbf{{SSN Part 3}} \\\\
         \\hline
         {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\\\
         \\hline
         {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\\\
         \\hline
-    \\end{tabular}
-
+    \\end{{tabular}}
 
     \\hrulefill
 
@@ -781,6 +778,7 @@ def generate_ssn_form(form, user):
 
     \\end{{document}}
     """
+    
     return latex_content
     
 # Update generate_latex_content function
