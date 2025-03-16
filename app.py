@@ -718,17 +718,16 @@ def generate_ssn_form(form, user):
     \\noindent
     \\textbf{{Name Change Details:}}
 
-    \\begin{{tabular}}{{|l|l|l|l|}}
+    \\begin{tabular}{|c|c|c|c|}
         \\hline
-        \\textbf{{From:}} & First Name & Middle Name & Last Name & Suffix \\\\
+        \\textbf{First Name} & \\textbf{Middle Name} & \\textbf{Last Name} & \\textbf{Suffix} \\\\
         \\hline
-        & {old_first_name} & {old_middle_name} & {old_last_name} & {old_suffix} \\\\
+        {form.old_first_name} & {form.old_middle_name} & {form.old_last_name} & {form.old_suffix} \\\\
         \\hline
-        \\textbf{{To:}} & First Name & Middle Name & Last Name & Suffix \\\\
+        {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix} \\\\
         \\hline
-        & {new_first_name} & {new_middle_name} & {new_last_name} & {new_suffix} \\\\
-        \\hline
-    \\end{{tabular}}
+    \\end{tabular}
+
 
     \\hrulefill
 
@@ -750,13 +749,16 @@ def generate_ssn_form(form, user):
     \\noindent
     \\textbf{{SSN Change Details:}}
 
-    \\begin{{tabular}}{{|l|l|l|}}
+    \\begin{tabular}{|c|c|c|}
         \\hline
-        \\textbf{{From:}} & {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\\\
+        \\textbf{SSN Part 1} & \\textbf{SSN Part 2} & \\textbf{SSN Part 3} \\\\
         \\hline
-        \\textbf{{To:}} & {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\\\
+        {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\\\
         \\hline
-    \\end{{tabular}}
+        {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\\\
+        \\hline
+    \\end{tabular}
+
 
     \\hrulefill
 
