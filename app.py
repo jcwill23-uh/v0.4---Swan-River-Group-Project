@@ -81,7 +81,7 @@ class User(db.Model):
 
 # Form Request Model
 class ReleaseFormRequest(db.Model):
-    __tablename__ = "release_form_requests"
+    __tablename__ = "release_form_request"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     
