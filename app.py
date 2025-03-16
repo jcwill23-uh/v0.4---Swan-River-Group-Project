@@ -302,7 +302,10 @@ def submit_ssn_form():
         student_name = f"{data.get('first_name', '').strip()} {data.get('middle_name', '').strip()} {data.get('last_name', '').strip()}"
         uhid = data.get("peoplesoft_id", "").strip()
         user_email = data.get("user_email", "").strip()
-        user_id = data.get("user_id", "").strip()
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        user_id = user.id  # Assign correct user ID
 
         # Process checkboxes for changes
         to_update = ",".join([u.strip() for u in data.getlist("toChange") if u])
@@ -598,8 +601,17 @@ def generate_ssn_form(form, user):
     to_change = form.toChange.split(",") if form.toChange else []
 
     # Split SSN into sections
-    old_ssn_parts = form.old_ssn.split("-") if form.old_ssn else ["", "", ""]
-    new_ssn_parts = form.new_ssn.split("-") if form.new_ssn else ["", "", ""]
+    old_ssn_parts = [
+        form.old_ssn.split("-")[0] if form.old_ssn else "",
+        form.old_ssn.split("-")[1] if form.old_ssn else "",
+        form.old_ssn.split("-")[2] if form.old_ssn else ""
+    ]
+    
+    new_ssn_parts = [
+        form.new_ssn.split("-")[0] if form.new_ssn else "",
+        form.new_ssn.split("-")[1] if form.new_ssn else "",
+        form.new_ssn.split("-")[2] if form.new_ssn else ""
+    ]
 
     latex_content = f"""
     \\documentclass[10pt]{{article}}
