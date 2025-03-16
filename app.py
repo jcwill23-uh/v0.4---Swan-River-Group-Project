@@ -362,20 +362,14 @@ def submit_ssn_form():
         db.session.add(new_request)
         db.session.commit()
 
-        # Fetch user object
-        user = User.query.filter_by(email=session["user"]["email"]).first()
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-
         # Ensure directory exists
         pdf_dir = "/mnt/data"
         os.makedirs(pdf_dir, exist_ok=True)
 
-        # Generate LaTeX file
+        # Set LaTeX file path
         tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
-        if not os.path.exists(tex_file_path):
-            return jsonify({"error": "LaTeX file was not created properly."}), 500
 
+        # Generate LaTeX file content
         latex_content = generate_ssn_form(new_request, user)
 
         # Debug: Check if LaTeX content is generated
@@ -384,15 +378,12 @@ def submit_ssn_form():
         
         print(f"Generated LaTeX Content:\n{latex_content}")
         
-        # Set the LaTeX file path
-        tex_file_path = os.path.join("/mnt/data", f"form_{new_request.id}.tex")
-        print(f"Writing LaTeX file to: {tex_file_path}")
-        
+        # Write LaTeX content to file
         try:
             with open(tex_file_path, "w") as tex_file:
                 tex_file.write(latex_content)
         
-            # Debug: Check if the file now exists
+            # Debug: Confirm the file exists
             if not os.path.exists(tex_file_path):
                 return jsonify({"error": "LaTeX file was not found after writing."}), 500
         
@@ -401,21 +392,16 @@ def submit_ssn_form():
         except Exception as e:
             return jsonify({"error": f"Failed to write LaTeX file: {str(e)}"}), 500
 
-        with open(tex_file_path, "w") as tex_file:
-            tex_file.write(generate_ssn_form(new_request, user))
-
-        with open(tex_file_path, "r") as tex_file:
-            latex_content = tex_file.read()
-        
-        print(f"Generated LaTeX Content:\n{latex_content}")
-
         # Run pdflatex to generate PDF
         try:
             pdflatex_path = "pdflatex"
             os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
 
-            subprocess.run([pdflatex_path, "-output-directory", pdf_dir, tex_file_path], 
+            subprocess.run([pdflatex_path, "-interaction=nonstopmode", "-output-directory", pdf_dir, tex_file_path], 
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        
+            print("PDF generation successful.")
+
         except subprocess.CalledProcessError as e:
             return jsonify({"error": f"PDF generation failed: {e.stderr.decode()}"}), 500
         except FileNotFoundError:
@@ -426,17 +412,22 @@ def submit_ssn_form():
         blob_name = f"release_forms/form_{new_request.id}.pdf"
         blob_client = pdf_container_client.get_blob_client(blob_name)
 
-        with open(pdf_file_path, "rb") as data:
-            blob_client.upload_blob(data, overwrite=True)
+        try:
+            with open(pdf_file_path, "rb") as data:
+                blob_client.upload_blob(data, overwrite=True)
 
-        pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
-        new_request.pdf_url = pdf_url
-        db.session.commit()
+            pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+            new_request.pdf_url = pdf_url
+            db.session.commit()
 
-        return jsonify({"message": "Form submitted successfully", "pdf_url": pdf_url}), 200
+            return jsonify({"message": "Form submitted successfully", "pdf_url": pdf_url}), 200
+        
+        except Exception as e:
+            return jsonify({"error": f"Azure upload failed: {str(e)}"}), 500
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # Azure AD Configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
