@@ -277,18 +277,45 @@ def submit_ssn_form():
         is_final_submission = data.get("final_submission") == "true"
         form_id = data.get("form_id")
 
-        student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
-        uhid = (data.get('uhid') or "").strip()
-        to_update = ",".join([u.strip() for u in data.getlist("toChange") if u])
-        name_change_reason = (data.get("name_change_reason") or "").strip()
-        ssn_change_reason = (data.get("ssn_change_reason") or "").strip()
-        old_name = (data.get("old_first_name") or "").strip() + "," + (data.get("old_middle_name") or "").strip() + "," + (data.get("old_last_name") or "").strip() + "," + (data.get("old_suffix") or "").strip()
-        new_name = (data.get("new_first_name") or "").strip() + "," + (data.get("new_middle_name") or "").strip() + "," + (data.get("new_last_name") or "").strip() + "," + (data.get("new_suffix") or "").strip()
-        old_ssn = (data.get("old_ssn_1").strip() + "-" + data.get("old_ssn_2").strip() + "-" + data.get("old_ssn_3").strip()) if data.get("old_ssn_1").strip() and data.get("old_ssn_2").strip() and data.get("old_ssn_3") else ""
-        new_ssn = (data.get("new_ssn_1").strip() + "-" + data.get("new_ssn_2").strip() + "-" + data.get("new_ssn_3").strip()) if data.get("new_ssn_1").strip() and data.get("new_ssn_2").strip() and data.get("new_ssn_3") else ""
-        signature_url = data.get('signature_url', None)
+        # Extract and format names
+        student_name = f"{data.get('first_name', '').strip()} {data.get('middle_name', '').strip()} {data.get('last_name', '').strip()}"
+        uhid = data.get("uhid", "").strip()
 
-        # Save form request in database
+        # Process checkboxes for changes
+        to_update = ",".join([u.strip() for u in data.getlist("toChange") if u])
+        name_change_reason = data.get("name_change_reason", "").strip()
+        ssn_change_reason = data.get("ssn_change_reason", "").strip()
+
+        # Process name change fields
+        old_name = ",".join([
+            data.get("old_first_name", "").strip(),
+            data.get("old_middle_name", "").strip(),
+            data.get("old_last_name", "").strip(),
+            data.get("old_suffix", "").strip()
+        ])
+        new_name = ",".join([
+            data.get("new_first_name", "").strip(),
+            data.get("new_middle_name", "").strip(),
+            data.get("new_last_name", "").strip(),
+            data.get("new_suffix", "").strip()
+        ])
+
+        # Process SSN change fields
+        old_ssn = "-".join([
+            data.get("old_ssn_1", "").strip(),
+            data.get("old_ssn_2", "").strip(),
+            data.get("old_ssn_3", "").strip()
+        ])
+        new_ssn = "-".join([
+            data.get("new_ssn_1", "").strip(),
+            data.get("new_ssn_2", "").strip(),
+            data.get("new_ssn_3", "").strip()
+        ])
+
+        # Process signature
+        signature_url = data.get("signature_url", None)
+
+        # Store form request in database
         new_request = ReleaseFormRequest(
             student_name=student_name,
             peoplesoft_id=uhid,
@@ -300,26 +327,22 @@ def submit_ssn_form():
             old_ssn=old_ssn,
             new_ssn=new_ssn,
             signature_url=signature_url,
-            submitted_at=None if not is_final_submission else datetime.utcnow()
+            submitted_at=datetime.utcnow() if is_final_submission else None
         )
         db.session.add(new_request)
         db.session.commit()
 
-        # Fetch User Object Before PDF Generation
+        # Fetch user object
         user = User.query.filter_by(email=session["user"]["email"]).first()
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        # Ensure the directory exists
+        # Ensure directory exists
         pdf_dir = "/mnt/data"
-        if not os.path.exists(pdf_dir):
-            os.makedirs(pdf_dir, exist_ok=True)  # Create directory if it doesn't exist
+        os.makedirs(pdf_dir, exist_ok=True)
 
-        # Define file paths
+        # Generate LaTeX file
         tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
-        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
-
-        # Write LaTeX content to the file
         with open(tex_file_path, "w") as tex_file:
             tex_file.write(generate_ssn_form(new_request, user))
 
@@ -328,54 +351,29 @@ def submit_ssn_form():
             pdflatex_path = "pdflatex"
             os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
 
-            print(f"Checking if LaTeX file exists: {tex_file_path}")
-            if not os.path.exists(tex_file_path):
-                print("ERROR: LaTeX file was not created!")
-                return jsonify({"error": "LaTeX file was not created."}), 500
-            else:
-                print("SUCCESS: LaTeX file exists.")
-
-            print("Running pdflatex...")
-            result = subprocess.run(
-                [pdflatex_path, "-output-directory", pdf_dir, tex_file_path],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=True
-            )
-
-            print("PDFLaTeX Output:", result.stdout.decode())  # Debugging
+            subprocess.run([pdflatex_path, "-output-directory", pdf_dir, tex_file_path], 
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         except subprocess.CalledProcessError as e:
-            print("PDF Generation Failed!")
-            print("STDOUT:", e.stdout.decode())  # Output
-            print("STDERR:", e.stderr.decode())  # Error details
             return jsonify({"error": f"PDF generation failed: {e.stderr.decode()}"}), 500
         except FileNotFoundError:
-            print("ERROR: pdflatex not found in Python!")
-            print("Current PATH:", os.environ["PATH"])  # Debugging
             return jsonify({"error": "pdflatex not found"}), 500
 
-        # Upload PDF to Azure Blob Storage
+        # Upload PDF to Azure
+        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
         blob_name = f"ssn_forms/form_{new_request.id}.pdf"
         blob_client = pdf_container_client.get_blob_client(blob_name)
 
         with open(pdf_file_path, "rb") as data:
-            if not os.path.exists(pdf_file_path):
-                return jsonify({"error": "PDF file was not created successfully."}), 500
             blob_client.upload_blob(data, overwrite=True)
 
-        # Store PDF URL in the database
         pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
         new_request.pdf_url = pdf_url
         db.session.commit()
 
-        return jsonify({
-            "message": "Form submitted successfully",
-            "pdf_url": pdf_url
-        }), 200
+        return jsonify({"message": "Form submitted successfully", "pdf_url": pdf_url}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 # Azure AD Configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
@@ -573,7 +571,15 @@ def generate_ssn_form(form, user):
 
     to_change = form.toChange.split(",") if form.toChange else []
 
-    latex_content = r"""
+    # Split SSN into sections
+    old_ssn_parts = form.old_ssn.split("-") if form.old_ssn else ["", "", ""]
+    new_ssn_parts = form.new_ssn.split("-") if form.new_ssn else ["", "", ""]
+
+    # Split names into individual components
+    old_name_parts = form.old_name.split(",") if form.old_name else ["", "", "", ""]
+    new_name_parts = form.new_name.split(",") if form.new_name else ["", "", "", ""]
+    
+    latex_content = f"""
     \\documentclass[10pt]{{article}}
     \\usepackage[a4paper, margin=0.75in]{{geometry}}
     \\usepackage{{graphicx}}
@@ -585,137 +591,78 @@ def generate_ssn_form(form, user):
     \\usepackage{{multicol}}
     \\usepackage{{ragged2e}}
     \\usepackage{{tabularray}}
-
-    % Define checkbox formatting
-    \\newcommand{{\\checkbox}}[1]{{\\hspace{{2em}} #1}}
-
-    % Remove default footer and page number
-    \\pagestyle{{empty}}
+    \\usepackage{{xcolor}}
     
+    \\newcommand{{\checkbox}}[1]{{\hspace{{2em}} #1}}
+    
+    \\pagestyle{{empty}}
     \\begin{{document}}
 
     \\begin{{center}}
-        {{\\Large\\textbf{{NAME AND/OR SOCIAL SECURITY NUMBER CHANGE}}}} \\\\
-        {{\\large{{University of Houston | Office of the University Registrar}}}} \\\\
-        {{\\large{{Houston, Texas 77204-2027 | (713) 743-1010, option 7}}}}
+        {{\Large\textbf{{CHANGE OF NAME AND/OR SOCIAL SECURITY NUMBER}}}} \\\\
+        {{\large{{University of Houston | Office of the University Registrar}}}} \\\\
+        {{\large{{Houston, Texas 77204-2027 | (713) 743-1010, option 7}}}}
     \\end{{center}}
-
-    \\vspace{{-1.5em}}
     \\hrulefill
-    \\vspace{{0.1em}}
 
     \\noindent
-    \\large\\textbf{{*Student Name (as listed on university record):}} \\
-    \\normalsize
-    \\begin{{tblr}}
-    {{
-    colspec = {{@{{}}X[l]X[l]X[l]@{{}}}},
-    row{{1}} = {{cmd=\\scriptsize\\textit}}
-    }}
-    First name & Middle name & Last name \\\\
-    {form.first_name} & {form.middle_name} & {form.last_name} \\\\
-    myUH ID Number & \\SetCell[c=2]{{l}} What are you requesting to add or update? \\\\
-    {form.uhid} & \\SetCell[c=2]{{l}} {latex_checkbox('name' in to_change)} \\\\ & \\SetCell[c=2]{{l}} {latex_checkbox('ssn' in to_change)} \\\\
+    \\textbf{{*Student Name:}} {form.student_name}  \\hfill \\textbf{{UH ID:}} {form.peoplesoft_id}
+    \\vspace{{1em}}
+    
+    \\textbf{{Requested Change:}} 
+    {latex_checkbox('name' in to_change)} Name Change
+    {latex_checkbox('ssn' in to_change)} SSN Update
+    
+    \\hrulefill
+    \\textbf{{Section A: Name Change}}
+    \\begin{{itemize}}
+        \\item Reason: {form.name_change_reason}
+    \\end{{itemize}}
+    
+    \\textbf{{Check reason for name change request:}}
+    \\begin{{itemize}}
+        \\item {latex_checkbox(form.name_change_reason == 'Marriage/Divorce')} Marriage/Divorce
+        \\item {latex_checkbox(form.name_change_reason == 'Court Order')} Court Order
+        \\item {latex_checkbox(form.name_change_reason == 'Correction of Error')} Correction of Error
+    \\end{{itemize}}
+
+    \\textbf{{Required Documents:}}\\
+    - Marriage License\\
+    - Divorce Decree\\
+    - Court Order\\
+    - Birth Certificate\\
+    - Government-issued ID\\
+    
+    \\begin{{tblr}} {{colspec = {{XXXX}}, row{1} = {{cmd=\textbf}}}}
+        From: & First Name & Middle Name & Last Name & Suffix \\
+              & {old_name_parts[0]} & {old_name_parts[1]} & {old_name_parts[2]} & {old_name_parts[3]} \\
+        To:   & First Name & Middle Name & Last Name & Suffix \\
+              & {new_name_parts[0]} & {new_name_parts[1]} & {new_name_parts[2]} & {new_name_parts[3]} \\
     \\end{{tblr}}
     \\hrulefill
-    \\noindent
-    \\large\\textbf{{Section A: Student Name Change}}
-
-    \\vspace{{-0.5em}}
-
-    \\hrulefill
-
-    \\noindent
-    \\normalsize
-    The University of Houston record of your name was originally taken from your application and may be changed if:
-    \\vspace{{-0.5em}}
-    \\begin{{enumerate}}
-        \\itemsep 0em
-        \\item You have married, remarried, or divorced (a copy of marriage license or portion of divorce decree indicating new name must be provided)
-        \\item You have changed your name by court order (a copy of the court order must be provided)
-        \\item Your legal name is listed incorrectly and satisfactory evidence exists for its correction (driver license, state ID, birth certificate, valid passport, etc., must be provided)
-    \\end{{enumerate}}
     
-    \\textit{{NOTE: A request to omit a first or middle name or to reverse the order of the first and middle names cannot be honored unless accompanied by appropriate documentation.
-    \\textbf{{All documents must also be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID). }}}} \\\\
-    \\noindent\\textbf{{\underline{{Please print and complete the following information:}}}} 
-    \\vspace{{0em}}
-    I request that my legal name be changed and reflected on University of Houston records as listed below: 
-    \\vspace{{0em}}
-    \\begin{{tblr}}
-    {{
-           colspec = {{@{{}}XX[-1]X[-1]X[-1]@{{}}}}
-    }}
-    Check reason for name change request: 
-    & {latex_checkbox(form.name_change_reason == 'Marriage/Divorce')} Marriage/Divorce
-    & {latex_checkbox(form.name_change_reason == 'Court Order')} Court Order
-    & {latex_checkbox(form.name_change_reason == 'Correction of Error')} Correction of Error \\\\
+    \\textbf{{Section B: SSN Change}}
+    \\begin{{itemize}}
+        \\item Reason: {form.ssn_change_reason}
+    \\end{{itemize}}
+    
+    \\textbf{{Check reason for Social Security Number change request:}}
+    \\begin{{itemize}}
+        \\item {latex_checkbox(form.ssn_change_reason == 'Correction of Error')} Correction of Error
+        \\item {latex_checkbox(form.ssn_change_reason == 'Addition')} Addition of SSN to University Records
+    \\end{{itemize}}
+    
+    \\textbf{{Required Documents:}}\\
+    - Social Security Card\\
+    - Government-issued ID\\
+    
+    \\begin{{tblr}} {{colspec = {{XXX}}, row{1} = {{cmd=\textbf}}}}
+        From: & {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\
+        To:   & {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\
     \\end{{tblr}}
-    \begin{{tblr}}
-    {{
-        colspec = {{@{{}}X[-1]X[c]X[c]X[c]X[c]@{{}}}},
-        row{1} = {{cmd=\\scriptsize\textit}},
-        row{3} = {{cmd=\\scriptsize\textit}},
-    }}
-        \\SetCell[r=2]{{l}} \\normalsize From: & {{First name}} & {{Middle name}} & {{Last name}} & {{Suffix}} \\\\
-            & {form.old_first_name} & {form.old_middle_name} & {form.old_last_name} & {form.old_suffix} \\\\
-        \\SetCell[r=2]{{l}} \\normalsize To: & {{First name}} & {{Middle name}} & {{Last name}} & {{Suffix}} \\\\
-            & {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix} \\\\
-    \\end{{tblr}}
-
     \\hrulefill
     
-    \\noindent
-    \\large\\textbf{{Section B: Student Social Security Number Change}}
-
-    \\vspace{{-0.5em}}
-
-    \\hrulefill
-
-    The University of Houston record of your Social Security Number was originally taken from your application for admission and may be changed only if the student has obtained a new social security number or an error was made. In either case, the student must provide a copy of the Social Security Card.
-    \\textbf{{The Social Security card must include the student's signature and must be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID).}}
-
-    \\noindent
-    \\textbf{{\\underline{{Please print and complete the following information: }}}}
-    I request that my Social Security Number be changed and reflected on University of Houston records as listed below: \\\\
-
-    \\noindent
-    Check reason for Social Security Number change request: \\\\
-    {latex_checkbox(form.ssn_change_reason == 'Correction of Error')} Correction of Error \\hspace{{}} {latex_checkbox(form.ssn_change_reason == 'Addition')} Addition of SSN to University Records \\\\
-
-    FROM: {form.old_ssn_1}-{form.old_ssn_2}-{form.old_ssn_3} \\hspace{{0.5\textwidth}} TO: {form.new_ssn_1}-{form.new_ssn_2}-{form.new_ssn_3}
-
-    \\hrulefill
-    
-    \\noindent
-    I authorize the University of Houston Main Campus to make the updates/changes to my student record as requested above. 
-    
-    \\vfill
-
-    % Student Information Section
-    \\noindent
-    \\noindent
-    \\begin{{tabular}}{{ p{{3in}} p{{3in}} }}
-        % Signature and Date row
-        \\begin{{minipage}}{{3in}}
-            \\IfFileExists{{{signature_path}}}
-                {{\\includegraphics[width=2in]{{{signature_path}}}}}
-                {{\\textbf{{No signature on file.}}}}
-        \\end{{minipage}} 
-        & 
-        \\begin{{minipage}}{{3in}}
-            
-            \\textbf{{\\underline{{\\today}}}}
-        \\end{{minipage}} \\\\
-        
-        \\textbf{{Student Signature}} & \\textbf{{Date:}} \\\\
-    \\end{{tabular}} \\\\
-
-    \\vfill
-
-    % Bottom Section
-    \\footnotesize State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be informed about the information the University collects about you by use of this form; (2) under sections 552.021 and 552.023 of the Government Code, you are entitled to receive and review the information; and (3) under section 559.004 of the Government Code, you are entitled to have the University correct information about you that is incorrect.
-
+    \\noindent\\textbf{{Student Signature:}} \\includegraphics[width=2in]{{{signature_path}}} \\hfill \\textbf{{Date:}} \\today
     \\end{{document}}
     """
     return latex_content
