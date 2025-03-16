@@ -617,34 +617,45 @@ def download_signature(signature_url, user_id):
     return "/mnt/data/default-signature.png"  # Fallback if the download fails
 
 def generate_ssn_form(form, user):
+    """
+    Generates a LaTeX document for the SSN Change Form.
+    """
     import re
 
+    # Escape LaTeX special characters in user inputs
     def latex_escape(text):
-        """Escape LaTeX special characters in user inputs."""
         return re.sub(r'([&_{}%$#])', r'\\\1', text) if text else ""
 
+    # Download signature if available
     signature_path = download_signature(user.signature_url, user.id) if user.signature_url else "/mnt/data/default-signature.png"
 
+    # Define checkbox formatting
     def latex_checkbox(condition):
         return r"$\boxtimes$" if condition else r"$\square$"
 
-    # Ensure SSN values are properly formatted before splitting
-    old_ssn = form.old_ssn if form.old_ssn else "---"
-    new_ssn = form.new_ssn if form.new_ssn else "---"
-    
-    # Split SSN into sections safely
-    old_ssn_parts = old_ssn.split("-") if "-" in old_ssn else ["", "", ""]
-    new_ssn_parts = new_ssn.split("-") if "-" in new_ssn else ["", "", ""]
-    
-    # Ensure lists have exactly 3 elements
-    if len(old_ssn_parts) != 3:
-        old_ssn_parts = ["", "", ""]
-    
-    if len(new_ssn_parts) != 3:
-        new_ssn_parts = ["", "", ""]
-    
     # Process checkboxes for changes
-    to_change = form.toChange.split(",") if form.toChange else []
+    to_change = [t.strip() for t in form.toChange.split(",") if t] if form.toChange else []
+
+    # Split SSN into sections safely
+    old_ssn_parts = form.old_ssn.split("-") if form.old_ssn else ["", "", ""]
+    new_ssn_parts = form.new_ssn.split("-") if form.new_ssn else ["", "", ""]
+
+    # Escape input fields to prevent LaTeX errors
+    student_name = latex_escape(form.student_name)
+    peoplesoft_id = latex_escape(form.peoplesoft_id)
+    name_change_reason = latex_escape(form.name_change_reason)
+    ssn_change_reason = latex_escape(form.ssn_change_reason)
+    release_to = latex_escape(form.release_to)
+
+    old_first_name = latex_escape(form.old_first_name)
+    old_middle_name = latex_escape(form.old_middle_name)
+    old_last_name = latex_escape(form.old_last_name)
+    old_suffix = latex_escape(form.old_suffix)
+
+    new_first_name = latex_escape(form.new_first_name)
+    new_middle_name = latex_escape(form.new_middle_name)
+    new_last_name = latex_escape(form.new_last_name)
+    new_suffix = latex_escape(form.new_suffix)
 
     latex_content = f"""
     \\documentclass[10pt]{{article}}
@@ -657,12 +668,13 @@ def generate_ssn_form(form, user):
     \\usepackage{{amssymb}}
     \\usepackage{{multicol}}
     \\usepackage{{ragged2e}}
-    \\usepackage{{tabularray}}
-    \\usepackage{{xcolor}}
-    
+
+    % Define checkbox formatting
     \\newcommand{{\\checkbox}}[1]{{\\hspace{{2em}} #1}}
-    
+
+    % Remove default footer and page number
     \\pagestyle{{empty}}
+
     \\begin{{document}}
 
     \\begin{{center}}
@@ -670,28 +682,29 @@ def generate_ssn_form(form, user):
         {{\\large{{University of Houston | Office of the University Registrar}}}} \\\\
         {{\\large{{Houston, Texas 77204-2027 | (713) 743-1010, option 7}}}}
     \\end{{center}}
+
     \\hrulefill
 
     \\noindent
-    \\textbf{{*Student Name:}} {form.student_name}  \\hfill \\textbf{{UH ID:}} {form.peoplesoft_id}
+    \\textbf{{Student Name:}} {student_name}  \\hfill \\textbf{{UH ID:}} {peoplesoft_id}
+
     \\vspace{{1em}}
-    
+
     \\textbf{{Requested Change:}} 
-    {latex_checkbox('name' in to_change)} Name Change
-    {latex_checkbox('ssn' in to_change)} SSN Update
-    
+    \\checkbox{{{latex_checkbox('name' in to_change)}}} Name Change
+    \\checkbox{{{latex_checkbox('ssn' in to_change)}}} SSN Update
+
     \\hrulefill
+
     \\textbf{{Section A: Name Change}}
-    \\begin{{itemize}}
-        \\item Reason: {form.name_change_reason}
-    \\end{{itemize}}
     
-    \\textbf{{Check reason for name change request:}}
-    \\begin{{itemize}}
-        \\item {latex_checkbox(form.name_change_reason == 'Marriage/Divorce')} Marriage/Divorce
-        \\item {latex_checkbox(form.name_change_reason == 'Court Order')} Court Order
-        \\item {latex_checkbox(form.name_change_reason == 'Correction of Error')} Correction of Error
-    \\end{{itemize}}
+    \\textbf{{Reason for Name Change:}} {name_change_reason}
+
+    \\begin{{flushleft}}
+        \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}} Marriage/Divorce \\\\
+        \\checkbox{{{latex_checkbox(name_change_reason == 'Court Order')}}} Court Order \\\\
+        \\checkbox{{{latex_checkbox(name_change_reason == 'Correction of Error')}}} Correction of Error \\\\
+    \\end{{flushleft}}
 
     \\textbf{{Required Documents:}}\\
     - Marriage License\\
@@ -699,37 +712,71 @@ def generate_ssn_form(form, user):
     - Court Order\\
     - Birth Certificate\\
     - Government-issued ID\\
-    
-    \\begin{{tabular}} {{colspec = {{XXXX}}, row{1} = {{cmd=\\textbf}}}}
-        From: & First Name & Middle Name & Last Name & Suffix \\\\
-              & {form.old_first_name} & {form.old_middle_name} & {form.old_last_name} & {form.old_suffix} \\\\
-        To:   & First Name & Middle Name & Last Name & Suffix \\\\
-              & {form.new_first_name} & {form.new_middle_name} & {form.new_last_name} & {form.new_suffix} \\\\
+
+    \\vspace{{1em}}
+
+    \\noindent
+    \\textbf{{Name Change Details:}}
+
+    \\begin{{tabular}}{{|l|l|l|l|}}
+        \\hline
+        \\textbf{{From:}} & First Name & Middle Name & Last Name & Suffix \\\\
+        \\hline
+        & {old_first_name} & {old_middle_name} & {old_last_name} & {old_suffix} \\\\
+        \\hline
+        \\textbf{{To:}} & First Name & Middle Name & Last Name & Suffix \\\\
+        \\hline
+        & {new_first_name} & {new_middle_name} & {new_last_name} & {new_suffix} \\\\
+        \\hline
     \\end{{tabular}}
+
     \\hrulefill
-    
+
     \\textbf{{Section B: SSN Change}}
-    \\begin{{itemize}}
-        \\item Reason: {form.ssn_change_reason}
-    \\end{{itemize}}
-    
-    \\textbf{{Check reason for Social Security Number change request:}}
-    \\begin{{itemize}}
-        \\item {latex_checkbox(form.ssn_change_reason == 'Correction of Error')} Correction of Error
-        \\item {latex_checkbox(form.ssn_change_reason == 'Addition')} Addition of SSN to University Records
-    \\end{{itemize}}
-    
+
+    \\textbf{{Reason for SSN Change:}} {ssn_change_reason}
+
+    \\begin{{flushleft}}
+        \\checkbox{{{latex_checkbox(ssn_change_reason == 'Correction of Error')}}} Correction of Error \\\\
+        \\checkbox{{{latex_checkbox(ssn_change_reason == 'Addition')}}} Addition of SSN to University Records \\\\
+    \\end{{flushleft}}
+
     \\textbf{{Required Documents:}}\\
     - Social Security Card\\
     - Government-issued ID\\
-    
-    \\begin{{tabular}} {{colspec = {{XXX}}, row{1} = {{cmd=\\textbf}}}}
-        From: & {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\\\
-        To:   & {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\\\
+
+    \\vspace{{1em}}
+
+    \\noindent
+    \\textbf{{SSN Change Details:}}
+
+    \\begin{{tabular}}{{|l|l|l|}}
+        \\hline
+        \\textbf{{From:}} & {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\\\
+        \\hline
+        \\textbf{{To:}} & {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\\\
+        \\hline
     \\end{{tabular}}
+
     \\hrulefill
-    
-    \\noindent\\textbf{{Student Signature:}} \\includegraphics[width=2in]{{{signature_path}}} \\hfill \\textbf{{Date:}} \\today
+
+    \\vfill
+
+    \\textbf{{Student Signature:}} \\\\
+
+    \\begin{{tabular}}{{ p{{3in}} p{{3in}} }}
+        \\begin{{minipage}}{{3in}}
+            \\IfFileExists{{{signature_path}}}
+                {{\\includegraphics[width=2in]{{{signature_path}}}}}
+                {{\\textbf{{No signature on file.}}}}
+        \\end{{minipage}} 
+        & 
+        \\begin{{minipage}}{{3in}}
+            \\textbf{{\\underline{{\\today}}}}
+        \\end{{minipage}} \\\\
+        \\textbf{{Student Signature}} & \\textbf{{Date:}} \\\\
+    \\end{{tabular}} \\\\
+
     \\end{{document}}
     """
     return latex_content
