@@ -758,17 +758,15 @@ def generate_ssn_form(form, user):
 
     \\textbf{{SIGNATURE (REQUIRED):}} \\includegraphics[height=1cm]{{{signature_path}}} \\hspace{{4em}} \\textbf{{Date:}} \\underline{{\\today}}
     \\vspace{{1em}}
-
-    {\tiny
-    State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be
-    informed about the information the
-    \indent University collects about you by use of this form; (2) under sections 552.021 and 552.023 of the Government Code, you are entitled to receive and review the
-    \indent information; and (3) under section 559.004 of the Government Code, you are entitled to have the University correct information about you that is incorrect.
+    \\vfill
+    {\\tiny
+    State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be informed about the information the
+    University collects about you by use of this form; (2) under sections 552.021 and 552.023 of the Government Code, you are entitled to receive and review the
+    information; and (3) under section 559.004 of the Government Code, you are entitled to have the University correct information about you that is incorrect.
     }
-
+        
     \\end{{document}}
     """
-
     return latex_content
     
 # Update generate_latex_content function
