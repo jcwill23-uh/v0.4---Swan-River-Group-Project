@@ -373,8 +373,16 @@ def submit_ssn_form():
 
         # Generate LaTeX file
         tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
+        if not os.path.exists(tex_file_path):
+            return jsonify({"error": "LaTeX file was not created properly."}), 500
+
         with open(tex_file_path, "w") as tex_file:
             tex_file.write(generate_ssn_form(new_request, user))
+
+        with open(tex_file_path, "r") as tex_file:
+            latex_content = tex_file.read()
+        
+        print(f"Generated LaTeX Content:\n{latex_content}")
 
         # Run pdflatex to generate PDF
         try:
@@ -593,6 +601,12 @@ def download_signature(signature_url, user_id):
     return "/mnt/data/default-signature.png"  # Fallback if the download fails
 
 def generate_ssn_form(form, user):
+    import re
+
+    def latex_escape(text):
+        """Escape LaTeX special characters in user inputs."""
+        return re.sub(r'([&_{}%$#])', r'\\\1', text) if text else ""
+
     signature_path = download_signature(user.signature_url, user.id) if user.signature_url else "/mnt/data/default-signature.png"
 
     def latex_checkbox(condition):
