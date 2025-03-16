@@ -718,7 +718,7 @@ def generate_ssn_form(form, user):
     \\noindent
     \\textbf{{Name Change Details:}}
 
-    \\begin{tabular}{|c|c|c|c|}
+    \\begin{{tabular}}{{|c|c|c|c|}}
         \\hline
         \\textbf{First Name} & \\textbf{Middle Name} & \\textbf{Last Name} & \\textbf{Suffix} \\\\
         \\hline
@@ -749,7 +749,7 @@ def generate_ssn_form(form, user):
     \\noindent
     \\textbf{{SSN Change Details:}}
 
-    \\begin{tabular}{|c|c|c|}
+    \\begin{{tabular}}{{|c|c|c|}}
         \\hline
         \\textbf{SSN Part 1} & \\textbf{SSN Part 2} & \\textbf{SSN Part 3} \\\\
         \\hline
