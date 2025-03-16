@@ -79,36 +79,58 @@ class User(db.Model):
     pdf_url = db.Column(db.String(255), nullable=True)
 
 
-# Release Form Request Model
+# Form Request Model
 class ReleaseFormRequest(db.Model):
-    __tablename__ = 'release_form_request'
+    __tablename__ = "release_form_requests"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     
-    id = db.Column(db.Integer, primary_key=True)
-    student_name = db.Column(db.String(100), nullable=False)
-    peoplesoft_id = db.Column(db.String(10), nullable=False)
-    password = db.Column(db.String(10), nullable=True)  # Make nullable for SSN forms
-    campus = db.Column(db.String(50), nullable=True)    # Make nullable for SSN forms
-    categories = db.Column(db.String(255), nullable=True)  # Make nullable for SSN forms
-    specific_info = db.Column(db.String(255), nullable=True)  # Make nullable for SSN forms
-    release_to = db.Column(db.String(255), nullable=True)  # Make nullable for SSN forms
-    purpose = db.Column(db.String(255), nullable=True)  # Make nullable for SSN forms
-    
-    # SSN form specific fields
-    toChange = db.Column(db.String(20), nullable=True)  # name, ssn, or both
+    # General Student Information
+    student_name = db.Column(db.String(255), nullable=False)
+    peoplesoft_id = db.Column(db.String(7), nullable=False)
+    user_email = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
+
+    # Release Form-Specific Fields
+    password = db.Column(db.String(10), nullable=True)  # 10-character max password
+    campus = db.Column(db.String(50), nullable=True)  # Selected UH campus
+    categories = db.Column(db.String(255), nullable=True)  # List of selected categories
+    specific_info = db.Column(db.String(255), nullable=True)  # Information to be released
+    release_to = db.Column(db.String(255), nullable=True)  # Names of individuals receiving info
+    purpose = db.Column(db.String(255), nullable=True)  # Purpose of information release
+    other_category_text = db.Column(db.String(255), nullable=True)  # If "Other" category is chosen
+    other_info_text = db.Column(db.String(255), nullable=True)  # If "Other" info is chosen
+    other_purpose_text = db.Column(db.String(255), nullable=True)  # If "Other" purpose is chosen
+
+    # SSN Form-Specific Fields
+    toChange = db.Column(db.String(20), nullable=True)  # Tracks whether 'name' or 'ssn' is updated
     name_change_reason = db.Column(db.String(50), nullable=True)
     ssn_change_reason = db.Column(db.String(50), nullable=True)
-    old_name = db.Column(db.String(255), nullable=True)
-    new_name = db.Column(db.String(255), nullable=True)
-    old_ssn = db.Column(db.String(15), nullable=True)
-    new_ssn = db.Column(db.String(15), nullable=True)
-    
+
+    # Name Change Fields (Old & New)
+    old_first_name = db.Column(db.String(50), nullable=True)
+    old_middle_name = db.Column(db.String(50), nullable=True)
+    old_last_name = db.Column(db.String(50), nullable=True)
+    old_suffix = db.Column(db.String(10), nullable=True)
+    new_first_name = db.Column(db.String(50), nullable=True)
+    new_middle_name = db.Column(db.String(50), nullable=True)
+    new_last_name = db.Column(db.String(50), nullable=True)
+    new_suffix = db.Column(db.String(10), nullable=True)
+
+    # SSN Change Fields (Stored in XXX-XX-XXXX format)
+    old_ssn = db.Column(db.String(11), nullable=True)
+    new_ssn = db.Column(db.String(11), nullable=True)
+
+    # Signature & PDF Storage
     signature_url = db.Column(db.String(255), nullable=True)
-    pdf_url = db.Column(db.String(255), nullable=True) 
-    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
-    approval_status = db.Column(db.String(20), default="pending")
-    other_category_text = db.Column(db.Text, nullable=True)  
-    other_info_text = db.Column(db.Text, nullable=True)
-    other_purpose_text = db.Column(db.Text, nullable=True)
+    pdf_url = db.Column(db.String(255), nullable=True)
+
+    # Approval Workflow & Status
+    approval_status = db.Column(db.String(20), nullable=False, default="pending")  # Values: pending, approved, returned, rejected
+    submitted_at = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<ReleaseFormRequest {self.id} - {self.student_name} - {self.peoplesoft_id}>"
 
 
 # ---- API Routes ----
