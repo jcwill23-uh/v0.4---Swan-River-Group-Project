@@ -390,7 +390,7 @@ def submit_ssn_form():
 
         # Upload PDF to Azure
         pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
-        blob_name = f"ssn_forms/form_{new_request.id}.pdf"
+        blob_name = f"release_forms/form_{new_request.id}.pdf"
         blob_client = pdf_container_client.get_blob_client(blob_name)
 
         with open(pdf_file_path, "rb") as data:
