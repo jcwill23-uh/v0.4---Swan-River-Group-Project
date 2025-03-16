@@ -78,23 +78,6 @@ class User(db.Model):
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
 
-# SSN Form Request Model
-class SSNFormRequest(db.Model):
-    __tablename__ = 'ssn_form_request'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False) # Comma-separated name
-    uhid = db.Column(db.String(10), nullable=False)
-    to_update=db.Column(db.String(15), nullable=False) # Comma-separated list
-    name_change_reason=db.Column(db.String(255), nullable=False)
-    old_name = db.Column(db.String(255), nullable=False) # Comma-separated name
-    new_name = db.Column(db.String(255), nullable=False) # Comma-separated name
-    ssn_change_reason = db.Column(db.String(255), nullable=False)
-    old_ssn = db.Column(db.String(20), nullable=False) # Hyphen-separated SSN
-    new_ssn = db.Column(db.String(20), nullable=False) # Hyphen-separated SSN
-    pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
-    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
-
 
 # Release Form Request Model
 class ReleaseFormRequest(db.Model):
@@ -103,19 +86,30 @@ class ReleaseFormRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_name = db.Column(db.String(100), nullable=False)
     peoplesoft_id = db.Column(db.String(10), nullable=False)
-    password = db.Column(db.String(10), nullable=False)
-    campus = db.Column(db.String(50), nullable=False)
-    categories = db.Column(db.String(255), nullable=False)  # Comma-separated categories
-    specific_info = db.Column(db.String(255), nullable=False)  # Comma-separated specific info
-    release_to = db.Column(db.String(255), nullable=False)
-    purpose = db.Column(db.String(255), nullable=False)  # Comma-separated purposes
+    password = db.Column(db.String(10), nullable=True)  # Make nullable for SSN forms
+    campus = db.Column(db.String(50), nullable=True)    # Make nullable for SSN forms
+    categories = db.Column(db.String(255), nullable=True)  # Make nullable for SSN forms
+    specific_info = db.Column(db.String(255), nullable=True)  # Make nullable for SSN forms
+    release_to = db.Column(db.String(255), nullable=True)  # Make nullable for SSN forms
+    purpose = db.Column(db.String(255), nullable=True)  # Make nullable for SSN forms
+    
+    # SSN form specific fields
+    toChange = db.Column(db.String(20), nullable=True)  # name, ssn, or both
+    name_change_reason = db.Column(db.String(50), nullable=True)
+    ssn_change_reason = db.Column(db.String(50), nullable=True)
+    old_name = db.Column(db.String(255), nullable=True)
+    new_name = db.Column(db.String(255), nullable=True)
+    old_ssn = db.Column(db.String(15), nullable=True)
+    new_ssn = db.Column(db.String(15), nullable=True)
+    
     signature_url = db.Column(db.String(255), nullable=True)
-    pdf_url = db.Column(db.String(255), nullable=True) # Store PDF location
+    pdf_url = db.Column(db.String(255), nullable=True) 
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     approval_status = db.Column(db.String(20), default="pending")
     other_category_text = db.Column(db.Text, nullable=True)  
     other_info_text = db.Column(db.Text, nullable=True)
     other_purpose_text = db.Column(db.Text, nullable=True)
+
 
 # ---- API Routes ----
 
@@ -274,6 +268,7 @@ def edit_draft_form(form_id):
         flash("An unexpected error occurred while loading the draft.", "error")
         return redirect(url_for('basic_user_form_status'))
 
+
 # Route to handle form submission
 @app.route('/submit_ssn_form', methods=['POST'])
 def submit_ssn_form():
@@ -295,9 +290,9 @@ def submit_ssn_form():
 
         # Save form request in database
         new_request = ReleaseFormRequest(
-            name=student_name,
+            student_name=student_name,
             peoplesoft_id=uhid,
-            to_update=to_update,
+            to=to_update,
             name_change_reason=name_change_reason,
             ssn_change_reason=ssn_change_reason,
             old_name=old_name,
@@ -323,7 +318,6 @@ def submit_ssn_form():
         # Define file paths
         tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
         pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
-        #pdf_file_path = os.path.abspath(os.path.join("mnt", "data", f"form_{new_request.id}.pdf"))
 
         # Write LaTeX content to the file
         with open(tex_file_path, "w") as tex_file:
@@ -331,18 +325,7 @@ def submit_ssn_form():
 
         # Run pdflatex to generate PDF
         try:
-            # FOR LOCAL TESTING
-            #pdflatex_path = r"C:\Users\jackc\AppData\Local\Programs\MiKTeX\miktex\bin\x64\pdflatex.EXE" 
             pdflatex_path = "pdflatex"
-            os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
-
-            print(f"Checking if LaTeX file exists: {tex_file_path}")
-            if not os.path.exists(tex_file_path):
-                print("ERROR: LaTeX file was not created!")
-                return jsonify({"error": "LaTeX file was not created."}), 500
-            else:
-                print("SUCCESS: LaTeX file exists.")
-
             os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
 
             print(f"Checking if LaTeX file exists: {tex_file_path}")
@@ -369,10 +352,10 @@ def submit_ssn_form():
         except FileNotFoundError:
             print("ERROR: pdflatex not found in Python!")
             print("Current PATH:", os.environ["PATH"])  # Debugging
-            return jsonify({"error": "pdflatex not found, but the PDF was created successfully."}), 200  # Change to 200
+            return jsonify({"error": "pdflatex not found"}), 500
 
         # Upload PDF to Azure Blob Storage
-        blob_name = f"release_forms/form_{new_request.id}.pdf"
+        blob_name = f"ssn_forms/form_{new_request.id}.pdf"
         blob_client = pdf_container_client.get_blob_client(blob_name)
 
         with open(pdf_file_path, "rb") as data:
@@ -381,17 +364,18 @@ def submit_ssn_form():
             blob_client.upload_blob(data, overwrite=True)
 
         # Store PDF URL in the database
-        new_request.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
-        user.pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        new_request.pdf_url = pdf_url
         db.session.commit()
 
         return jsonify({
             "message": "Form submitted successfully",
-            "pdf_url": f"/mnt/data/form_{new_request.id}.pdf"
+            "pdf_url": pdf_url
         }), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # Azure AD Configuration
 CLIENT_ID = "7fbeba40-e221-4797-8f8a-dc364de519c7"
@@ -1183,5 +1167,5 @@ def _get_user_info(token):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(host='0.0.0.0', port=8000, debug=True) 
+    app.run(host='0.0.0.0', port=8000, debug=True)
     #app.run(host='localhost', port=5000, debug=True) 
