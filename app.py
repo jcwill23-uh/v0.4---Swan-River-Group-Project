@@ -641,7 +641,9 @@ def generate_ssn_form(form, user):
     new_ssn_parts = form.new_ssn.split("-") if form.new_ssn else ["", "", ""]
 
     # Escape input fields to prevent LaTeX errors
-    student_name = latex_escape(form.student_name)
+    user_first_name = latex_escape(user.first_name if user.first_name else "")
+    user_middle_name = latex_escape(user.middle_name if user.middle_name else "")
+    user_last_name = latex_escape(user.last_name if user.last_name else "")
     peoplesoft_id = latex_escape(form.peoplesoft_id)
     name_change_reason = latex_escape(form.name_change_reason)
     ssn_change_reason = latex_escape(form.ssn_change_reason)
@@ -656,7 +658,7 @@ def generate_ssn_form(form, user):
     new_last_name = latex_escape(form.new_last_name)
     new_suffix = latex_escape(form.new_suffix)
 
-    latex_content = f"""
+latex_content = f"""
     \\documentclass[10pt]{{article}}
     \\usepackage[a4paper, margin=0.75in]{{geometry}}
     \\usepackage{{graphicx}}
@@ -665,8 +667,14 @@ def generate_ssn_form(form, user):
     \\usepackage{{setspace}}
     \\usepackage{{lmodern}}
     \\usepackage{{amssymb}}
+    \\usepackage{{xcolor}}
+    \\usepackage{{colortbl}}
     \\usepackage{{multicol}}
     \\usepackage{{ragged2e}}
+
+    % Define Colors
+    \\definecolor{{uhred}}{{RGB}}{{200,16,46}}
+    \\definecolor{{uhgray}}{{RGB}}{{102,102,102}}
 
     % Define checkbox formatting
     \\newcommand{{\\checkbox}}[1]{{\\hspace{{2em}} #1}}
@@ -676,105 +684,88 @@ def generate_ssn_form(form, user):
 
     \\begin{{document}}
 
+    % === Header ===
     \\begin{{center}}
-        {{\\Large\\textbf{{CHANGE OF NAME AND/OR SOCIAL SECURITY NUMBER}}}} \\\\
-        {{\\large{{University of Houston | Office of the University Registrar}}}} \\\\
-        {{\\large{{Houston, Texas 77204-2027 | (713) 743-1010, option 7}}}}
+        {{\\color{{uhgray}} \\textbf{{\\LARGE UNIVERSITY of }} }} 
+        {{\\color{{uhred}} \\textbf{{\\LARGE HOUSTON}} }} \\\\
+        {{\\color{{uhgray}} \\large \\textbf{{OFFICE OF THE UNIVERSITY REGISTRAR}} }} \\\\
+        \\vspace{{0.5em}}
+        \\large Name and/or Social Security Number Change \\\\
+        \\large University of Houston | Office of the University Registrar \\\\
+        \\large Houston, Texas 77204-2027 | (713) 743-1010, option 7
     \\end{{center}}
 
-    \\hrulefill
+    % Solid Black Line
+    \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
 
-    \\noindent
-    \\textbf{{Student Name:}} {student_name}  \\hfill \\textbf{{UH ID:}} {peoplesoft_id}
-
-    \\vspace{{1em}}
-
-    \\textbf{{Requested Change:}} 
-    \\checkbox{{{latex_checkbox('name' in to_change)}}} Name Change
-    \\checkbox{{{latex_checkbox('ssn' in to_change)}}} SSN Update
-
-    \\hrulefill
-
-    \\textbf{{Section A: Name Change}}
-    
-    \\textbf{{Reason for Name Change:}} {name_change_reason}
-
-    \\begin{{flushleft}}
-        \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}} Marriage/Divorce \\\\
-        \\checkbox{{{latex_checkbox(name_change_reason == 'Court Order')}}} Court Order \\\\
-        \\checkbox{{{latex_checkbox(name_change_reason == 'Correction of Error')}}} Correction of Error \\\\
-    \\end{{flushleft}}
-
-    \\textbf{{Required Documents:}}\\
-    - Marriage License\\
-    - Divorce Decree\\
-    - Court Order\\
-    - Birth Certificate\\
-    - Government-issued ID\\
-
-    \\vspace{{1em}}
-
-    \\noindent
-    \\textbf{{Name Change Details:}}
-
-    \\begin{{tabular}}{{|c|c|c|c|}}
-        \\hline
-        \\textbf{{First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
-        \\hline
-        {old_first_name} & {old_middle_name} & {old_last_name} & {old_suffix} \\\\
-        \\hline
-        {new_first_name} & {new_middle_name} & {new_last_name} & {new_suffix} \\\\
-        \\hline
-    \\end{{tabular}}
-
-    \\hrulefill
-
-    \\textbf{{Section B: SSN Change}}
-
-    \\textbf{{Reason for SSN Change:}} {ssn_change_reason}
-
-    \\begin{{flushleft}}
-        \\checkbox{{{latex_checkbox(ssn_change_reason == 'Correction of Error')}}} Correction of Error \\\\
-        \\checkbox{{{latex_checkbox(ssn_change_reason == 'Addition')}}} Addition of SSN to University Records \\\\
-    \\end{{flushleft}}
-
-    \\textbf{{Required Documents:}}\\
-    - Social Security Card\\
-    - Government-issued ID\\
-
-    \\vspace{{1em}}
-
-    \\noindent
-    \\textbf{{SSN Change Details:}}
-
+    % === Student Name Section ===
+    \\textbf{{Student Name (as listed on university record)}}\\\\
     \\begin{{tabular}}{{|c|c|c|}}
         \\hline
-        \\textbf{{SSN Part 1}} & \\textbf{{SSN Part 2}} & \\textbf{{SSN Part 3}} \\\\
+        \\textbf{{First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} \\\\
         \\hline
-        {old_ssn_parts[0]} & {old_ssn_parts[1]} & {old_ssn_parts[2]} \\\\
+        {user_first_name} & {user_middle_name} & {user_last_name} \\\\
         \\hline
-        {new_ssn_parts[0]} & {new_ssn_parts[1]} & {new_ssn_parts[2]} \\\\
+    \\end{{tabular}}\\\\
+
+    % === UH ID & Request Type ===
+    \\vspace{{1em}}
+    \\begin{{tabular}}{{|p{{3in}}|p{{3in}}|}}
+        \\hline
+        \\textbf{{myUH ID Number}} & \\textbf{{What are you requesting to add or update?}} \\\\
+        \\hline
+        {peoplesoft_id} & \\checkbox{{{latex_checkbox('name' in to_change)}}} Update Name (Complete Section A) \\\\
+        & \\checkbox{{{latex_checkbox('ssn' in to_change)}}} Update/Add Social Security Number (Complete Section B) \\\\
         \\hline
     \\end{{tabular}}
 
-    \\hrulefill
+    % Solid Black Line
+    \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
+
+    % === Section A: Name Change ===
+    \\textbf{{\\underline{{Section A: Student Name Change}}}} \\\\
+    The University of Houston record of your name was originally taken from your application for admission and may be changed if: \\\\
+    1. You have married, remarried, or divorced (a copy of marriage license or portion of divorce decree indicating new name must be provided) \\\\
+    2. You have changed your name by court order (a copy of the court order must be provided) \\\\
+    3. Your legal name is listed incorrectly and satisfactory evidence exists for its correction (driver license, state ID, birth certificate, valid passport, etc., must be provided) \\\\
+
+    \\textit{{NOTE: A request to omit a first or middle name or to reverse the order of the first and middle names cannot be honored unless accompanied by appropriate documentation. }} 
+    \\textbf{{\\underline{{ All documents must also be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID).}}}} \\\\
+
+    \\textbf{{\\underline{{Please print and complete the following information:}}}} \\\\
+    I request that my legal name be changed and reflected on University of Houston records as listed below: \\\\
+    \\textbf{{Check reason for name change request:}} 
+    \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}} Marriage/Divorce \\hspace{{2em}}
+    \\checkbox{{{latex_checkbox(name_change_reason == 'Court Order')}}} Court Order \\hspace{{2em}}
+    \\checkbox{{{latex_checkbox(name_change_reason == 'Correction of Error')}}} Correction of Error
+    \\begin{{tabular}}{{|c|c|c|c|}}
+        \\hline
+        \\textbf{{FROM: First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
+        \\hline
+        \\textbf{{\\underline{{{form.old_first_name}}}}} & \\textbf{{\\underline{{{form.old_middle_name}}}}} & \\textbf{{\\underline{{{form.old_last_name}}}}} & \\textbf{{\\underline{{{form.old_suffix}}}}} \\\\
+        \\hline
+        \\textbf{{TO: First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
+        \\hline
+        \\textbf{{\\underline{{{form.new_first_name}}}}} & \\textbf{{\\underline{{{form.new_middle_name}}}}} & \\textbf{{\\underline{{{form.new_last_name}}}}} & \\textbf{{\\underline{{{form.new_suffix}}}}} \\\\
+        \\hline
+    \\end{{tabular}}
+
+    % Solid Black Line
+    \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
+
+    % === Section B: SSN Change ===
+    \\textbf{{\\underline{{Section B: Student Social Security Number Change}}}} \\\\
+    The University of Houston record of your Social Security Number was originally taken from your application for admission and may be changed only if the student has obtained a new social security number or an error was made. In either case, the student must provide a copy of the Social Security Card. \\\\
+    \\textbf{{\\underline{{The Social Security card must include the student's signature and must be submitted with a valid government-issued photo ID (such as a driver license, passport, or military ID).}}}} \\\\
+
+    \\noindent\\rule{{\\textwidth}}{{1pt}}\\\\
+
+    I authorize the University of Houston Main Campus to make the updates/changes to my student record as requested above. \\\\
+
+    \\textbf{{SIGNATURE (REQUIRED):}} \\includegraphics[width=2in]{{{signature_path}}} \\hfill \\textbf{{Date:}} \\today \\\\
 
     \\vfill
-
-    \\textbf{{Student Signature:}} \\\\
-
-    \\begin{{tabular}}{{ p{{3in}} p{{3in}} }}
-        \\begin{{minipage}}{{3in}}
-            \\IfFileExists{{{signature_path}}}
-                {{\\includegraphics[width=2in]{{{signature_path}}}}}
-                {{\\textbf{{No signature on file.}}}}
-        \\end{{minipage}} 
-        & 
-        \\begin{{minipage}}{{3in}}
-            \\textbf{{\\underline{{\\today}}}}
-        \\end{{minipage}} \\\\
-        \\textbf{{Student Signature}} & \\textbf{{Date:}} \\\\
-    \\end{{tabular}} \\\\
+    \\tiny{{"State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be informed about the information the University collects about you by use of this form; (2) under sections 552.021 and 552.023 of the Government Code, you are entitled to receive and review the information; and (3) under section 559.004 of the Government Code, you are entitled to have the University correct information about you that is incorrect.}} \\\\
 
     \\end{{document}}
     """
