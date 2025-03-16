@@ -757,7 +757,7 @@ def generate_ssn_form(form, user):
     \\vspace{{0.5em}}
 
     \\textbf{{SIGNATURE (REQUIRED):}} \\includegraphics[height=1cm]{{{signature_path}}} \\hspace{{4em}} \\textbf{{Date:}} \\underline{{\\today}}
-    \\vspace{1em}
+    \\vspace{{1em}}
 
     {\tiny
     State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be
