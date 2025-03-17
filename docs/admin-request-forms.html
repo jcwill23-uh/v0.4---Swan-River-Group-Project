@@ -86,7 +86,7 @@
                     <tr>
                 <td>{{ request.student_name }}</td>
                 <td><button onclick="viewPDF('{{ request.pdf_url }}')">View PDF</button></td>
-                <td>{{ request.status }}</td>
+                <td>{{ request.approval_status }}</td>
                 <td class="action-buttons">
                     <button onclick="approveRequest({{ request.id }})">Approve</button>
                     <button onclick="declineRequest({{ request.id }})">Decline</button>
