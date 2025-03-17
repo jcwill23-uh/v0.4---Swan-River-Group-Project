@@ -728,7 +728,7 @@ def generate_ssn_form(form, user):
     \\end{{enumerate}}
 
     \\textbf{{Check reason for name change request:}} \\\\
-    \\hspace{2em} \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}}~Marriage/Divorce 
+    \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}}~Marriage/Divorce 
     \\checkbox{{{latex_checkbox(name_change_reason == 'Court Order')}}}~Court Order 
     \\checkbox{{{latex_checkbox(name_change_reason == 'Correction of Error')}}}~Correction of Error 
 
