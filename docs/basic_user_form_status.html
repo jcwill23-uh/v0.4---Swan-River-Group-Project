@@ -71,8 +71,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if form.comments %}
-                                {{ form.comments }}
+                            {% if request.comments %}
+                                {{ request.comments }}
                             {% else %}
                                 No comments
                             {% endif %}
