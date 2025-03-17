@@ -352,6 +352,8 @@ def submit_ssn_form():
 
         approval_status = "pending" if is_final_submission else "draft"
 
+        form_instance = None
+
         # Check if form_id exists (Updating a draft)
         if form_id:
             existing_request = ReleaseFormRequest.query.get(form_id)
