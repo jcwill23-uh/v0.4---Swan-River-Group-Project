@@ -337,30 +337,62 @@ def submit_ssn_form():
         # Process signature
         signature_url = data.get("signature_url", None)
 
-        # Store form request in database
-        new_request = ReleaseFormRequest(
-            student_name=student_name,
-            peoplesoft_id=uhid,
-            user_email=user_email,
-            user_id=user_id,
-            toChange=to_update,
-            name_change_reason=name_change_reason,
-            ssn_change_reason=ssn_change_reason,
-            old_first_name=old_first_name,
-            old_middle_name=old_middle_name,
-            old_last_name=old_last_name,
-            old_suffix=old_suffix,
-            new_first_name=new_first_name,
-            new_middle_name=new_middle_name,
-            new_last_name=new_last_name,
-            new_suffix=new_suffix,
-            old_ssn=old_ssn,
-            new_ssn=new_ssn,
-            signature_url=signature_url,
-            submitted_at=datetime.utcnow() if is_final_submission else None
-        )
-        db.session.add(new_request)
-        db.session.commit()
+        approval_status = "pending" if is_final_submission else "draft"
+
+        # Check if form_id exists (Updating a draft)
+        if form_id:
+            existing_request = ReleaseFormRequest.query.get(form_id)
+
+            if existing_request:
+                existing_request.student_name = student_name
+                existing_request.peoplesoft_id = uhid
+                existing_request.user_email = user_email
+                existing_request.user_id = user_id
+                existing_request.toChange = to_update
+                existing_request.name_change_reason = name_change_reason
+                existing_request.ssn_change_reason = ssn_change_reason
+                existing_request.old_first_name = old_first_name
+                existing_request.old_middle_name = old_middle_name
+                existing_request.old_last_name = old_last_name
+                existing_request.old_suffix = old_suffix
+                existing_request.new_first_name = new_first_name
+                existing_request.new_middle_name = new_middle_name
+                existing_request.new_last_name = new_last_name
+                existing_request.new_suffix = new_suffix
+                existing_request.old_ssn = old_ssn
+                existing_request.new_ssn = new_ssn
+                existing_request.signature_url = signature_url
+                db.session.commit()
+                form_instance = existing_request
+            else:
+                return jsonify({"error": "Draft not found."}), 404
+
+        else:
+            # Store form request in database
+            new_request = ReleaseFormRequest(
+                student_name=student_name,
+                peoplesoft_id=uhid,
+                user_email=user_email,
+                user_id=user_id,
+                toChange=to_update,
+                name_change_reason=name_change_reason,
+                ssn_change_reason=ssn_change_reason,
+                old_first_name=old_first_name,
+                old_middle_name=old_middle_name,
+                old_last_name=old_last_name,
+                old_suffix=old_suffix,
+                new_first_name=new_first_name,
+                new_middle_name=new_middle_name,
+                new_last_name=new_last_name,
+                new_suffix=new_suffix,
+                old_ssn=old_ssn,
+                new_ssn=new_ssn,
+                signature_url=signature_url,
+                submitted_at=datetime.utcnow() if is_final_submission else None
+            )
+            db.session.add(new_request)
+            db.session.commit()
+            form_instance = new_request
 
         # Ensure directory exists
         pdf_dir = "/mnt/data"
