@@ -75,16 +75,16 @@
             
             <!-- UH ID Input -->
             <h3>UH ID Number:</h3>
-            <input type="text" name="peoplesoft_id" placeholder="Enter 7-digit UH ID" onblur="validateUHID(this)" required>
+            <input type="text" name="peoplesoft_id" placeholder="Enter 7-digit UH ID" onblur="validateUHID(this)" required value="{% if form and form.peoplesoft_id %}{{ form.peoplesoft_id }}{% endif % }">
         
             <!-- Request Type Selection -->
             <h3>What are you requesting to add or update?</h3>
             <div class="selection-group">
                 <label>
-                    <input type="checkbox" id="updateNameCheckbox" name="toChange" value="name" onclick="toggleSection('sectionA', 'updateNameCheckbox')"> Update Name (Complete Section A)
+                    <input type="checkbox" id="updateNameCheckbox" name="toChange" value="name" {% if form and 'name' in form.toChange %}checked{% endif %} onclick="toggleSection('sectionA', 'updateNameCheckbox')"> Update Name (Complete Section A)
                 </label>
                 <label>
-                    <input type="checkbox" id="updateSSNCheckbox" name="toChange" value="ssn" onclick="toggleSection('sectionB', 'updateSSNCheckbox')"> Update/Add Social Security Number (Complete Section B)
+                    <input type="checkbox" id="updateSSNCheckbox" name="toChange" value="ssn" {% if form and 'ssn' in form.toChange %}checked{% endif %} onclick="toggleSection('sectionB', 'updateSSNCheckbox')"> Update/Add Social Security Number (Complete Section B)
                 </label>
             </div>
         
@@ -94,22 +94,22 @@
         
                 <h3>Check reason for name change request:</h3>
                 <div class="selection-group">
-                    <label><input type="radio" name="name_change_reason" value="Marriage/Divorce"> Marriage/Divorce</label>
-                    <label><input type="radio" name="name_change_reason" value="Court Order"> Court order</label>
-                    <label><input type="radio" name="name_change_reason" value="Correction of Error"> Correction of error</label>
+                    <label><input type="radio" name="name_change_reason" value="Marriage/Divorce" {% if form and 'Marriage/Divorce' in form.name_change_reason %}checked{% endif %}> Marriage/Divorce</label>
+                    <label><input type="radio" name="name_change_reason" value="Court Order" {% if form and 'Court Order' in form.name_change_reason %}checked{% endif %}> Court order</label>
+                    <label><input type="radio" name="name_change_reason" value="Correction of Error" {% if form and 'Correction of Error' in form.name_change_reason %}checked{% endif %}> Correction of error</label>
                 </div>
         
                 <h3>FROM:</h3>
-                <input type="text" name="old_first_name" placeholder="First Name">
-                <input type="text" name="old_middle_name" placeholder="Middle Name">
-                <input type="text" name="old_last_name" placeholder="Last Name">
-                <input type="text" name="old_suffix" placeholder="Suffix (Optional)">
+                <input type="text" name="old_first_name" placeholder="First Name" value="{% if form and form.old_first_name %}{{ form.old_first_name }}{% endif %}">
+                <input type="text" name="old_middle_name" placeholder="Middle Name" value="{% if form and form.old_middle_name %}{{ form.old_middle_name }}{% endif %}">
+                <input type="text" name="old_last_name" placeholder="Last Name" value="{% if form and form.old_last_name %}{{ form.old_last_name }}{% endif %}">
+                <input type="text" name="old_suffix" placeholder="Suffix (Optional)" value="{% if form and form.old_suffix %}{{ form.old_suffix }}{% endif %}">
         
                 <h3>TO:</h3>
-                <input type="text" name="new_first_name" placeholder="First Name">
-                <input type="text" name="new_middle_name" placeholder="Middle Name">
-                <input type="text" name="new_last_name" placeholder="Last Name">
-                <input type="text" name="new_suffix" placeholder="Suffix (Optional)">
+                <input type="text" name="new_first_name" placeholder="First Name" value="{% if form and form.new_first_name %}{{ form.new_first_name }}{% endif %}">
+                <input type="text" name="new_middle_name" placeholder="Middle Name" value="{% if form and form.new_middle_name %}{{ form.new_middle_name }}{% endif %}">
+                <input type="text" name="new_last_name" placeholder="Last Name" value="{% if form and form.new_last_name %}{{ form.new_last_name }}{% endif %}">
+                <input type="text" name="new_suffix" placeholder="Suffix (Optional)" value="{% if form and form.new_suffix %}{{ form.new_suffix }}{% endif %}">
             </div>
         
             <!-- Section B: SSN Update -->
@@ -118,22 +118,22 @@
         
                 <h3>Check reason for Social Security Number change request:</h3>
                 <div class="selection-group">
-                    <label><input type="radio" name="ssn_change_reason" value="Correction of Error"> Correction of error</label>
-                    <label><input type="radio" name="ssn_change_reason" value="Addition"> Addition of SSN to university records</label>
+                    <label><input type="radio" name="ssn_change_reason" value="Correction of Error" {% if form and 'Correction of Error' in form.ssn_change_reason %}checked{% endif %}> Correction of error</label>
+                    <label><input type="radio" name="ssn_change_reason" value="Addition" {% if form and 'Addition' in form.ssn_change_reason %}checked{% endif %}> Addition of SSN to university records</label>
                 </div>
         
                 <h3>FROM:</h3>
                 <div class="ssn-container">
-                    <input type="text" name="old_ssn_1" maxlength="3" placeholder="XXX" required> -
-                    <input type="text" name="old_ssn_2" maxlength="2" placeholder="XX" required> -
-                    <input type="text" name="old_ssn_3" maxlength="4" placeholder="XXXX" required>
+                    <input type="text" name="old_ssn_1" maxlength="3" placeholder="XXX" required value="{% if form and form.old_ssn %}{{ form.old_ssn.split('-')[0] }}{% endif %}"> -
+                    <input type="text" name="old_ssn_2" maxlength="2" placeholder="XX" required value="{% if form and form.old_ssn %}{{ form.old_ssn.split('-')[1] }}{% endif %}"> -
+                    <input type="text" name="old_ssn_3" maxlength="4" placeholder="XXXX" required value="{% if form and form.old_ssn %}{{ form.old_ssn.split('-')[2] }}{% endif %}">
                 </div>
         
                 <h3>TO:</h3>
                 <div class="ssn-container">
-                    <input type="text" name="new_ssn_1" maxlength="3" placeholder="XXX" required> -
-                    <input type="text" name="new_ssn_2" maxlength="2" placeholder="XX" required> -
-                    <input type="text" name="new_ssn_3" maxlength="4" placeholder="XXXX" required>
+                    <input type="text" name="new_ssn_1" maxlength="3" placeholder="XXX" required value="{% if form and form.new_ssn %}{{ form.new_ssn.split('-')[0] }}{% endif %}"> -
+                    <input type="text" name="new_ssn_2" maxlength="2" placeholder="XX" required value="{% if form and form.new_ssn %}{{ form.new_ssn.split('-')[1] }}{% endif %}"> -
+                    <input type="text" name="new_ssn_3" maxlength="4" placeholder="XXXX" required value="{% if form and form.new_ssn %}{{ form.new_ssn.split('-')[2] }}{% endif %}">
                 </div>
             </div>
         </form>
@@ -270,17 +270,27 @@
         async function handleFormSubmission(isFinalSubmission) {
             const form = document.getElementById("ssnForm");
             const formData = new FormData(form);
+        
+            // Ensure form_id is included for drafts
+            const formIdField = document.querySelector('input[name="form_id"]');
+            if (formIdField && formIdField.value) {
+                formData.append("form_id", formIdField.value);
+            }
+        
             formData.append("final_submission", isFinalSubmission ? "true" : "false");
-         
+        
             try {
                 const response = await fetch("/submit_ssn_form", {
                     method: "POST",
                     body: formData
                 });
                 const data = await response.json();
-         
+        
                 if (response.ok) {
-                    alert(isFinalSubmission ? "Form submitted successfully!" : "Form saved for later.");
+                    alert(isFinalSubmission ? "Form submitted successfully!" : "Form saved as a draft.");
+                    if (!isFinalSubmission) {
+                        window.location.href = "/basic_user_form_status";  
+                    }
                 } else {
                     alert("Error: " + data.error);
                 }
@@ -288,44 +298,52 @@
                 alert("An error occurred while submitting the form.");
             }
         }
-        
+
         function redirectToBasicHome() {
             window.location.href = "{{ url_for('basic_user_home') }}";
         }
         
         async function uploadSignature() {
-        const fileInput = document.getElementById("signatureInput");
-        const previewImage = document.getElementById("signaturePreview");
-
-        if (fileInput.files.length === 0) {
-            alert("Please select a signature file.");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("signature", fileInput.files[0]);
-
-        try {
-            const response = await fetch("/upload_signature", {
-                method: "POST",
-                body: formData
-            });
-
-            const data = await response.json();
-            if (response.ok && data.signature_url) {
-                // Update image preview
-                previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Prevents caching
-                previewImage.style.display = "block";
-
-                alert("Signature uploaded successfully!");
-            } else {
-                alert("Upload failed: " + data.error);
+            const fileInput = document.getElementById("signatureInput");
+            const previewImage = document.getElementById("signaturePreview");
+    
+            if (fileInput.files.length === 0) {
+                alert("Please select a signature file.");
+                return;
             }
-        } catch (error) {
-            console.error("Error uploading signature:", error);
-            alert("An unexpected error occurred. Please try again.");
+    
+            const formData = new FormData();
+            formData.append("signature", fileInput.files[0]);
+    
+            try {
+                const response = await fetch("/upload_signature", {
+                    method: "POST",
+                    body: formData
+                });
+    
+                const data = await response.json();
+                if (response.ok && data.signature_url) {
+                    // Update image preview
+                    previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Prevents caching
+                    previewImage.style.display = "block";
+    
+                    alert("Signature uploaded successfully!");
+                } else {
+                    alert("Upload failed: " + data.error);
+                }
+            } catch (error) {
+                console.error("Error uploading signature:", error);
+                alert("An unexpected error occurred. Please try again.");
+            }
         }
-    }
+
+        document.getElementById("ssnForm").addEventListener("submit", function () {
+            var ssnCheckbox = document.getElementById("updateSSNCheckbox");
+            var nameCheckbox = document.getElementById("updateNameCheckbox");
+        
+            document.getElementById("hiddenOtherSSNText").value = ssnCheckbox.checked ? document.getElementById("ssn_other_text").value : "";
+            document.getElementById("hiddenOtherNameText").value = nameCheckbox.checked ? document.getElementById("name_other_text").value : "";
+        });
     
     </script>
     
