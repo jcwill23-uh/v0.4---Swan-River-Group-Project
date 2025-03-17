@@ -394,68 +394,69 @@ def submit_ssn_form():
             db.session.commit()
             form_instance = new_request
 
-        # Ensure directory exists
-        pdf_dir = "/mnt/data"
-        os.makedirs(pdf_dir, exist_ok=True)
-
-        # Set LaTeX file path
-        tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
-
-        # Generate LaTeX file content
-        latex_content = generate_ssn_form(new_request, user)
-
-        # Debug: Check if LaTeX content is generated
-        if latex_content is None or not latex_content.strip():
-            return jsonify({"error": "generate_ssn_form() returned empty content."}), 500
+        if is_final_submission:
+            # Ensure directory exists
+            pdf_dir = "/mnt/data"
+            os.makedirs(pdf_dir, exist_ok=True)
         
-        print(f"Generated LaTeX Content:\n{latex_content}")
+            # Set LaTeX file path
+            tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
         
-        # Write LaTeX content to file
-        try:
-            with open(tex_file_path, "w") as tex_file:
-                tex_file.write(latex_content)
+            # Generate LaTeX file content
+            latex_content = generate_ssn_form(new_request, user)
         
-            # Debug: Confirm the file exists
-            if not os.path.exists(tex_file_path):
-                return jsonify({"error": "LaTeX file was not found after writing."}), 500
+            # Debug: Check if LaTeX content is generated
+            if latex_content is None or not latex_content.strip():
+                return jsonify({"error": "generate_ssn_form() returned empty content."}), 500
         
-            print(f"LaTeX file successfully written: {tex_file_path}")
-            
-        except Exception as e:
-            return jsonify({"error": f"Failed to write LaTeX file: {str(e)}"}), 500
-
-        # Run pdflatex to generate PDF
-        try:
-            pdflatex_path = "pdflatex"
-            os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
-
-            subprocess.run([pdflatex_path, "-interaction=nonstopmode", "-output-directory", pdf_dir, tex_file_path], 
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+            print(f"Generated LaTeX Content:\n{latex_content}")
         
-            print("PDF generation successful.")
-
-        except subprocess.CalledProcessError as e:
-            return jsonify({"error": f"PDF generation failed: {e.stderr.decode()}"}), 500
-        except FileNotFoundError:
-            return jsonify({"error": "pdflatex not found"}), 500
-
-        # Upload PDF to Azure
-        pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
-        blob_name = f"release_forms/form_{new_request.id}.pdf"
-        blob_client = pdf_container_client.get_blob_client(blob_name)
-
-        try:
-            with open(pdf_file_path, "rb") as data:
-                blob_client.upload_blob(data, overwrite=True)
-
-            pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
-            new_request.pdf_url = pdf_url
-            db.session.commit()
-
-            return jsonify({"message": "Form submitted successfully", "pdf_url": pdf_url}), 200
+            # Write LaTeX content to file
+            try:
+                with open(tex_file_path, "w") as tex_file:
+                    tex_file.write(latex_content)
         
-        except Exception as e:
-            return jsonify({"error": f"Azure upload failed: {str(e)}"}), 500
+                # Debug: Confirm the file exists
+                if not os.path.exists(tex_file_path):
+                    return jsonify({"error": "LaTeX file was not found after writing."}), 500
+        
+                print(f"LaTeX file successfully written: {tex_file_path}")
+        
+            except Exception as e:
+                return jsonify({"error": f"Failed to write LaTeX file: {str(e)}"}), 500
+        
+            # Run pdflatex to generate PDF
+            try:
+                pdflatex_path = "pdflatex"
+                os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
+        
+                subprocess.run([pdflatex_path, "-interaction=nonstopmode", "-output-directory", pdf_dir, tex_file_path], 
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        
+                print("PDF generation successful.")
+        
+            except subprocess.CalledProcessError as e:
+                return jsonify({"error": f"PDF generation failed: {e.stderr.decode()}"}), 500
+            except FileNotFoundError:
+                return jsonify({"error": "pdflatex not found"}), 500
+        
+            # Upload PDF to Azure
+            pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
+            blob_name = f"release_forms/form_{new_request.id}.pdf"
+            blob_client = pdf_container_client.get_blob_client(blob_name)
+        
+            try:
+                with open(pdf_file_path, "rb") as data:
+                    blob_client.upload_blob(data, overwrite=True)
+        
+                pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+                new_request.pdf_url = pdf_url
+                db.session.commit()
+        
+                return jsonify({"message": "Form submitted successfully", "pdf_url": pdf_url}), 200
+        
+            except Exception as e:
+                return jsonify({"error": f"Azure upload failed: {str(e)}"}), 500
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
