@@ -128,6 +128,7 @@ class ReleaseFormRequest(db.Model):
     # Approval Workflow & Status
     approval_status = db.Column(db.String(20), nullable=False, default="pending")  # Values: pending, approved, returned, rejected
     submitted_at = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
+    comments = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
         return f"<ReleaseFormRequest {self.id} - {self.student_name} - {self.peoplesoft_id}>"
