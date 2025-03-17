@@ -1255,10 +1255,10 @@ def decline_request(request_id):
 @app.route('/update_comment/<int:request_id>', methods=['POST'])
 def update_comment(request_id):
     data = request.get_json() 
-    request = ReleaseFormRequest.query.get(request_id)  
+    release_form_request = ReleaseFormRequest.query.get(request_id)  
 
-    if request:
-        request.comments = data['comments']  
+    if release_form_request:
+        release_form_request.comments = data['comments']  
         db.session.commit()  
         return jsonify({"message": "Comment saved successfully"}), 200
     return jsonify({"error": "Request not found"}), 404 
