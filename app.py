@@ -709,8 +709,8 @@ def generate_ssn_form(form, user):
     \\begin{{tabular}}{{@{{}}p{{2.8in}} p{{3in}}@{{}}}}
     \\textbf{{myUH ID Number}} & \\textbf{{What are you requesting to add or update?}} \\\\
     \\textbf{{\\underline{{{peoplesoft_id}}}}} & 
-    \\checkbox{{{latex_checkbox('name' in to_change)}}} Update Name (Complete Section A) \\\\
-    & \\checkbox{{{latex_checkbox('ssn' in to_change)}}} Update/Add Social Security Number \\\\
+    \\checkbox{{{latex_checkbox('name' in to_change)}}}~Update Name (Complete Section A) \\\\
+    & \\checkbox{{{latex_checkbox('ssn' in to_change)}}}~Update/Add Social Security Number \\\\
     & \\hspace{{2em}} (Complete Section B) \\\\
     \\end{{tabular}}
 
@@ -727,43 +727,20 @@ def generate_ssn_form(form, user):
     \\end{{enumerate}}
 
     \\textbf{{Check reason for name change request:}} \\\\
-    \\indent\\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}} Marriage/Divorce 
-    \\checkbox{{{latex_checkbox(name_change_reason == 'Court Order')}}} Court Order 
-    \\checkbox{{{latex_checkbox(name_change_reason == 'Correction of Error')}}} Correction of Error 
+    \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}}~Marriage/Divorce 
+    \\checkbox{{{latex_checkbox(name_change_reason == 'Court Order')}}}~Court Order 
+    \\checkbox{{{latex_checkbox(name_change_reason == 'Correction of Error')}}}~Correction of Error 
 
     \\vspace{{1em}}
-
-    \\begin{{tabular}}{{@{{}}p{{1.5in}} p{{1.5in}} p{{1.5in}} p{{1.5in}}@{{}}}}
-    \\textbf{{FROM: First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
-    \\textbf{{{old_first_name}}} & \\textbf{{{old_middle_name}}} & \\textbf{{{old_last_name}}} & \\textbf{{{old_suffix}}} \\\\
-    \\textbf{{TO: First Name}} & \\textbf{{Middle Name}} & \\textbf{{Last Name}} & \\textbf{{Suffix}} \\\\
-    \\textbf{{{new_first_name}}} & \\textbf{{{new_middle_name}}} & \\textbf{{{new_last_name}}} & \\textbf{{{new_suffix}}} \\\\
-    \\end{{tabular}}
-
-    \\hrulefill
-    \\vspace{{0.5em}}
-
-    \\textbf{{Check reason for Social Security Number change request:}} \\\\
-    \\indent\\checkbox{{{latex_checkbox(ssn_change_reason == 'Correction of Error')}}} Correction of Error
-    \\checkbox{{{latex_checkbox(ssn_change_reason == 'Addition')}}} Addition of SSN to university records 
-
-    \\vspace{{1em}}
-
-    \\begin{{tabular}}{{@{{}}p{{2.5in}} p{{2.5in}}@{{}}}}
-    \\textbf{{FROM:}} {old_ssn_parts[0]}-{old_ssn_parts[1]}-{old_ssn_parts[2]} & \\textbf{{TO:}} {new_ssn_parts[0]}-{new_ssn_parts[1]}-{new_ssn_parts[2]} \\\\
-    \\end{{tabular}}
-
-    \\hrulefill
-    \\vspace{{0.5em}}
 
     \\textbf{{SIGNATURE (REQUIRED):}} \\includegraphics[height=1cm]{{{signature_path}}} \\hspace{{4em}} \\textbf{{Date:}} \\underline{{\\today}}
     \\vspace{{1em}}
     \\vfill
-    {\\tiny
+    {{\\tiny
     State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be informed about the information the
     University collects about you by use of this form; (2) under sections 552.021 and 552.023 of the Government Code, you are entitled to receive and review the
     information; and (3) under section 559.004 of the Government Code, you are entitled to have the University correct information about you that is incorrect.
-    }
+    }}
         
     \\end{{document}}
     """
