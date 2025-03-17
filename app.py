@@ -422,10 +422,10 @@ def submit_ssn_form():
             os.makedirs(pdf_dir, exist_ok=True)
         
             # Set LaTeX file path
-            tex_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.tex")
+            tex_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.tex")
         
             # Generate LaTeX file content
-            latex_content = generate_ssn_form(new_request, user)
+            latex_content = generate_ssn_form(form_instance, user)
         
             # Debug: Check if LaTeX content is generated
             if latex_content is None or not latex_content.strip():
@@ -463,7 +463,7 @@ def submit_ssn_form():
                 return jsonify({"error": "pdflatex not found"}), 500
         
             # Upload PDF to Azure
-            pdf_file_path = os.path.join(pdf_dir, f"form_{new_request.id}.pdf")
+            pdf_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.pdf")
             blob_name = f"release_forms/form_{new_request.id}.pdf"
             blob_client = pdf_container_client.get_blob_client(blob_name)
         
