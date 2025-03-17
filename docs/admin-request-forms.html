@@ -72,17 +72,7 @@
         <table id="userTable">
             <thead>
                  <tr>
-                <th>ID</th>
-                <th>Request ID</th>
                 <th>Student Name</th>
-                <th>Peoplesoft ID</th>
-                <th>Password</th>
-                <th>Campus</th>
-                <th>Categories</th>
-                <th>Specific Info</th>
-                <th>Release To</th>
-                <th>Purpose</th>
-                <th>Signature URL</th>
                 <th>PDF URL</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -93,25 +83,16 @@
                 {% if requests %}
                     {% for request in requests %}
                     <tr>
-                <td>{{ request.id }}</td>
-                <td>{{ request.request_id }}</td>
                 <td>{{ request.student_name }}</td>
-                <td>{{ request.peoplesoft_id }}</td>
-                <td>{{ request.password }}</td>
-                <td>{{ request.campus }}</td>
-                <td>{{ request.categories }}</td>
-                <td>{{ request.specific_info }}</td>
-                <td>{{ request.release_to }}</td>
-                <td>{{ request.purpose }}</td>
-                <td>{{ request.signature_url }}</td>
                 <td><button onclick="viewPDF('{{ request.pdf_url }}')">View PDF</button></td>
-                <!--<td>{{ request.pdf_url }}</td>-->
-                <td>{{ request.approval_status }}</td>
+                <td>{{ request.status }}</td>
                 <td class="action-buttons">
                     <button onclick="approveRequest({{ request.id }})">Approve</button>
                     <button onclick="declineRequest({{ request.id }})">Decline</button>
                 </td>
                 <td>{{ request.submitted_at }}</td>
+               
+                <!--<td>{{ request.pdf_url }}</td>-->
             </tr>
                     {% endfor %}
                 {% else %}
