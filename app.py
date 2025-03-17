@@ -362,6 +362,7 @@ def submit_ssn_form():
                 existing_request.old_ssn = old_ssn
                 existing_request.new_ssn = new_ssn
                 existing_request.signature_url = signature_url
+                existing_request.approval_status = "draft" if not is_final_submission else "pending"
                 db.session.commit()
                 form_instance = existing_request
             else:
@@ -391,6 +392,7 @@ def submit_ssn_form():
                 old_ssn=old_ssn,
                 new_ssn=new_ssn,
                 signature_url=signature_url,
+                approval_status="draft" if not is_final_submission else "pending",
                 submitted_at=datetime.utcnow() if is_final_submission else None
             )
             db.session.add(new_request)
