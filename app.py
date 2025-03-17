@@ -282,8 +282,16 @@ def edit_draft_form(form_id):
             return redirect(url_for('basic_user_form_status'))
 
         signature_url = user.signature_url if user else None
-        print(f"Draft {form_id} loaded successfully")  # Confirm successful retrieval
-        return render_template("basic_user_release.html", form=form, user=user)
+
+        # Check if the form is for SSN or Name Change
+        to_change_lower = form.toChange.lower() if form.toChange else ""
+        if "ssn" in to_change_lower or "name" in to_change_lower:
+            template = "basic_user_ssn.html"  # Load the SSN/Name Change Form
+        else:
+            template = "basic_user_release.html"  # Load the Release Form
+
+        print(f"Draft {form_id} loaded successfully, rendering {template}")  # Confirm successful retrieval
+        return render_template(template, form=form, user=user)
 
     except Exception as e:
         print(f"Unexpected error while loading draft {form_id}: {str(e)}")  # Log full error message
