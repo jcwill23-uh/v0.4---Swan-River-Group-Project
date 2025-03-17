@@ -1250,6 +1250,18 @@ def decline_request(request_id):
         db.session.commit()
         return jsonify({"message": "Request declined successfully"}), 200
     return jsonify({"error": "Request not found"}), 404
+
+# Save comments
+@app.route('/update_comment/<int:request_id>', methods=['POST'])
+def update_comment(request_id):
+    data = request.get_json() 
+    request = ReleaseFormRequest.query.get(request_id)  
+
+    if request:
+        request.comments = data['comments']  
+        db.session.commit()  
+        return jsonify({"message": "Comment saved successfully"}), 200
+    return jsonify({"error": "Request not found"}), 404 
     
 # Helper functions
 def _build_auth_url(scopes=None, state=None):
