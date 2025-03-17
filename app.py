@@ -718,28 +718,47 @@ def generate_ssn_form(form, user):
     \\vspace{{0.5em}}
 
     \\textbf{{\\fontsize{{13}}{{13}}\\selectfont \\underline{{Section A: Student Name Change}}}} \\\\
-    The University of Houston record of your name was originally taken from your application for admission and may be changed if:
+    \\indent The University of Houston record of your name was originally taken from your application for admission
+    \\indent and may be changed if:
 
     \\begin{{enumerate}}
-    \\item You have married, remarried, or divorced (a copy of marriage license or portion of divorce decree indicating new name must be provided).
-    \\item You have changed your name by court order (a copy of the court order must be provided).
-    \\item Your legal name is listed incorrectly and satisfactory evidence exists for its correction (driver license, state ID, birth certificate, valid passport, etc., must be provided).
+        \\item You have married, remarried, or divorced (a copy of marriage license or portion of divorce decree indicating new name must be provided).
+        \\item You have changed your name by court order (a copy of the court order must be provided).
+        \\item Your legal name is listed incorrectly and satisfactory evidence exists for its correction (driver license, state ID, birth certificate, valid passport, etc., must be provided).
     \\end{{enumerate}}
 
     \\textbf{{Check reason for name change request:}} \\\\
-    \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}}~Marriage/Divorce 
+    \\hspace{2em} \\checkbox{{{latex_checkbox(name_change_reason == 'Marriage/Divorce')}}}~Marriage/Divorce 
     \\checkbox{{{latex_checkbox(name_change_reason == 'Court Order')}}}~Court Order 
     \\checkbox{{{latex_checkbox(name_change_reason == 'Correction of Error')}}}~Correction of Error 
 
+    \\hrulefill
+    \\vspace{{0.5em}}
+
+    \\textbf{{\\fontsize{{13}}{{13}}\\selectfont \\underline{{Section B: Student Social Security Number Change}}}} \\\\
+    The University of Houston record of your Social Security Number was originally taken from your application for admission and may be changed only if the student has obtained a new social security number or an error was made. In either case, the student must provide a copy of the Social Security Card. \\\\
+    \\textbf{{\\underline{{The Social Security card must include the student's signature and must be submitted with a valid government-issued photo ID.}}}} \\\\
+
+    \\textbf{{Check reason for Social Security Number change request:}} \\\\
+    \\checkbox{{{latex_checkbox(ssn_change_reason == 'Correction of Error')}}}~Correction of Error
+    \\checkbox{{{latex_checkbox(ssn_change_reason == 'Addition')}}}~Addition of SSN to university records 
+
     \\vspace{{1em}}
 
+    \\begin{{tabular}}{{@{{}}p{{2.5in}} p{{2.5in}}@{{}}}}
+    \\textbf{{FROM:}} {old_ssn_parts[0]}-{old_ssn_parts[1]}-{old_ssn_parts[2]} & \\textbf{{TO:}} {new_ssn_parts[0]}-{new_ssn_parts[1]}-{new_ssn_parts[2]} \\\\
+    \\end{{tabular}}
+
+    \\hrulefill
+    \\vspace{{0.5em}}
+
     \\textbf{{SIGNATURE (REQUIRED):}} \\includegraphics[height=1cm]{{{signature_path}}} \\hspace{{4em}} \\textbf{{Date:}} \\underline{{\\today}}
-    \\vspace{{1em}}
+    
     \\vfill
+    \\noindent
     {{\\tiny
     State law requires that you be informed of the following: (1) with few exceptions, you are entitled on request to be informed about the information the
-    University collects about you by use of this form; (2) under sections 552.021 and 552.023 of the Government Code, you are entitled to receive and review the
-    information; and (3) under section 559.004 of the Government Code, you are entitled to have the University correct information about you that is incorrect.
+    University collects about you by use of this form; (2) you are entitled to receive and review the information; and (3) you are entitled to have the University correct incorrect information.
     }}
         
     \\end{{document}}
