@@ -645,6 +645,7 @@ def basic_user_form_status():
     # Fetch user's email from session
     email = session['user']['email']
     user = User.query.filter_by(email=email).first()
+    forms = ReleaseFormRequest.query.filter_by(user_id=user.id).all()
 
     # Fetch all forms (Drafts + Submitted Forms)
     user_full_name = f"{user.first_name} {user.middle_name or ''} {user.last_name}".strip()
@@ -652,7 +653,7 @@ def basic_user_form_status():
         ReleaseFormRequest.student_name.like(f"%{user_full_name}%")
     ).all()
     
-    return render_template("basic_user_form_status.html", user=session['user'], requests=requests)
+    return render_template("basic_user_form_status.html", user=session['user'], requests=requests, forms=forms)
 
 def download_signature(signature_url, user_id):
     """
