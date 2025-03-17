@@ -69,6 +69,13 @@
                                 <span class="text-muted">Not Available</span>
                             {% endif %}
                         </td>
+                        <td>
+                            {% if form.comments %}
+                                {{ form.comments }}
+                            {% else %}
+                                No comments
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
