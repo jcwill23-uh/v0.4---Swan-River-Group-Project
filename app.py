@@ -171,6 +171,8 @@ def submit_release_form():
 
         approval_status = "pending" if is_final_submission else "draft"
 
+        form_instance = None
+
         # Check if form_id exists (Updating a draft)
         if form_id:
             existing_request = ReleaseFormRequest.query.get(form_id)
@@ -214,6 +216,9 @@ def submit_release_form():
             db.session.add(new_request)
             db.session.commit()
             form_instance = new_request
+
+        if not form_instance:
+            return jsonify({"error": "Failed to process form."}), 500
 
         # Fetch user object before PDF generation
         user = User.query.filter_by(email=session["user"]["email"]).first()
