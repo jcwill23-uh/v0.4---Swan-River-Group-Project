@@ -366,6 +366,9 @@ def submit_ssn_form():
                 form_instance = existing_request
             else:
                 return jsonify({"error": "Draft not found."}), 404
+                
+            if not is_final_submission:
+                return jsonify({"message": "Draft saved successfully."}), 200
 
         else:
             # Store form request in database
@@ -393,6 +396,8 @@ def submit_ssn_form():
             db.session.add(new_request)
             db.session.commit()
             form_instance = new_request
+            if not is_final_submission:
+                return jsonify({"message": "Draft saved successfully."}), 200
 
         if is_final_submission:
             # Ensure directory exists
