@@ -736,13 +736,8 @@ def generate_ssn_form(form, user):
     \\hrulefill
     \\vspace{{0.5em}}
 
-    \\textbf{{\\fontsize{{13}}{{13}}\\selectfont \\underline{{Section B: Student Social Security Number Change}}}} \\\\
-    \\\\
-    \\indent The University of Houston record of your Social Security Number was originally taken from your application
-    \\indent for admission and may be changed only if the student has obtained a new social security number or an error
-    \\indent was made. In either case, the student must provide a copy of the Social Security Card. \\textbf{{\\underline{{The Social Security}} \\\\
-    \\textbf{{\\underline{{card must include the student's signature and must be submitted with a valid government-}}
-    \\textbf{{\\underline{{issued photo ID.}}}} \\\\
+    \\textbf{{\\fontsize{{13}}{{13}}\\selectfont \\underline{{Section B: Student Social Security Number Change}}}} \\\\\\\\
+    The University of Houston record of your Social Security Number was originally taken from your application for admission and may be changed only if the student has obtained a new social security number or an error was made. In either case, the student must provide a copy of the Social Security Card. The Social Security card must include the student's signature and must be submitted with a valid government-issued photo ID. \\\\
 
     \\textbf{{Check reason for Social Security Number change request:}} \\\\
     \\checkbox{{{latex_checkbox(ssn_change_reason == 'Correction of Error')}}}~Correction of Error
