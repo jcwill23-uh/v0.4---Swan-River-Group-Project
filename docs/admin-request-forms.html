@@ -94,7 +94,8 @@
                 <td>{{ request.submitted_at }}</td>
                 <td>
                 <textarea id="comment-{{ request.id }}" onblur="saveComment({{ request.id }})"
-                    style="vertical-align: top; text-align: left; width: 100%; min-height: 50px; padding: 5px;">
+                    style="vertical-align: top; text-align: left; width: 90%; min-height: 50px; padding: 5px;
+                    resize: none;">
                      {{ request.comments or '' }}
                 </textarea>
                 </td>
