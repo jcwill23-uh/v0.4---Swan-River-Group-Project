@@ -1,3 +1,10 @@
+# INSTRUCTIONS TO RUN:
+# 1. Download Docker Desktop: https://www.docker.com/products/docker-desktop/
+# 2. Open repository in terminal
+# 3. Execute: docker build -t myapp .
+# 4. Execute: docker run -p 8000:8000 myapp
+# 5. Go to: http://localhost:8000
+
 # Use an official Python slim image
 FROM python:3.11-slim
 
