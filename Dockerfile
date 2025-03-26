@@ -1,9 +1,10 @@
 # INSTRUCTIONS TO RUN:
 # 1. Download Docker Desktop: https://www.docker.com/products/docker-desktop/
-# 2. Open repository in terminal
-# 3. Execute: docker build -t myapp .
-# 4. Execute: docker run -p 8000:8000 myapp
-# 5. Go to: http://localhost:8000
+# 2. Open Docker Desktop app
+# 3. Open repository in terminal
+# 4. Execute: docker build -t myapp .
+# 5. Execute: docker run -p 8000:8000 myapp
+# 6. Go to: http://localhost:8000
 
 # Use an official Python slim image
 FROM python:3.11-slim
@@ -45,9 +46,6 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy app code into the container
 COPY . .
 
-# Make startup script executable
-RUN chmod +x startup.sh
-
 # Set permissions for Flask session storage
 RUN mkdir -p /tmp/flask_session
 
@@ -55,4 +53,4 @@ RUN mkdir -p /tmp/flask_session
 EXPOSE 8000
 
 # Default command
-CMD ["./startup.sh"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]
