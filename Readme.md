@@ -6,6 +6,14 @@
 
 This is a basic proof of concept for an authentication system with role-based access control using Office365 for authentication.
 
+Easiest way to run this app:
+  1. Download Docker Desktop: https://www.docker.com/products/docker-desktop/
+  2. Open Docker Desktop app
+  3. Download repository and open path in terminal
+  4. Execute: docker build -t myapp .
+  5. Execute: docker run -p 8000:8000 myapp
+  6. Go to: http://localhost:8000
+
 To run this app locally, you will need to have a database set up on your local host via sqlite, as well as an account on Microsoft Azure. Once you have these, you will need to edit `app.py` as follows:
                                                                                                 Open a terminal (Command Prompt, PowerShell, or Git Bash on Windows; Terminal on macOS/Linux).
                                                                                                 Run the git clone: `git clone https://github.com/jcwill23-uh/Swan-River-Group-Project.git`
