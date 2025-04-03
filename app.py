@@ -25,7 +25,7 @@ load_dotenv()
 # Initialize Flask app
 app = Flask(__name__, template_folder='docs', static_folder='docs')
 #app.secret_key = os.getenv('SECRET_KEY')
-SECRET_KEY = "sWanRiver"
+app.config['SECRET_KEY']= 'sWanRiver'
 
 # Configure session storage
 app.config['SESSION_TYPE'] = 'filesystem'
