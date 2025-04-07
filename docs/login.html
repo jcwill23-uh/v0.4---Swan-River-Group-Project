@@ -36,10 +36,11 @@
         <button onclick="togglePane('signup-pane')" id="create-account-button">Create Account</button>
     </div>
 
+    {% if error %}
+    <p class="error" style="color: red;">{{ error }}</p>
+    {% endif %}
+
     <div class="login_container">
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
 
         <!-- Sign In Pane -->
         <div id="sign-in-pane" class="pane">
