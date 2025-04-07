@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
 from datetime import datetime
 import subprocess
+from werkzeug.security import generate_password_hash, check_password_hash #Password hashing
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -26,6 +28,8 @@ load_dotenv()
 app = Flask(__name__, template_folder='docs', static_folder='docs')
 #app.secret_key = os.getenv('SECRET_KEY')
 app.config['SECRET_KEY']= 'sWanRiver'
+
+
 
 # Configure session storage
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -73,7 +77,9 @@ class User(db.Model):
     first_name = db.Column(db.String(50), nullable=False)
     middle_name = db.Column(db.String(50), nullable=True)
     last_name = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(150), nullable=False) #for creating accounts
     email = db.Column(db.String(100), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(50), default="basicuser")
     status = db.Column(db.String(20), default="active")
     signature_url = db.Column(db.String(255), nullable=True)
@@ -938,6 +944,112 @@ def generate_latex_content(form, user):
     \\end{{document}}
     """
     return latex_content
+
+#--------------------------------------------------------------------------------------------------------------------------------------
+#sign in
+@app.route('/sign_in', methods=['POST'])
+def sign_in():
+    email = request.form['email']
+    password = request.form['password']
+
+    # Query the database for the user
+    user = User.query.filter_by(email=email).first()
+
+    if user:
+        logger.info(f"User {user.email} found in database.")
+
+        # If the password is None (e.g., OAuth users), allow login
+        if not user.password or check_password_hash(user.password, password):
+             # Split the full name into first, middle, and last names
+            name_parts = user.name.split()
+            first_name = name_parts[0]  # First name is the first part
+            middle_name = " ".join(name_parts[1:-1]) if len(name_parts) > 2 else ""  # Middle name, if present
+            last_name = name_parts[-1] if len(name_parts) > 1 else ""  # Last name
+
+            session['user'] = {
+                'first_name': first_name,
+                'middle_name': middle_name,
+                'last_name': last_name,
+                'email': user.email,
+                'role': user.role.strip().lower(),
+                'status': user.status.strip().lower()
+            }
+
+            logger.info(f"User {user.email} logged in with role: {session['user']['role']} and status: {session['user']['status']}")
+
+            # Redirect based on role
+            logger.info(f"Checking role for {user.email}: session['user']['role'] = {session['user']['role']}")
+            if session['user']['role'] == "admin":
+                logger.info(f"Admin {user.email} is being redirected to admin_home.")
+                return redirect(url_for('admin_home'))
+            else:
+                logger.info(f"Basic user {user.email} is being redirected to basic_user_home.")
+                return redirect(url_for('basic_user_home'))
+        else:
+            # Invalid password
+            logger.warning(f"Password mismatch for {user.email}.")
+            return render_template('login.html', error="Invalid password. Please try again.")
+    else:
+        # User not found
+        logger.warning(f"No account found for email: {email}.")
+        return render_template('login.html', error="No account found with this email.")
+
+#create account
+@app.route('/create_account', methods=['GET', 'POST'])
+def create_account():
+    if request.method == 'POST':
+        # Collect form data
+        first_name = request.form['first_name']
+        middle_name = request.form.get('middle_name', '').strip()  # Optional, defaults to empty
+        last_name = request.form['last_name']
+        email = request.form['email'].lower()  # Normalize email
+        password = request.form['password']
+
+        # Concatenate name (first + middle + last)
+        name = f"{first_name} {middle_name} {last_name}".strip()  # Remove extra spaces if middle_name is empty
+
+        # Hash the password securely
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+
+        # Check if the email is already in use
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            return "Error: Email already in use. Please try another email."
+
+        # Create a new User instance
+        new_user = User(
+            first_name=first_name,
+            middle_name=middle_name if middle_name else None,  # Handle optional middle name
+            last_name=last_name,
+            name=name,
+            email=email,
+            password=hashed_password,  # Store the hashed password
+            role="basicuser",  # Default role for manual accounts
+            status="active",   # Default status for new users
+            signature_url=None,  # Optional fields
+            pdf_url=None,        # Optional fields
+        )
+        try:
+            # Insert concatenated name into the database directly using raw SQL or ORM logic
+            db.session.add(new_user)
+            db.session.commit()
+
+            # Update the name field manually if needed
+            new_user.name = name
+            db.session.commit()
+
+            # Redirect to basic user home after account creation
+            return redirect(url_for('basic_user_home'))
+
+        except Exception as e:
+            # Log the error for debugging purposes
+            logger.error(f"Database Error: {str(e)}", exc_info=True)
+            return f"Error: An issue occurred while creating the account. {str(e)}"
+
+    # Render the form
+    return render_template('login.html')
+
+#---------------------------------------------------------------------------------------------------------------------------
 
 # Admin Routes
 @app.route('/admin_home')
