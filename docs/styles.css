@@ -441,3 +441,120 @@ body.userList tbody tr:hover {
     font-size: 16px;
     padding: 5px;
 }
+
+/* Container for the form with side-by-side panes */
+.login_container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    width: 70%;
+    max-width: 800px;
+    margin: auto;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: var(--primary-color);
+}
+
+/* Style for the buttons that switch between forms */
+.login_buttons {
+    position: relative; /* Use relative positioning to prevent overlap */
+    margin: 20px auto;  /* Center buttons and add vertical spacing */
+    display: flex;
+    gap: 20px; /* Add spacing between buttons */
+    justify-content: center; /* Align buttons in the center horizontally */
+}
+
+.login_buttons button {
+    background-color: var(--secondary-color);
+    color: var(--darker-white);
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.login_buttons button:hover {
+    background-color: var(--darker-secondary);
+}
+
+/* Side-by-side panes */
+.pane {
+    width: 100%; /* Make the panes fill the container horizontally */
+    height: 100%; /* Ensure panes fill the container vertically */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.5s ease;
+    background-color: var(--secondary-color); /* Green background for the panes */
+    color: var(--darker-white); /* Text color */
+    box-sizing: border-box; /* Ensure padding doesn’t affect dimensions */
+}
+
+
+/* Hides a pane during transition */
+.pane.hidden {
+    transform: translateX(100%); /* Smoothly hide the pane */
+    display: none; /* Completely hide the pane */
+}
+
+
+/* Forms inside each pane */
+.login_container {
+    width: 100%; /* Full container width */
+    max-width: 400px; /* Limit overall width for better focus */
+    margin: 0 auto; /* Center form horizontally */
+    padding: 20px; /* Add internal padding to create breathing room */
+    box-sizing: border-box; /* Ensure consistent dimensions */
+}
+
+
+.login_label {
+    display: block;
+    margin-bottom: 10px;
+    margin-left: 5px; /* Add horizontal padding to align labels */
+    font-weight: bold;
+    color: var(--darker-white);
+}
+
+.login_input {
+    width: 100%;
+    padding: 12px 15px; /* Increase horizontal padding */
+    margin-bottom: 20px;
+    border: 1px solid var(--secondary-color);
+    border-radius: 5px;
+    background-color: var(--primary-color);
+    color: var(--darker-white);
+    font-size: 14px; /* Adjust font size for readability */
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
+.login_input:focus {
+    border-color: var(--darker-secondary);
+    outline: none;
+}
+
+button.submit {
+    width: 50%; /* Make the button fill the form width */
+    margin-top: 20px; /* Add spacing above the button */
+    margin-bottom: 20px;
+    background-color: var(--darker-secondary); /* Darker background for the button */
+    color: var(--darker-white); /* Text color for readability */
+    border: none; /* Remove default border */
+    padding: 15px 20px; /* Add more padding for a larger button */
+    font-size: 16px; /* Font size for text inside button */
+    border-radius: 25px; /* Make the button rounder with a large border-radius */
+    cursor: pointer; /* Change cursor to pointer for interactivity */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth color and hover effects */
+}
+
+button.submit:hover {
+    background-color: #1a2e2e; /* Slightly darker shade for hover state */
+    transform: scale(1.05); /* Slight scaling effect for hover */
+}
