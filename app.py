@@ -29,8 +29,6 @@ app = Flask(__name__, template_folder='docs', static_folder='docs')
 #app.secret_key = os.getenv('SECRET_KEY')
 app.config['SECRET_KEY']= 'sWanRiver'
 
-
-
 # Configure session storage
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False
@@ -66,6 +64,23 @@ engine = create_engine(
 # Bind engine to SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = engine.url
 db = SQLAlchemy(app)
+
+# Azure Blob Storage Configuration - USER'S SIGNATURE PHOTO
+SIGNATURE_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=usersignatures;AccountKey=rGwYQGqikAfq0XDTasLRbd5HTQkbVW2s8NClGZ9NGdCknqdp8MBGEo8/WEdd/GO205SYcwyOz+cL+ASt/PQdPQ==;EndpointSuffix=core.windows.net"
+SIGNATURE_CONTAINER_NAME = "signatures"
+STORAGE_ACCOUNT_NAME = "usersignatures"
+
+# Azure Blob Storage Configuration - PDF's
+PDF_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=swanriverpdfs;AccountKey=ngToSF78m/0QeZVrW6cgw4xbRfhC+5AsuLJzB0vXoLroL7diVT59uvpIiklgcpc7UqyVHjVH9k5q+AStzdWBMw==;EndpointSuffix=core.windows.net"
+PDF_CONTAINER_NAME = "releaseforms"
+
+# Initialize Azure Blob Clients
+signature_blob_service = BlobServiceClient.from_connection_string(SIGNATURE_STORAGE_CONNECTION_STRING)
+pdf_blob_service = BlobServiceClient.from_connection_string(PDF_STORAGE_CONNECTION_STRING)
+
+# Container Clients
+signature_container_client = signature_blob_service.get_container_client(SIGNATURE_CONTAINER_NAME)
+pdf_container_client = pdf_blob_service.get_container_client(PDF_CONTAINER_NAME)
 
 # ---- Database Models ----
 
@@ -128,6 +143,34 @@ class ReleaseFormRequest(db.Model):
     old_ssn = db.Column(db.String(11), nullable=True)
     new_ssn = db.Column(db.String(11), nullable=True)
 
+    #RCL Form fields
+    rcl_reason = db.Column(db.String(50))
+    academic_subreason = db.Column(db.String(50))
+    iai_explanation = db.Column(db.Text)
+    icl_class1 = db.Column(db.String(255))
+    icl_prof1 = db.Column(db.String(255))
+    icl_sign1 = db.Column(db.String(255))
+    icl_date1 = db.Column(db.String(255))
+    icl_class2 = db.Column(db.String(255))
+    icl_prof2 = db.Column(db.String(255))
+    icl_sign2 = db.Column(db.String(255))
+    icl_date2 = db.Column(db.String(255))
+    medical_subreason = db.Column(db.String(50))
+    final_hours = db.Column(db.String(10))
+    uh_hours = db.Column(db.String(10))
+    other_hours = db.Column(db.String(10))
+    other_school = db.Column(db.String(255))
+    rcl_term = db.Column(db.String(10))
+    rcl_term_year_fall = db.Column(db.String(4))
+    rcl_term_year_spring = db.Column(db.String(4))
+    drop_class_1 = db.Column(db.String(255))
+    drop_class_2 = db.Column(db.String(255))
+    drop_class_3 = db.Column(db.String(255))
+    hours_after_drop = db.Column(db.String(10))
+    hours_term = db.Column(db.String(10))
+    hours_year_fall = db.Column(db.String(4))
+    hours_year_spring = db.Column(db.String(4))
+
     # Signature & PDF Storage
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
@@ -144,6 +187,333 @@ class ReleaseFormRequest(db.Model):
 # ---- API Routes ----
 
 # Route to handle form submission
+@app.route('/submit_course_load', methods=['POST'])
+def submit_course_load():
+    try:
+        data = request.form
+        is_final_submission = data.get("final_submission") == "true"
+        form_id = data.get("form_id")
+
+        # Extract and format names
+        student_name = (data.get('first_name') or "").strip() + " " + (data.get('middle_name') or "").strip() + " " + (data.get('last_name') or "").strip()
+        uhid = data.get("peoplesoft_id", "").strip()
+        user_email = session["user"]["email"]
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        user_id = user.id
+        signature_url = data.get('signature_url', None)
+
+        approval_status = "pending" if is_final_submission else "draft"
+
+        form_instance = None
+
+        if form_id:
+            existing_request = ReleaseFormRequest.query.get(form_id)
+
+            if existing_request:
+                existing_request.student_name = student_name
+                existing_request.peoplesoft_id = uhid
+                existing_request.user_email = user_email
+                existing_request.user_id = user_id
+                existing_request.rcl_reason = data.get("rcl_reason")
+                existing_request.academic_subreason = data.get("academic_subreason")
+                existing_request.iai_explanation = data.get("iai_explanation")
+                existing_request.icl_class1 = data.get("icl_class1")
+                existing_request.icl_prof1 = data.get("icl_prof1")
+                existing_request.icl_sign1 = data.get("icl_sign1")
+                existing_request.icl_date1 = data.get("icl_date1")
+                existing_request.icl_class2 = data.get("icl_class2")
+                existing_request.icl_prof2 = data.get("icl_prof2")
+                existing_request.icl_sign2 = data.get("icl_sign2")
+                existing_request.icl_date2 = data.get("icl_date2")
+                existing_request.medical_subreason = data.get("medical_subreason")
+                existing_request.final_hours = data.get("final_hours")
+                existing_request.uh_hours = data.get("uh_hours")
+                existing_request.other_hours = data.get("other_hours")
+                existing_request.other_school = data.get("other_school")
+                existing_request.rcl_term = data.get("rcl_term")
+                existing_request.rcl_term_year_fall = data.get("rcl_term_year_fall")
+                existing_request.rcl_term_year_spring = data.get("rcl_term_year_spring")
+                existing_request.drop_class_1 = data.get("drop_class_1")
+                existing_request.drop_class_2 = data.get("drop_class_2")
+                existing_request.drop_class_3 = data.get("drop_class_3")
+                existing_request.hours_after_drop = data.get("hours_after_drop")
+                existing_request.hours_term = data.get("hours_term")
+                existing_request.hours_year_fall = data.get("hours_year_fall")
+                existing_request.hours_year_spring = data.get("hours_year_spring")
+                existing_request.signature_url = signature_url
+                existing_request.approval_status = approval_status
+                existing_request.submitted_at = datetime.utcnow() if is_final_submission else None
+                db.session.commit()
+                form_instance = existing_request
+            else:
+                return jsonify({"error": "Draft not found."}), 404
+
+        else:
+            new_request = ReleaseFormRequest(
+                student_name=student_name,
+                peoplesoft_id=uhid,
+                user_email=user_email,
+                user_id=user_id,
+                rcl_reason=data.get("rcl_reason"),
+                academic_subreason=data.get("academic_subreason"),
+                iai_explanation=data.get("iai_explanation"),
+                icl_class1=data.get("icl_class1"),
+                icl_prof1=data.get("icl_prof1"),
+                icl_sign1=data.get("icl_sign1"),
+                icl_date1=data.get("icl_date1"),
+                icl_class2=data.get("icl_class2"),
+                icl_prof2=data.get("icl_prof2"),
+                icl_sign2=data.get("icl_sign2"),
+                icl_date2=data.get("icl_date2"),
+                medical_subreason=data.get("medical_subreason"),
+                final_hours=data.get("final_hours"),
+                uh_hours=data.get("uh_hours"),
+                other_hours=data.get("other_hours"),
+                other_school=data.get("other_school"),
+                rcl_term=data.get("rcl_term"),
+                rcl_term_year_fall=data.get("rcl_term_year_fall"),
+                rcl_term_year_spring=data.get("rcl_term_year_spring"),
+                drop_class_1=data.get("drop_class_1"),
+                drop_class_2=data.get("drop_class_2"),
+                drop_class_3=data.get("drop_class_3"),
+                hours_after_drop=data.get("hours_after_drop"),
+                hours_term=data.get("hours_term"),
+                hours_year_fall=data.get("hours_year_fall"),
+                hours_year_spring=data.get("hours_year_spring"),
+                signature_url=signature_url,
+                approval_status=approval_status,
+                submitted_at=datetime.utcnow() if is_final_submission else None
+            )
+            db.session.add(new_request)
+            db.session.commit()
+            form_instance = new_request
+
+        if not form_instance:
+            return jsonify({"error": "Failed to process form."}), 500
+        
+        # Fetch user object before PDF generation
+        user = User.query.filter_by(email=session["user"]["email"]).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Generate PDF
+        pdf_dir = "/mnt/data"
+        os.makedirs(pdf_dir, exist_ok=True)
+
+        tex_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.tex")
+        pdf_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.pdf")
+
+        with open(tex_file_path, "w") as tex_file:
+            tex_file.write(generate_course_load_pdf(form_instance, user))
+
+        try:
+            pdflatex_path = "pdflatex"
+            os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
+
+            if not os.path.exists(tex_file_path):
+                logger.error("LaTeX file was not created.")
+                return jsonify({"error": "LaTeX file was not created."}), 500
+
+            result = subprocess.run(
+                [pdflatex_path, "-output-directory", pdf_dir, tex_file_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True
+            )
+
+            logger.info(f"pdflatex STDOUT:\n{result.stdout.decode()}")
+            logger.info(f"pdflatex STDERR:\n{result.stderr.decode()}")
+
+        except subprocess.CalledProcessError as e:
+            stderr_output = e.stderr.decode("utf-8", errors="replace")
+            stdout_output = e.stdout.decode("utf-8", errors="replace")
+            logger.error("PDF generation failed with CalledProcessError")
+            logger.error(f"STDOUT:\n{stdout_output}")
+            logger.error(f"STDERR:\n{stderr_output}")
+            return jsonify({"error": f"PDF generation failed. See logs."}), 500
+
+        
+        except FileNotFoundError:
+            return jsonify({"error": "pdflatex not found"}), 500
+
+        blob_name = f"release_forms/form_{form_instance.id}.pdf"
+        blob_client = pdf_container_client.get_blob_client(blob_name)
+
+        with open(pdf_file_path, "rb") as data:
+            if not os.path.exists(pdf_file_path):
+                return jsonify({"error": "PDF file was not created successfully."}), 500
+            blob_client.upload_blob(data, overwrite=True)
+
+        # Store PDF URL in the database
+        pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        form_instance.pdf_url = pdf_url
+        db.session.commit()
+
+        if not is_final_submission:
+            return jsonify({"message": "Draft saved successfully."}), 200
+
+        return jsonify({"message": "Form saved successfully", "pdf_url": pdf_url}), 200
+
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    
+#RCL Form PDF Generation
+def generate_course_load_pdf(form, user):
+    import re
+
+    def latex_escape(text):
+        return re.sub(r'([&_{}%$#])', r'\\\1', text) if text else ""
+
+    def safe_value(val, fallback=r"\hspace{3cm}"):
+        return latex_escape(val) if val else fallback
+
+    signature_path = download_signature(user.signature_url, user.id) if user.signature_url else "default-signature.png"
+
+    academic_subreason_checkbox = "X" if form.academic_subreason == 'IAI' else ""
+    iclp_checkbox = "X" if form.academic_subreason == 'ICLP' else ""
+    medical_checkbox = "X" if form.medical_subreason else ""
+    final_checkbox = "X" if form.final_hours else ""
+    concurrent_checkbox = "X" if form.uh_hours or form.other_hours else ""
+    rcl_fall_checkbox = "X" if form.rcl_term == 'fall' else ""
+    rcl_spring_checkbox = "X" if form.rcl_term == 'spring' else ""
+    fall_hours_check = "X" if form.hours_term == 'fall' else ""
+    spring_hours_check = "X" if form.hours_term == 'spring' else ""
+
+    student_name = latex_escape(form.student_name)
+    ps_id = latex_escape(form.peoplesoft_id)
+    submitted_date = form.submitted_at.strftime('%m/%d/%Y') if form.submitted_at else ""
+    iai_explanation = safe_value(form.iai_explanation)
+    icl_class1 = safe_value(form.icl_class1)
+    icl_prof1 = safe_value(form.icl_prof1)
+    icl_sign1 = safe_value(form.icl_sign1)
+    icl_date1 = safe_value(form.icl_date1)
+    icl_class2 = safe_value(form.icl_class2)
+    icl_prof2 = safe_value(form.icl_prof2)
+    icl_sign2 = safe_value(form.icl_sign2)
+    icl_date2 = safe_value(form.icl_date2)
+    final_hours = safe_value(form.final_hours)
+    uh_hours = safe_value(form.uh_hours)
+    other_hours = safe_value(form.other_hours)
+    other_school = safe_value(form.other_school)
+    rcl_year_fall = safe_value(form.rcl_term_year_fall)
+    rcl_year_spring = safe_value(form.rcl_term_year_spring)
+    drop_class_1 = safe_value(form.drop_class_1)
+    drop_class_2 = safe_value(form.drop_class_2)
+    drop_class_3 = safe_value(form.drop_class_3)
+    hours_after_drop = safe_value(form.hours_after_drop)
+    hours_year_fall = safe_value(form.hours_year_fall)
+    hours_year_spring = safe_value(form.hours_year_spring)
+
+    return rf"""\documentclass[8pt]{{article}}
+\usepackage[top=0.25in, bottom=0.75in, left=0.5in, right=0.5in]{{geometry}}
+\usepackage{{amsmath,amssymb,graphicx,enumitem,array,booktabs,multirow,tikz,hyperref,ulem}}
+\usepackage{{setspace}}
+\setstretch{{0.1}}
+\setlength\parindent{{0pt}}
+\pagestyle{{empty}}
+
+\newcommand{{\checkbox}}[1]{{\tikz[scale=0.5] \draw[thick] (0,0) rectangle (0.3,0.3) node[pos=.5] {{#1}};}}
+\newcommand{{\customline}}{{\rule{{6cm}}{{0.4pt}}}}
+
+\begin{{document}}
+\begin{{center}}
+    \includegraphics[width=5.5cm]{{RCL_Form_logo.png}}
+\end{{center}}
+\small
+{{\footnotesize\textbf{{
+Student Center North, N203, Houston, TX 77204-3024 \quad Phone:(713)743-5065 \quad Email:isssohlp@central.uh.edu \quad \underline{{\href{{http://uh.edu/oiss}}{{http://uh.edu/oisss}}}}
+}}}}
+
+\begin{{center}}
+    \LARGE \textbf{{Reduced Course Load (RCL) Form for Undergraduates}}
+\end{{center}}
+
+F-1 students are required to maintain full-time enrollment while studying in the U.S. Undergraduate and post-baccalaureate students are expected to complete a minimum of 12 hours of course work during the fall and spring semesters. Classes during the summer are optional unless it is the first semester at UH; then an F-1 student has to complete 6 hours. The following form must be completed before dropping below full-time hours after start of classes. \\
+\textbf{{Note:}} Dropping below full course load may involve the loss of resident tuition based on a scholarship, grant, or on-campus employment. \\\\
+\underline{{Please complete the form below by selecting one of the options:}} \\\\
+
+\vspace{{0.5em}}
+\textbf{{1. ACADEMIC DIFFICULTY \underline{{(FIRST SEMESTER ONLY)}}}} \\
+RCL for valid academic difficulties is allowed \underline{{once}} and \underline{{only in the first semester}} when starting a new degree program. A minimum of 6hrs will still have to be completed. This option cannot be used prior to ORD. \\
+
+\vspace{{0.5em}}
+\textbf{{Initial Adjustment Issues (IAI)}} \\
+\checkbox{{{academic_subreason_checkbox}}} I am having initial difficulties with English, reading, or unfamiliarity with American teaching methods. \\
+Please explain: \underline{{{iai_explanation}}} \\
+
+\vspace{{0.5em}}
+\textbf{{Improper Course Level Placement (ICLP)}} \\
+\checkbox{{{iclp_checkbox}}} I am having difficulty with my class(es) due to improper course level placement which may include not having the prerequisites or insufficient background to complete the course at this time. For example, an international student taking U.S. History for the first time (e.g. no previous exposure, insufficient background) or a philosophy course that is based on a worldview that clashes with the student's own culture. \\
+
+\begin{{center}} \textbf{{ICLP CERTIFYING SIGNATURE BY PROFESSOR}} \end{{center}}
+I \textit{{recommend that this student be allowed to drop the following course(s) due to improper course level placement as defined above.}} \\
+\begin{{tabular}}{{@{{}}l p{{2.7cm}} l p{{2.7cm}} l p{{3cm}} l p{{3cm}}@{{}}}}
+    Class& \underline{{{icl_class1}}} & Professor& \underline{{{icl_prof1}}} & Signature& \underline{{{icl_sign1}}} & Date& \underline{{{icl_date1}}} \\
+    Class& \underline{{{icl_class2}}} & Professor& \underline{{{icl_prof2}}} & Signature& \underline{{{icl_sign2}}} & Date& \underline{{{icl_date2}}}
+\end{{tabular}} 
+
+\vspace{{0.5em}}
+\textbf{{2. MEDICAL REASON}} \\
+\vspace{{0.5em}}
+\checkbox{{{medical_checkbox}}} Valid medical reason must be proven with a supporting letter from a licensed medical doctor, clinical psychologist, or doctor of osteopathy. \underline{{The letter has to contain the following information:}} written in English on a letterhead, signed in ink, the recommended credit hours of enrollment, when the below hours should begin and end (if known), details of when student first saw the doctor, and when they advised the student withdraw from course(s). Medical excuses must be renewed each semester. You are only allowed to accumulate 12 months of reduced course load for medical reasons during any given degree level. \textbf{{Zero hours are allowed under this provision of the law only if it is clearly recommended by the licensed medical professional.}} \\
+
+\vspace{{0.5em}}
+\textbf{{3. FINAL SEMESTER}} \\
+\vspace{{0.5em}}
+\checkbox{{{final_checkbox}}} This is my final semester and I only need \underline{{{final_hours}}} hours of course work to complete my degree. I understand that if I am granted a reduced course load and fail to complete my degree as planned, I may be in violation of my legal status and will need to apply for reinstatement. (If you need only one course to finish your program of study, it cannot be taken through onlin/distance education). \\
+
+\vspace{{0.5em}}
+\textbf{{4. CONCURRENTLY ENROLLED}} \\
+\vspace{{0.5em}}
+\checkbox{{{concurrent_checkbox}}} I am taking courses at another college/University and want to drop a course at UH. I will still have 12 hours of enrollment between both schools. After the drop, I will have \underline{{{uh_hours}}} hours at UH and \underline{{{other_hours}}} at \underline{{{other_school}}} (school name). Attach proof of concurrent enrollment. Academic advisor signature is not required for this option, only ISSSO counselor. \\
+
+\vspace{{0.5em}}
+\sloppy
+\noindent\fbox{{%
+  \parbox{{0.97\textwidth}}{{%
+    \hspace*{{0.5em}}%
+    I am applying for a reduced course load for the \checkbox{{{rcl_fall_checkbox}}} Fall 20\underline{{{rcl_year_fall}}} \quad \checkbox{{{rcl_spring_checkbox}}} Spring 20\underline{{{rcl_year_spring}}}
+
+    I want to drop the following class(es): \underline{{{drop_class_1}}}; \underline{{{drop_class_2}}}; \underline{{{drop_class_3}}} (course number). After the drop, I will have a total of \underline{{{hours_after_drop}}} (at UH) for the: \checkbox{{{fall_hours_check}}} Fall 20\underline{{{hours_year_fall}}} \quad \checkbox{{{spring_hours_check}}} Spring 20\underline{{{hours_year_spring}}}
+
+    \small
+    {{\footnotesize{{
+    You must submit a copy of this form to Office of the University Registrar (located in the Welcome Center) if you are requesting the drop after the 1st day of the semester. The approval signature from your Academic Advisor and ISSSO are required to drop a course. You may still be responsible for the tuition and fee charges to the dropped course(s) after passing the deadline.
+    }}}} \\[1ex]
+    \textbf{{Student Name:}} \underline{{{student_name}}} \quad
+    \textbf{{PS ID:}} \underline{{{ps_id}}} \quad
+    \textbf{{Date:}} \underline{{{submitted_date}}} \quad
+    \textbf{{Signature:}} \IfFileExists{{{signature_path}}}{{\includegraphics[width=1.5in]{{{signature_path}}}}}{{(Not Available)}}
+    \hspace*{{0.5em}}%
+  }}
+}}
+
+\vspace{{0.5em}}
+
+\begin{{center}}
+    APPROVAL SIGNATURE FROM ACADEMIC ADVISOR
+\end{{center}}
+
+\begin{{tabular}}{{@{{}}l l l l l l@{{}}}}
+Name: & \rule{{4cm}}{{0.4pt}} & 
+Signature: & \rule{{4cm}}{{0.4pt}} &
+Date: & \rule{{4cm}}{{0.4pt}} \\
+\end{{tabular}}
+
+\vspace{{0.5em}}
+
+\begin{{tabular}}{{@{{}}l l l l l l@{{}}}}
+Name: & \rule{{4cm}}{{0.4pt}} & 
+Signature: & \rule{{4cm}}{{0.4pt}} &
+Date: & \rule{{4cm}}{{0.4pt}} \\
+\end{{tabular}}
+\end{{document}}
+"""
+
 @app.route('/submit_release_form', methods=['POST'])
 def submit_release_form():
     try:
@@ -297,11 +667,18 @@ def edit_draft_form(form_id):
         signature_url = user.signature_url if user else None
 
         # Check if the form is for SSN or Name Change
+        # Check if the form is for SSN or Name Change
         to_change_lower = form.toChange.lower() if form.toChange else ""
         if "ssn" in to_change_lower or "name" in to_change_lower:
             template = "basic_user_ssn.html"  # Load the SSN/Name Change Form
-        else:
-            template = "basic_user_release.html"  # Load the Release Form
+
+        campus = form.campus.lower() if form.campus else ""
+        if "clear lake" in campus or "downtown" in campus or "main" in campus or "victoria" in campus:
+            template = "basic_user_release.html" # Load the Release Form
+
+        rcl_reason = form.rcl_reason.lower() if form.rcl_reason else ""
+        if "academic_difficulty" in rcl_reason or "medical_reason" in rcl_reason or "final_semester" in rcl_reason or "concurrent_enrollment" in rcl_reason:
+            template = "basic_user_course_load.html" # Load reduce course load form
 
         print(f"Draft {form_id} loaded successfully, rendering {template}")  # Confirm successful retrieval
         return render_template(template, form=form, user=user)
@@ -603,6 +980,17 @@ def basic_user_forms():
     # Get the signature URL (if exists)
     signature_url = user.signature_url if user and user.signature_url else ""
     return render_template("basic_user_forms.html", user=session['user'])
+
+@app.route('/basic_user_course_load')
+def basic_user_course_load():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    # Fetch user's signature from the database
+    email = session['user']['email']
+    user = User.query.filter_by(email=email).first()
+    # Get the signature URL (if exists)
+    signature_url = user.signature_url if user and user.signature_url else ""
+    return render_template("basic_user_course_load.html", user=session['user'], signature_url=signature_url)
 
 @app.route('/basic_user_release')
 def basic_user_release():
@@ -1261,23 +1649,6 @@ def admin_get_pdf(form_id):
     if not form or not form.pdf_url:
         return jsonify({"error": "PDF not found"}), 404
     return redirect(form.pdf_url)
-
-# Azure Blob Storage Configuration - USER'S SIGNATURE PHOTO
-SIGNATURE_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=usersignatures;AccountKey=rGwYQGqikAfq0XDTasLRbd5HTQkbVW2s8NClGZ9NGdCknqdp8MBGEo8/WEdd/GO205SYcwyOz+cL+ASt/PQdPQ==;EndpointSuffix=core.windows.net"
-SIGNATURE_CONTAINER_NAME = "signatures"
-STORAGE_ACCOUNT_NAME = "usersignatures"
-
-# Azure Blob Storage Configuration - PDF's
-PDF_STORAGE_CONNECTION_STRING = "DefaultEndpointsProtocol=https;AccountName=swanriverpdfs;AccountKey=ngToSF78m/0QeZVrW6cgw4xbRfhC+5AsuLJzB0vXoLroL7diVT59uvpIiklgcpc7UqyVHjVH9k5q+AStzdWBMw==;EndpointSuffix=core.windows.net"
-PDF_CONTAINER_NAME = "releaseforms"
-
-# Initialize Azure Blob Clients
-signature_blob_service = BlobServiceClient.from_connection_string(SIGNATURE_STORAGE_CONNECTION_STRING)
-pdf_blob_service = BlobServiceClient.from_connection_string(PDF_STORAGE_CONNECTION_STRING)
-
-# Container Clients
-signature_container_client = signature_blob_service.get_container_client(SIGNATURE_CONTAINER_NAME)
-pdf_container_client = pdf_blob_service.get_container_client(PDF_CONTAINER_NAME)
 
 # Upload user signature to Azure Blob Storage
 @app.route('/upload_signature', methods=['POST'])
