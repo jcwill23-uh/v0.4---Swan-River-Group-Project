@@ -21,9 +21,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     <script>
-      function redirectToAdmin() {
-          window.location.href = "/basic_user_home";
-      }
+        function redirectToAdmin() {
+            window.location.href = "/basic_user_home";
+        }
+
+        function previewPDF(url) {
+            const modal = document.getElementById('pdfModal');
+            const frame = document.getElementById('pdfFrame');
+            frame.src = url;
+            modal.style.display = 'block';
+        }
+        function closePDFModal() {
+            const modal = document.getElementById('pdfModal');
+            const frame = document.getElementById('pdfFrame');
+            frame.src = ''; // Clear the PDF source
+            modal.style.display = 'none';
+        }
     </script>
 </head>
 
@@ -38,6 +51,7 @@
                     <th>Student Name</th>
                     <th>Status</th>
                     <th>Submitted Date</th>
+                    <th>Preview PDF</th>
                     <th>Action</th>
                     <th>Comments</th>
                 </tr>
@@ -63,6 +77,13 @@
                             {% endif %}
                         </td>
                         <td>{{ request.submitted_at if request.submitted_at else "Not Submitted" }}</td>
+                        <td>
+                            {% if request.pdf_url %}
+                                <button onclick="previewPDF('/preview_pdf/{{ request.id }}')" class="btn btn-secondary">Preview</button>
+                            {% else %}
+                                <span class="text-muted">Not Available</span>
+                            {% endif %}
+                        </td>                                               
                         <td>
                             {% if request.approval_status == 'draft' %}
                                 <a href="{{ url_for('edit_draft_form', form_id=request.id) }}" class="btn btn-info">Edit Draft</a>
@@ -91,6 +112,14 @@
 
         <button class="back" onclick="redirectToAdmin()">Back to Home</button>
     </div>
+
+    <!-- Modal for PDF Preview -->
+    <div id="pdfModal" style="display:none; position:fixed; top:10%; left:10%; width:80%; height:80%; background:white; border:2px solid #ccc; z-index:1000; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+        <div style="text-align:right; padding:10px;">
+            <button onclick="closePDFModal()" style="padding:5px 10px;">Close</button>
+        </div>
+        <iframe id="pdfFrame" style="width:100%; height:90%; border:none;"></iframe>
+    </div>   
+
 </body>
 </html>
-
