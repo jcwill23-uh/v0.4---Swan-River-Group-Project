@@ -719,32 +719,32 @@
                         method: "POST",
                         body: formData
                     })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.signature_url) {
+                    .then(async res => {
+                        const data = await res.json();
+
+                        if (res.ok && data.signature_url) {
                             const preview = document.getElementById("signaturePreview");
-                            preview.src = data.signature_url + "?t=" + new Date().getTime();  // 🧽 cache buster
+                            preview.src = data.signature_url + "?t=" + new Date().getTime();  // Cache busting
                             preview.style.display = "block";
 
-                            // Attach to hidden input if needed
                             let sigInput = document.querySelector('input[name="signature_url"]');
                             if (!sigInput) {
                                 sigInput = document.createElement("input");
                                 sigInput.type = "hidden";
                                 sigInput.name = "signature_url";
-                                document.getElementById("rclForm").appendChild(sigInput);
+                                document.querySelector("form").appendChild(sigInput);  // Use generic form selector
                             }
                             sigInput.value = data.signature_url;
 
                             alert("Signature saved!");
                             closeSignaturePad();
                         } else {
-                            alert("Upload failed.");
+                            alert("Upload failed: " + (data.error || "No signature URL returned."));
                         }
                     })
                     .catch(err => {
                         console.error("Upload error", err);
-                        alert("Error uploading signature.");
+                        alert("An unexpected error occurred. Please try again.");
                     });
                 });
         }
