@@ -12,7 +12,7 @@ import requests
 import pyodbc
 from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
-from datetime import datetime
+from datetime import datetime, timedelta
 import subprocess
 from werkzeug.security import generate_password_hash, check_password_hash #Password hashing
 
@@ -187,6 +187,34 @@ class ReleaseFormRequest(db.Model):
     def __repr__(self):
         return f"<ReleaseFormRequest {self.id} - {self.student_name} - {self.peoplesoft_id}>"
 
+# ---- VIEWING PDF AS PREVIEW IN POPUP WINDOW ----
+from azure.storage.blob import generate_blob_sas, BlobSasPermissions
+
+@app.route('/preview_pdf/<int:form_id>')
+def preview_pdf(form_id):
+    form = ReleaseFormRequest.query.get(form_id)
+    if not form or not form.pdf_url:
+        return "PDF not found", 404
+
+    blob_name = form.pdf_url.split(f"/{PDF_CONTAINER_NAME}/")[-1]
+
+    sas_token = generate_blob_sas(
+        account_name=pdf_blob_service.account_name,
+        container_name=PDF_CONTAINER_NAME,
+        blob_name=blob_name,
+        account_key=pdf_blob_service.credential.account_key,
+        permission=BlobSasPermissions(read=True),
+        expiry=datetime.utcnow() + timedelta(hours=1),
+        content_disposition="inline; filename=form.pdf",
+        content_type="application/pdf"
+    )
+
+    preview_url = (
+        f"https://{pdf_blob_service.account_name}.blob.core.windows.net/"
+        f"{PDF_CONTAINER_NAME}/{blob_name}?{sas_token}"
+    )
+
+    return redirect(preview_url)
 
 # ---- API Routes ----
 
