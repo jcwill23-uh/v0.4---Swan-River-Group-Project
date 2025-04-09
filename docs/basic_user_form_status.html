@@ -34,6 +34,7 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Form Name</th>
                     <th>Student Name</th>
                     <th>Status</th>
                     <th>Submitted Date</th>
@@ -46,6 +47,7 @@
                     {% for request in requests %}
                     <tr>
                         <td>{{ request.id }}</td>
+                        <td>{{ request.form_name }}</td>
                         <td>{{ request.student_name }}</td>
                         <td>
                             {% if request.approval_status == 'pending' %}
@@ -91,3 +93,4 @@
     </div>
 </body>
 </html>
+
