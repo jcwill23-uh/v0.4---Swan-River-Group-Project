@@ -30,6 +30,15 @@
         function redirectToBasicForms() {
             window.location.href = "/basic_user_forms";
         }
+        function confirmLogout() {
+            var confirmLogout = confirm("Are you sure you want to log out?");
+            if (confirmLogout) {
+                window.location.href = "{{ url_for('index') }}";
+            }
+        }
+        function redirectToIndex() {
+            confirmLogout();
+        }
     </script>
 
 </head>
@@ -37,11 +46,10 @@
 <body class="normal">
     <div class="welcome">
         <h1>Profile Home</h1>
-        <button class="back" onclick="redirectToBasicView()">View Profile</button>
-        <br>
-        <button class="back" onclick="redirectToBasicEditView()">Edit Profile</button>
-        <br>
-        <button class="back" onClick="redirectToBasicForms()">Forms</button>
+        <button class="back" onclick="redirectToBasicView()">View Profile</button><br>
+        <button class="back" onclick="redirectToBasicEditView()">Edit Profile</button><br>
+        <button class="back" onclick="redirectToBasicForms()">Forms</button><br>
+        <button class="back" onclick="redirectToIndex()">Logout</button><br>   
     </div>
 
 </body>
