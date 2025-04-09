@@ -178,6 +178,10 @@ class ReleaseFormRequest(db.Model):
     # Approval Workflow & Status
     approval_status = db.Column(db.String(20), nullable=False, default="pending")  # Values: pending, approved, returned, rejected
     submitted_at = db.Column(db.DateTime, nullable=True, default=datetime.utcnow)
+
+    # Form name
+    form_name = db.Column(db.String(255))
+    
     comments = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
@@ -205,6 +209,7 @@ def submit_course_load():
         signature_url = data.get('signature_url', None)
 
         approval_status = "pending" if is_final_submission else "draft"
+        form_name = "RCL"
 
         form_instance = None
 
@@ -245,6 +250,7 @@ def submit_course_load():
                 existing_request.signature_url = signature_url
                 existing_request.approval_status = approval_status
                 existing_request.submitted_at = datetime.utcnow() if is_final_submission else None
+                existing_request.form_name = form_name
                 db.session.commit()
                 form_instance = existing_request
             else:
@@ -284,6 +290,7 @@ def submit_course_load():
                 hours_year_spring=data.get("hours_year_spring"),
                 signature_url=signature_url,
                 approval_status=approval_status,
+                form_name=form_name,
                 submitted_at=datetime.utcnow() if is_final_submission else None
             )
             db.session.add(new_request)
@@ -548,6 +555,7 @@ def submit_release_form():
         signature_url = data.get('signature_url', None)
 
         approval_status = "pending" if is_final_submission else "draft"
+        form_name = "Release Records"
 
         form_instance = None
 
@@ -569,6 +577,7 @@ def submit_release_form():
                 existing_request.other_category_text = other_category_text
                 existing_request.other_info_text = other_info_text
                 existing_request.other_purpose_text = other_purpose_text
+                existing_request.form_name = form_name
                 db.session.commit()
                 form_instance = existing_request
             else:
@@ -589,7 +598,8 @@ def submit_release_form():
                 approval_status=approval_status,
                 other_category_text=other_category_text,
                 other_info_text=other_info_text,
-                other_purpose_text=other_purpose_text
+                other_purpose_text=other_purpose_text,
+                form_name=form_name
             )
             db.session.add(new_request)
             db.session.commit()
@@ -695,6 +705,7 @@ def submit_ssn_form():
         data = request.form
         is_final_submission = data.get("final_submission") == "true"
         form_id = data.get("form_id")
+        form_name = "Name/SSN Change"
 
         # Extract and format names
         student_name = f"{data.get('first_name', '').strip()} {data.get('middle_name', '').strip()} {data.get('last_name', '').strip()}"
@@ -763,6 +774,7 @@ def submit_ssn_form():
                 existing_request.new_ssn = new_ssn
                 existing_request.signature_url = signature_url
                 existing_request.approval_status = "draft" if not is_final_submission else "pending"
+                existing_request.form_name = form_name
                 db.session.commit()
                 form_instance = existing_request
             else:
@@ -792,6 +804,7 @@ def submit_ssn_form():
                 old_ssn=old_ssn,
                 new_ssn=new_ssn,
                 signature_url=signature_url,
+                form_name=form_name,
                 approval_status="draft" if not is_final_submission else "pending",
                 submitted_at=datetime.utcnow() if is_final_submission else None
             )
