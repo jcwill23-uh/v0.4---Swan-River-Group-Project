@@ -63,6 +63,19 @@
                 });
             }
         }
+
+        function previewPDF(url) {
+            const modal = document.getElementById('pdfModal');
+            const frame = document.getElementById('pdfFrame');
+            frame.src = url;
+            modal.style.display = 'block';
+        }
+        function closePDFModal() {
+            const modal = document.getElementById('pdfModal');
+            const frame = document.getElementById('pdfFrame');
+            frame.src = ''; // Clear the PDF source
+            modal.style.display = 'none';
+        }
     </script>
 </head>
 
@@ -71,39 +84,47 @@
         <h1>View New Requested Forms</h1><br>
         <table id="userTable">
             <thead>
-                 <tr>
-                <th>Student Name</th>
-                <th>Form Name</th>
-                <th>PDF URL</th>
-                <th>Status</th>
-                <th>Action</th>
-                <th>Submitted At</th>
-                <th>Comments</th>
-            </tr>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Form Name</th>
+                    <th>Preview PDF</th>
+                    <th>Download PDF</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                    <th>Submitted At</th>
+                    <th>Comments</th>
+                </tr>
             </thead>
             <tbody id="userTableBody">
                 {% if requests %}
                     {% for request in requests %}
                     <tr>
-                <td>{{ request.student_name }}</td>
-                <td>{{ request.form_name }}</td>
-                <td><button onclick="viewPDF('{{ request.pdf_url }}')">View PDF</button></td>
-                <td>{{ request.approval_status }}</td>
-                <td class="action-buttons">
-                    <button onclick="approveRequest({{ request.id }})">Approve</button>
-                    <button onclick="declineRequest({{ request.id }})">Decline</button>
-                </td>
-                <td>{{ request.submitted_at }}</td>
-                <td>
-                <textarea id="comment-{{ request.id }}" onblur="saveComment({{ request.id }})"
-                    style="vertical-align: top; text-align: left; width: 90%; min-height: 50px; padding: 5px;
-                    resize: none;">
-                     {{ request.comments or '' }}
-                </textarea>
-                </td>
+                        <td>{{ request.student_name }}</td>
+                        <td>{{ request.form_name }}</td>
+                        <td>
+                            {% if request.pdf_url %}
+                                <button onclick="previewPDF('/preview_pdf/{{ request.id }}')" class="btn btn-secondary">Preview PDF</button>
+                            {% else %}
+                                <span class="text-muted">Not Available</span>
+                            {% endif %}
+                        </td>
+                        <td><button onclick="viewPDF('{{ request.pdf_url }}')">Download PDF</button></td>
+                        <td>{{ request.approval_status }}</td>
+                        <td class="action-buttons">
+                            <button onclick="approveRequest({{ request.id }})">Approve</button>
+                            <button onclick="declineRequest({{ request.id }})">Decline</button>
+                        </td>
+                        <td>{{ request.submitted_at }}</td>
+                        <td>
+                            <textarea id="comment-{{ request.id }}" onblur="saveComment({{ request.id }})"
+                                style="vertical-align: top; text-align: left; width: 90%; min-height: 50px; padding: 5px;
+                                resize: none;">
+                                {{ request.comments or '' }}
+                            </textarea>
+                        </td>
                
                 <!--<td>{{ request.pdf_url }}</td>-->
-            </tr>
+                    </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
@@ -161,6 +182,15 @@
         
         <button class="back" onclick="redirectToAdmin()">Back to Home</button>
     </div>
+
+    <!-- Modal for PDF Preview -->
+    <div id="pdfModal" style="display:none; position:fixed; top:10%; left:10%; width:80%; height:80%; background:white; border:2px solid #ccc; z-index:1000; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+        <div style="text-align:right; padding:10px;">
+            <button onclick="closePDFModal()" style="padding:5px 10px;">Close</button>
+        </div>
+        <iframe id="pdfFrame" style="width:100%; height:90%; border:none;"></iframe>
+    </div>     
+
 </body>
 
 </html>
