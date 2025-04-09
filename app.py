@@ -676,18 +676,15 @@ def edit_draft_form(form_id):
 
         signature_url = user.signature_url if user else None
 
-        # Check if the form is for SSN or Name Change
-        # Check if the form is for SSN or Name Change
-        to_change_lower = form.toChange.lower() if form.toChange else ""
-        if "ssn" in to_change_lower or "name" in to_change_lower:
+        # Check form name and redirect accordingly
+        form_name = form.form_name.lower() if form.form_name else ""
+        if "name/ssn change" in form_name:
             template = "basic_user_ssn.html"  # Load the SSN/Name Change Form
 
-        campus = form.campus.lower() if form.campus else ""
-        if "clear lake" in campus or "downtown" in campus or "main" in campus or "victoria" in campus:
+        if "release records" in form_name:
             template = "basic_user_release.html" # Load the Release Form
-
-        rcl_reason = form.rcl_reason.lower() if form.rcl_reason else ""
-        if "academic_difficulty" in rcl_reason or "medical_reason" in rcl_reason or "final_semester" in rcl_reason or "concurrent_enrollment" in rcl_reason:
+            
+        if "rcl" in form_name:
             template = "basic_user_course_load.html" # Load reduce course load form
 
         print(f"Draft {form_id} loaded successfully, rendering {template}")  # Confirm successful retrieval
