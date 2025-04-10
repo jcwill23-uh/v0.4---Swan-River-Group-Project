@@ -15,6 +15,10 @@ from azure.storage.blob import BlobServiceClient
 from datetime import datetime, timedelta
 import subprocess
 from werkzeug.security import generate_password_hash, check_password_hash #Password hashing
+from datetime import datetime
+from datetime import datetime
+import os
+import subprocess
 
 
 # Set up logging
@@ -406,6 +410,10 @@ def generate_course_load_pdf(form, user):
     def safe_value(val, fallback=r"\hspace{3cm}"):
         return latex_escape(val) if val else fallback
 
+     # Add processing for reviewed_by and reviewed_date
+    reviewed_by = latex_escape(form.reviewed_by) if getattr(form, "reviewed_by", None) else r"\hspace{3cm}"
+    reviewed_date = form.reviewed_at.strftime('%m/%d/%Y') if getattr(form, "reviewed_at", None) else r"\hspace{3cm}"
+
     signature_path = download_signature(user.signature_url, user.id) if user.signature_url else "default-signature.png"
 
     academic_subreason_checkbox = "X" if form.academic_subreason == 'IAI' else ""
@@ -546,6 +554,22 @@ Name: & \rule{{4cm}}{{0.4pt}} &
 Signature: & \rule{{4cm}}{{0.4pt}} &
 Date: & \rule{{4cm}}{{0.4pt}} \\
 \end{{tabular}}
+
+\vfill
+
+    % Approval Section 
+    \noindent
+    \begin{{center}}
+        \fbox{{
+            \begin{{minipage}}{{0.9\textwidth}}
+                \vspace{{0.3cm}} % Adds vertical space at the top
+                \textbf{{Reviewed By:  }} \underline{{{reviewed_by}}} \hspace{{3in}} \textbf{{Date: }} \underline{{{reviewed_date}}}
+                \vspace{{1.3cm}} % Adds vertical space at the bottom
+
+            \end{{minipage}}
+        }}
+    \end{{center}}
+
 \end{{document}}
 """
 
@@ -1104,6 +1128,10 @@ def generate_ssn_form(form, user):
     def latex_checkbox(condition):
         return r"$\boxtimes$" if condition else r"$\square$"
 
+    # Add processing for reviewed_by and reviewed_date
+    reviewed_by = latex_escape(form.reviewed_by) if getattr(form, "reviewed_by", None) else r"\hspace{3cm}"
+    reviewed_date = form.reviewed_at.strftime('%m/%d/%Y') if getattr(form, "reviewed_at", None) else r"\hspace{3cm}"
+
     # Process checkboxes for changes
     to_change = [t.strip() for t in form.toChange.split(",") if t] if form.toChange else []
 
@@ -1224,6 +1252,20 @@ def generate_ssn_form(form, user):
     \\vspace{{0.5em}}
 
     \\textbf{{SIGNATURE (REQUIRED):}} \\includegraphics[height=1cm]{{{signature_path}}} \\hspace{{4em}} \\textbf{{Date:}} \\underline{{\\today}}
+
+    \\vfill
+
+    % Approval Section with Vertical Space
+    \\noindent
+    \\begin{{center}}
+        \\fbox{{
+            \\begin{{minipage}}{{0.9\\textwidth}}
+                \\vspace{{0.3cm}} % Adds vertical space at the top
+                \\textbf{{Reviewed By:}} \\underline{{{reviewed_by}}} \\hspace{{3in}} \\textbf{{Date:}} \\underline{{{reviewed_date}}}
+                \\vspace{{1.3cm}} % Adds vertical space at the bottom
+            \\end{{minipage}}
+        }}
+    \\end{{center}}
     
     \\vfill
     \\noindent
@@ -1241,12 +1283,23 @@ def generate_latex_content(form, user):
     """
     Generates a one-page LaTeX document for the authorization form.
     """
+    import re
+
+    # Escape LaTeX special characters in user inputs
+    def latex_escape(text):
+        return re.sub(r'([&_{}%$#])', r'\\\1', text) if text else ""
+
+
     # Download signature locally if it's a URL
     signature_path = download_signature(user.signature_url, user.id) if user.signature_url else "/mnt/data/default-signature.png"
 
     # Define LaTeX checkbox symbols
     def latex_checkbox(condition):
         return r"$\boxtimes$" if condition else r"$\square$"
+
+    # Add processing for reviewed_by and reviewed_date
+    reviewed_by = latex_escape(form.reviewed_by) if getattr(form, "reviewed_by", None) else r"\hspace{3cm}"
+    reviewed_date = form.reviewed_at.strftime('%m/%d/%Y') if getattr(form, "reviewed_at", None) else r"\hspace{3cm}"
 
     # Process selected checkboxes
     categories = [c.strip() for c in form.categories.split(",") if c] if form.categories else []
@@ -1264,6 +1317,7 @@ def generate_latex_content(form, user):
     \\usepackage{{amssymb}}
     \\usepackage{{multicol}}
     \\usepackage{{ragged2e}}
+    \\usepackage{{hyperref}}
 
     % Define checkbox formatting
     \\newcommand{{\\checkbox}}[1]{{\\hspace{{2em}} #1}}
@@ -1354,8 +1408,9 @@ def generate_latex_content(form, user):
         
         \\textbf{{Student Signature}} & \\textbf{{Date:}} \\\\
     \\end{{tabular}} \\\\
-
+    
     \\vfill
+
 
     % Bottom Section
     \\noindent
@@ -1366,6 +1421,20 @@ def generate_latex_content(form, user):
         OGC-SF-2006-02 Revised 11.10.2022 & \\textbf{{Note: Modification of this Form requires approval of OGC}} \\\\
         Page 1 of 1 & \\\\
     \\end{{tabular}}
+
+    \\vfill
+
+    % Approval Section with Vertical Space
+    \\noindent
+    \\begin{{center}}
+        \\fbox{{
+            \\begin{{minipage}}{{0.9\\textwidth}}
+                \\vspace{{0.3cm}} % Adds vertical space at the top
+                \\textbf{{Reviewed By:}} \\underline{{{reviewed_by}}} \\hspace{{3in}} \\textbf{{Date:}} \\underline{{{reviewed_date}}}
+                \\vspace{{1.3cm}} % Adds vertical space at the bottom
+            \\end{{minipage}}
+        }}
+    \\end{{center}}
 
     \\end{{document}}
     """
@@ -1739,21 +1808,148 @@ def upload_user_signature():
 
 @app.route('/approve_request/<int:request_id>', methods=['POST'])
 def approve_request(request_id):
-    request = ReleaseFormRequest.query.get(request_id)
-    if request:
-        request.approval_status = "approved"
+    try:
+        # Fetch the form request record
+        form_instance = ReleaseFormRequest.query.get(request_id)
+        if not form_instance:
+            return jsonify({"error": "Request not found"}), 404
+
+        # Add debugging log to confirm form_name
+        logger.info(f"Form name received: {form_instance.form_name}")
+
+        # Get the current user (the reviewer)
+        user = User.query.filter_by(email=session["user"]["email"]).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Update the form's status to "approved"
+        form_instance.approval_status = "approved"
+        form_instance.reviewed_by = user.first_name
+        form_instance.reviewed_at = datetime.utcnow()
         db.session.commit()
-        return jsonify({"message": "Request approved successfully"}), 200
-    return jsonify({"error": "Request not found"}), 404
+
+        # Conditional logic for form_name
+        if form_instance.form_name.strip().lower() == "name/ssn change".lower():
+            pdf_content = generate_ssn_form(form_instance, user)
+        elif form_instance.form_name.strip().lower() == "release records".lower():
+            pdf_content = generate_latex_content(form_instance, user)
+        elif form_instance.form_name.strip().lower() == "rcl".lower():
+            pdf_content = generate_course_load_pdf(form_instance, user)
+        else:
+            logger.error(f"Unknown form_name '{form_instance.form_name}' received.")
+            return jsonify({"error": f"Unknown form type '{form_instance.form_name}'. Supported types are: Name/SSN Change, Release Records, RCL"}), 400
+
+        # Save and process the LaTeX document
+        pdf_dir = "/mnt/data"
+        os.makedirs(pdf_dir, exist_ok=True)
+        tex_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.tex")
+        pdf_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.pdf")
+
+        with open(tex_file_path, "w") as tex_file:
+            tex_file.write(pdf_content)
+
+        try:
+            pdflatex_path = "pdflatex"
+            os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
+            result = subprocess.run(
+                [pdflatex_path, "-output-directory", pdf_dir, tex_file_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True
+            )
+            logger.info(f"pdflatex output: {result.stdout.decode('utf-8')}")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"PDF generation failed: {e.stderr.decode('utf-8')}")
+            return jsonify({"error": "PDF generation failed. See logs."}), 500
+
+        # Upload the PDF to Blob Storage
+        blob_name = f"release_forms/form_{form_instance.id}.pdf"
+        blob_client = pdf_container_client.get_blob_client(blob_name)
+        with open(pdf_file_path, "rb") as pdf_data:
+            blob_client.upload_blob(pdf_data, overwrite=True)
+
+        # Update the form's PDF URL in the database
+        pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        form_instance.pdf_url = pdf_url
+        db.session.commit()
+
+        return jsonify({"message": "Request approved successfully.", "pdf_url": pdf_url}), 200
+
+    except Exception as e:
+        logger.error(f"Error occurred: {str(e)}")
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+        #---------------------------------------------------------------------------------------------------------------------------------------
 
 @app.route('/decline_request/<int:request_id>', methods=['POST'])
 def decline_request(request_id):
-    request = ReleaseFormRequest.query.get(request_id)
-    if request:
-        request.approval_status = "declined"
+    try:
+        # Fetch the form request record
+        form_instance = ReleaseFormRequest.query.get(request_id)
+        if not form_instance:
+            return jsonify({"error": "Request not found"}), 404
+
+        # Get the current user (the reviewer)
+        user = User.query.filter_by(email=session["user"]["email"]).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Update the form's status to "declined"
+        form_instance.approval_status = "declined"
+        form_instance.reviewed_by = user.first_name
+        form_instance.reviewed_at = datetime.utcnow()
         db.session.commit()
-        return jsonify({"message": "Request declined successfully"}), 200
-    return jsonify({"error": "Request not found"}), 404
+
+        # Determine the appropriate LaTeX generation function based on form_name
+        if form_instance.form_name.strip().lower() == "name/ssn change".lower():
+            pdf_content = generate_ssn_form(form_instance, user)
+        elif form_instance.form_name.strip().lower() == "release records".lower():
+            pdf_content = generate_latex_content(form_instance, user)
+        elif form_instance.form_name.strip().lower() == "rcl".lower():
+            pdf_content = generate_course_load_pdf(form_instance, user)
+        else:
+            logger.error(f"Unknown form_name '{form_instance.form_name}' received.")
+            return jsonify({"error": f"Unknown form type '{form_instance.form_name}'. Supported types are: Name/SSN Change, Release Records, RCL"}), 400
+
+        # Save and process the LaTeX document
+        pdf_dir = "/mnt/data"
+        os.makedirs(pdf_dir, exist_ok=True)
+        tex_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.tex")
+        pdf_file_path = os.path.join(pdf_dir, f"form_{form_instance.id}.pdf")
+
+        with open(tex_file_path, "w") as tex_file:
+            tex_file.write(pdf_content)
+
+        try:
+            pdflatex_path = "pdflatex"
+            os.environ["PATH"] += os.pathsep + os.path.dirname(pdflatex_path)
+            result = subprocess.run(
+                [pdflatex_path, "-output-directory", pdf_dir, tex_file_path],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True
+            )
+            logger.info(f"pdflatex output: {result.stdout.decode('utf-8')}")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"PDF generation failed: {e.stderr.decode('utf-8')}")
+            return jsonify({"error": "PDF generation failed. See logs."}), 500
+
+        # Upload the PDF to Blob Storage
+        blob_name = f"release_forms/form_{form_instance.id}.pdf"
+        blob_client = pdf_container_client.get_blob_client(blob_name)
+        with open(pdf_file_path, "rb") as pdf_data:
+            blob_client.upload_blob(pdf_data, overwrite=True)
+
+        # Update the form's PDF URL in the database
+        pdf_url = f"https://{pdf_blob_service.account_name}.blob.core.windows.net/{PDF_CONTAINER_NAME}/{blob_name}"
+        form_instance.pdf_url = pdf_url
+        db.session.commit()
+
+        return jsonify({"message": "Request declined successfully.", "pdf_url": pdf_url}), 200
+
+    except Exception as e:
+        logger.error(f"Error occurred: {str(e)}")
+        return jsonify({"error": "An unexpected error occurred."}), 500
 
 # Save comments
 @app.route('/update_comment/<int:request_id>', methods=['POST'])
