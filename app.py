@@ -1140,20 +1140,13 @@ def generate_ssn_form(form, user):
     new_ssn_parts = form.new_ssn.split("-") if form.new_ssn else ["", "", ""]
 
     # Fetch student-specific details
-
-    # Split student_name into parts and handle middle/last names correctly
-    student_name_parts = form.student_name.split() if form.student_name else []
-
-    # First name (always first part)
-    student_first_name = latex_escape(student_name_parts[0]) if len(student_name_parts) > 0 else ""
-
-    # Middle name (ONLY if there are exactly 3 parts, e.g., "John Michael Doe")
-    student_middle_name = latex_escape(student_name_parts[1]) if len(student_name_parts) == 3 else ""
-
-    # Last name (everything after the first name if 2+ parts, or empty otherwise)
-    student_last_name = latex_escape(" ".join(student_name_parts[1:])) if len(student_name_parts) > 1 else ""
-
-
+    if form.student_name:
+        student_name_parts = form.student_name.strip().split()
+        student_first_name = latex_escape(student_name_parts[0]) if len(student_name_parts) >= 1 else ""
+        student_last_name = latex_escape(student_name_parts[-1]) if len(student_name_parts) >= 2 else ""
+        student_middle_name = latex_escape(" ".join(student_name_parts[1:-1])) if len(student_name_parts) > 2 else ""
+    else:
+        student_first_name = student_middle_name = student_last_name = ""
 
     peoplesoft_id = latex_escape(form.peoplesoft_id)
     name_change_reason = latex_escape(form.name_change_reason)
