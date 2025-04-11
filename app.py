@@ -18,7 +18,6 @@ from werkzeug.security import generate_password_hash, check_password_hash #Passw
 from datetime import datetime
 from datetime import datetime
 import os
-import subprocess
 
 
 # Set up logging
@@ -1111,6 +1110,7 @@ def download_signature(signature_url, user_id):
             print(f"Error downloading signature: {e}")
     return "/mnt/data/default-signature.png"  # Fallback if the download fails
 
+
 def generate_ssn_form(form, user):
     """
     Generates a LaTeX document for the SSN Change Form.
@@ -1139,10 +1139,22 @@ def generate_ssn_form(form, user):
     old_ssn_parts = form.old_ssn.split("-") if form.old_ssn else ["", "", ""]
     new_ssn_parts = form.new_ssn.split("-") if form.new_ssn else ["", "", ""]
 
-    # Escape input fields to prevent LaTeX errors
-    user_first_name = latex_escape(user.first_name if user.first_name else "")
-    user_middle_name = latex_escape(user.middle_name if user.middle_name else "")
-    user_last_name = latex_escape(user.last_name if user.last_name else "")
+    # Fetch student-specific details
+
+    # Split student_name into parts and handle middle/last names correctly
+    student_name_parts = form.student_name.split() if form.student_name else []
+
+    # First name (always first part)
+    student_first_name = latex_escape(student_name_parts[0]) if len(student_name_parts) > 0 else ""
+
+    # Middle name (ONLY if there are exactly 3 parts, e.g., "John Michael Doe")
+    student_middle_name = latex_escape(student_name_parts[1]) if len(student_name_parts) == 3 else ""
+
+    # Last name (everything after the first name if 2+ parts, or empty otherwise)
+    student_last_name = latex_escape(" ".join(student_name_parts[1:])) if len(student_name_parts) > 1 else ""
+
+
+
     peoplesoft_id = latex_escape(form.peoplesoft_id)
     name_change_reason = latex_escape(form.name_change_reason)
     ssn_change_reason = latex_escape(form.ssn_change_reason)
@@ -1200,7 +1212,7 @@ def generate_ssn_form(form, user):
 
     \\begin{{tabular}}{{@{{}}p{{1.8in}} p{{1.8in}} p{{1.8in}}@{{}}}}
     First Name & Middle Name & Last Name \\\\
-    \\textbf{{\\underline{{{user_first_name}}}}} & \\textbf{{\\underline{{{user_middle_name}}}}} & \\textbf{{\\underline{{{user_last_name}}}}} \\\\
+    \\textbf{{\\underline{{{student_first_name}}}}} & \\textbf{{\\underline{{{student_middle_name}}}}} & \\textbf{{\\underline{{{student_last_name}}}}} \\\\
     \\end{{tabular}}
 
     \\vspace{{1em}}
@@ -1826,6 +1838,7 @@ def approve_request(request_id):
         form_instance.approval_status = "approved"
         form_instance.reviewed_by = user.first_name
         form_instance.reviewed_at = datetime.utcnow()
+
         db.session.commit()
 
         # Conditional logic for form_name
@@ -1898,10 +1911,12 @@ def decline_request(request_id):
         form_instance.approval_status = "declined"
         form_instance.reviewed_by = user.first_name
         form_instance.reviewed_at = datetime.utcnow()
+
         db.session.commit()
 
         # Determine the appropriate LaTeX generation function based on form_name
         if form_instance.form_name.strip().lower() == "name/ssn change".lower():
+            signature_path = "/mnt/data/default-signature.png"
             pdf_content = generate_ssn_form(form_instance, user)
         elif form_instance.form_name.strip().lower() == "release records".lower():
             pdf_content = generate_latex_content(form_instance, user)
