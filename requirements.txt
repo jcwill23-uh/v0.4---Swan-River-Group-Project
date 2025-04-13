@@ -1,0 +1,13 @@
+Flask
+Flask-SQLAlchemy
+Flask-Session
+Authlib
+requests
+python-dotenv
+msal
+pyodbc
+gunicorn
+simplejson
+azure-storage-blob
+pandas
+pygments
