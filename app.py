@@ -99,7 +99,8 @@ class User(db.Model):
     status = db.Column(db.String(20), default="active")
     signature_url = db.Column(db.String(255), nullable=True)
     pdf_url = db.Column(db.String(255), nullable=True)
-
+    clearance_level = db.Column(db.Integer, default=0)
+    manager = db.Column(db.String(20), default="no")
 
 # Form Request Model
 class ReleaseFormRequest(db.Model):
