@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project. Admin User Management">
+    <meta name="keywords" content="swan river, admin, user management, cosc 4353">
+    <meta property="og:title" content="Admin User Management">
+    <meta property="og:description" content="Admin Panel for User Management">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+    <title>Suspend User - Admin</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+
+</head>
+
+<body class="userList">
+    <div>
+        <h1>List of Users</h1>
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Name &#x25B2;&#x25BC;</th>
+                    <th onclick="sortTable(1)">Email &#x25B2;&#x25BC;</th>
+                    <th onclick="sortTable(2)">Role &#x25B2;&#x25BC;</th>
+                    <th onclick="sortTable(3)">Status &#x25B2;&#x25BC;</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="userList">
+                <!-- User rows will be inserted dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <button class="back" onclick="redirectToAdmin()">Back to Home</button>
+
+    <!-- Modal for confirmation -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>Are you sure you want to suspend this user?</h3>
+            <button class="modal-button confirm" onclick="confirmSuspend()">Yes</button>
+            <button class="modal-button cancel" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let users = [];
+        let currentUserIndex = null;
+        let sortDirections = [true, true, true, true];
+        
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/admin/all_users');
+                users = await response.json();
+        
+                if (users.error) {
+                    alert("Error fetching users: " + users.error);
+                    return;
+                }
+        
+                console.log(users);  // Debugging: Check if ID is included
+                renderUserList(users);
+            } catch (error) {
+                console.error("Failed to fetch users", error);
+            }
+        }
+        
+        function renderUserList(users) {
+            const userListElement = document.getElementById("userList");
+            userListElement.innerHTML = users.map((user, index) => `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.role}</td>
+                    <td>${user.status}</td>
+                    <td>
+                        <button class="suspend-btn" onclick="openModal(${index})">Suspend</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function openModal(index) {
+            currentUserIndex = index;
+            document.getElementById('confirmModal').style.display = "block";
+        }
+        
+        async function confirmSuspend() {
+            const userId = users[currentUserIndex].id;
+
+            const response = await fetch(`/admin/deactivate_user/${userId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: "deactivated" })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('User has been suspended');
+                closeModal();
+                fetchUsers();  // Refresh the list of users
+            } else {
+                alert(`Error: ${result.error}`);
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('confirmModal').style.display = "none";
+        }
+        
+        function sortTable(columnIndex) {
+            const sortAscending = sortDirections[columnIndex];
+            sortDirections[columnIndex] = !sortDirections[columnIndex];
+        
+            users.sort((a, b) => {
+                let valueA = Object.values(a)[columnIndex] || "";
+                let valueB = Object.values(b)[columnIndex] || "";
+        
+                return sortAscending ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+            });
+        
+            renderUserList(users);
+        }
+        
+        function redirectToAdmin() {
+            window.location.href = "/admin_home";
+        }
+
+        window.onload = fetchUsers;
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project.">
+    <meta name="keywords" content="swan river, group project, cosc 4353">
+    <meta property="og:title" content="Swan River Group Project">
+    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+
+    <title>Swan River Group Project</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> 
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Cropper.js (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+
+<body class="forms">
+    <h1><u>Reduced Course Load (RCL) Form for Undergraduates</u></h1>
+
+    <!-- FORM INFORMATION SHOULD BE INSERTED HERE -->
+    <div class="release-form-container">
+        <form id="rclForm" action="{{ url_for('submit_course_load') }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="form_id" value="{{ form.id if form else '' }}">
+    
+            <!-- Student Info -->
+            <h3>Student Information</h3>
+            <div class="selection-group">
+                <p>First Name:</p>
+                <input type="text" name="first_name" value="{{ user.first_name }}" readonly>
+    
+                <p>Middle Name:</p>
+                {% if user.middle_name.strip() %}
+                    <input type="text" name="middle_name" value="{{ user.middle_name }}" readonly>
+                {% else %}
+                    <input type="text" name="middle_name" placeholder="Enter Middle Name">
+                {% endif %}
+    
+                <p>Last Name:</p>
+                <input type="text" name="last_name" value="{{ user.last_name }}" readonly>
+    
+                <p>PeopleSoft ID:</p>
+                <input type="text" name="peoplesoft_id" value="{% if form and form.peoplesoft_id %}{{ form.peoplesoft_id }}{% endif %}">
+    
+                <p>Date:</p>
+                <input type="text" name="submission_date" id="submission_date" readonly>
+            </div>
+    
+            <!-- RCL Reason Selection -->
+            <h3>Select the reason for reduced course load:</h3>
+            <div class="selection-group">
+                <label><input type="radio" name="rcl_reason" value="academic_difficulty" onclick="showSection('academic_section')" {% if form and form.rcl_reason == 'academic_difficulty' %}checked{% endif %}> 1. ACADEMIC DIFFICULTY (FIRST SEMESTER ONLY)</label>
+                <label><input type="radio" name="rcl_reason" value="medical_reason" onclick="showSection('medical_section')" {% if form and form.rcl_reason == 'medical_reason' %}checked{% endif %}> 2. MEDICAL REASON</label>
+                <label><input type="radio" name="rcl_reason" value="final_semester" onclick="showSection('final_section')" {% if form and form.rcl_reason == 'final_semester' %}checked{% endif %}> 3. FINAL SEMESTER</label>
+                <label><input type="radio" name="rcl_reason" value="concurrent_enrollment" onclick="showSection('concurrent_section')" {% if form and form.rcl_reason == 'concurrent_enrollment' %}checked{% endif %}> 4. CONCURRENTLY ENROLLED</label>
+            </div>
+
+            <!-- Academic Difficulty Section -->
+            <div id="academic_section" style="display: {% if form and form.rcl_reason == 'academic_difficulty' %}block{% else %}none{% endif %};">
+                <p><strong>RCL for valid academic difficulties is allowed once and only in the first semester when starting a new degree program. A minimum of 6hrs will still have to be completed. This option cannot be used or submitted prior to ORD.</strong></p>
+                <label><input type="radio" name="academic_subreason" value="IAI" {% if form and form.academic_subreason == 'IAI' %}checked{% endif %}> Initial Adjustment Issues (IAI)</label>
+                <p>I am having initial difficulties with the English language, reading requirements, or unfamiliarity with American teaching methods.</p>
+                <p>Please explain:</p>
+                <textarea name="iai_explanation">{{ form.iai_explanation if form else '' }}</textarea>
+                <br>
+                <label><input type="radio" name="academic_subreason" value="ICLP" {% if form and form.academic_subreason == 'ICLP' %}checked{% endif %}> Improper Course Level Placement (ICLP)</label>
+                <p>I am having difficulty with my class(es) due to improper course level placement which may include not having the prerequisites or insufficient background to complete the course at this time. For example, an international student taking U.S. History for the first time (e.g. no previous exposure, insufficient background) or a philosophy course that is based on a worldview that clashes with the student’s own culture.</p>
+                <p><strong>ICLP CERTIFYING SIGNATURE BY PROFESSOR</strong></p>
+                <p>I recommend that this student be allowed to drop the following course(s) due to improper course level placement as defined above.</p>
+                <div>
+                    <p>Class: <input type="text" name="icl_class1" value="{{ form.icl_class1 if form else '' }}"></p>
+                    <p>Professor: <input type="text" name="icl_prof1" value="{{ form.icl_prof1 if form else '' }}"></p>
+                    <p>Signature: <input type="text" name="icl_sign1" value="{{ form.icl_sign1 if form else '' }}"></p>
+                    <p>Date: <input type="text" name="icl_date1" value="{{ form.icl_date1 if form else '' }}"></p>
+                    <br>
+                    <p>Class: <input type="text" name="icl_class2" value="{{ form.icl_class2 if form else '' }}"></p>
+                    <p>Professor: <input type="text" name="icl_prof2" value="{{ form.icl_prof2 if form else '' }}"></p>
+                    <p>Signature: <input type="text" name="icl_sign2" value="{{ form.icl_sign2 if form else '' }}"></p>
+                    <p>Date: <input type="text" name="icl_date2" value="{{ form.icl_date2 if form else '' }}"></p>
+                </div>
+            </div>
+
+            <!-- Medical Reason Section -->
+            <div id="medical_section" style="display: {% if form and form.rcl_reason == 'medical_reason' %}block{% else %}none{% endif %};">
+                <label><input type="radio" name="medical_subreason" value="medical_statement" {% if form and form.medical_subreason == 'medical_statement' %}checked{% endif %}> 
+                    Valid medical reason must be proven with a supporting letter from a licensed medical doctor, clinical psychologist, or doctor of osteopathy. The letter has to contain the following information: written in English on a letterhead, signed in ink, the recommended credit hours of enrollment, when the below hours should begin and end (if known), details of when student first saw the doctor, and when they advised the student to withdraw from course(s). Medical excuses must be renewed each semester. You are only allowed to accumulate 12 months of reduced course load for medical reasons during any given degree level. Zero hours are allowed under this provision of the law only if it is clearly recommended by the licensed medical professional.
+                </label>
+                <br><br>
+                <label><input type="radio" name="medical_subreason" value="letter_attached" {% if form and form.medical_subreason == 'letter_attached' %}checked{% endif %}> 
+                    Letter from a licensed medical doctor, doctor of osteopathy, a licensed psychologist/clinical psychologist is attached.
+                </label>
+                <br><br>
+                <label>Upload Medical Letter:</label>
+                <input type="file" name="medical_letter" accept="application/pdf,image/*">
+            </div>
+
+            <!-- Final Semester Section -->
+            <div id="final_section" style="display: {% if form and form.rcl_reason == 'final_semester' %}block{% else %}none{% endif %};">
+                <p>This is my final semester and I only need <input type="text" name="final_hours" value="{{ form.final_hours if form else '' }}" style="width: 50px;"> hours of course work to complete my degree. I understand that if I am granted a reduced course load and fail to complete my degree as planned, I may be in violation of my legal status and will need to apply for reinstatement. (If you need only one course to finish your program of study, it cannot be taken through online/distance education).</p>
+            </div>
+
+            <!-- Concurrent Enrollment Section -->
+            <div id="concurrent_section" style="display: {% if form and form.rcl_reason == 'concurrent_enrollment' %}block{% else %}none{% endif %};">
+                <p>I am taking courses at another college/University and want to drop a course at UH. I will still have 12 hours of enrollment between both schools. After the drop, I will have 
+                    <input type="text" name="uh_hours" value="{{ form.uh_hours if form else '' }}" style="width: 50px;"> hours at UH and 
+                    <input type="text" name="other_hours" value="{{ form.other_hours if form else '' }}" style="width: 50px;"> hours at 
+                    <input type="text" name="other_school" value="{{ form.other_school if form else '' }}" placeholder="School Name"> (school name).
+                </p>
+                <p>Attach proof of concurrent enrollment. Academic advisor signature is not required for this option, only ISSSO counselor.</p>
+                <label>Upload Proof of Enrollment:</label>
+                <input type="file" name="proof_enrollment" accept="application/pdf,image/*">
+            </div>
+
+            <!-- Universal RCL Details -->
+            <h3>Enrollment Term & Course Drop Info</h3>
+            <div class="selection-group">
+                <p>I am applying for a reduced course load for the:</p>
+                <label><input type="radio" name="rcl_term" value="fall" {% if form and form.rcl_term == 'fall' %}checked{% endif %}> fall semester of 20<input type="text" name="rcl_term_year_fall" value="{{ form.rcl_term_year_fall if form else '' }}" style="width: 40px;"></label><br>
+                <label><input type="radio" name="rcl_term" value="spring" {% if form and form.rcl_term == 'spring' %}checked{% endif %}> spring semester of 20<input type="text" name="rcl_term_year_spring" value="{{ form.rcl_term_year_spring if form else '' }}" style="width: 40px;"></label>
+
+                <br><br>
+                <p>I want to drop the following class(es):
+                    <input type="text" name="drop_class_1" value="{{ form.drop_class_1 if form else '' }}">;
+                    <input type="text" name="drop_class_2" value="{{ form.drop_class_2 if form else '' }}">;
+                    <input type="text" name="drop_class_3" value="{{ form.drop_class_3 if form else '' }}">
+                    (course number) After the drop, I will have a total of <input type="text" name="hours_after_drop" value="{{ form.hours_after_drop if form else '' }}" style="width: 50px;"> hours (at UH) for the:
+                    <label><input type="radio" name="hours_term" value="fall" {% if form and form.hours_term == 'fall' %}checked{% endif %}> Fall semester 20<input type="text" name="hours_year_fall" value="{{ form.hours_year_fall if form else '' }}" style="width: 40px;"></label><br>
+                    <label><input type="radio" name="hours_term" value="spring" {% if form and form.hours_term == 'spring' %}checked{% endif %}> Spring semester of 20<input type="text" name="hours_year_spring" value="{{ form.hours_year_spring if form else '' }}" style="width: 40px;"></label>
+                </p>
+                
+                <br><br>
+                <p><strong>You must submit a copy of this form to Office of the University Registrar (located in the Welcome Center) if you are requesting the drop after the 1st day of the semester. The approval signature from your Academic Advisor and ISSSO are required to drop a course. You may still be responsible for the tuition and fee charges to the dropped course(s) after passing the deadline.</strong></p>
+
+            </div>
+
+            
+            <h3>Please upload a picture of your signature below.</h3>
+
+            <!-- NEW SIGN SIGNATURE METHOD -->
+            <!-- Signature Method Toggle -->
+            <h3>Select Signature Method:</h3>
+            <label><input type="radio" name="signature_method" value="upload" checked onchange="toggleSignatureMethod()"> Upload Image</label>
+            <label><input type="radio" name="signature_method" value="draw" onchange="toggleSignatureMethod()"> Draw Signature</label>
+
+            <!-- Draw Signature Button -->
+            <div id="drawSignatureContainer" style="display: none; margin-top: 10px;">
+                <button type="button" class="back" onclick="openSignaturePad()">Open Signature Pad</button>
+            </div>
+            <div id="signatureModal" style="
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            ">
+                <div style="background: white; padding: 20px; border-radius: 10px;">
+                    <h3>Draw Your Signature</h3>
+                    <canvas id="signaturePad" width="500" height="150" style="border: 1px solid black; background-color: lightgray;"></canvas><br>
+                    <button type="button" onclick="clearSignature()">Clear</button>
+                    <button type="button" onclick="saveSignature()">Save</button>
+                    <button type="button" onclick="closeSignaturePad()">Cancel</button>
+                </div>
+            </div>
+            <!-- END SIGN SIGNATURE METHOD -->
+
+            <input type="file" id="signatureInput" name="signature" accept="image/png, image/jpeg">
+            <br><br>
+            <button class="back" onclick="uploadSignature()">Upload Signature Photo</button>  
+            <div class="signature-container">
+                {% if signature_url %}
+                    <img id="signaturePreview" src="{{ signature_url }}" alt="Signature Image" style="max-width: 200px; max-height: 100px;">
+                {% else %}
+                    <img id="signaturePreview" src="" 
+                        alt="Signature Image" style="display: none;">
+                {% endif %}
+            </div>
+
+            <div id="editControls" style="display: none; text-align: center;">
+                <button onclick="rotateImage()">Rotate</button>
+                <button onclick="cancelEdit()">Cancel</button>
+                <button onclick="saveEditedImage()">Save</button>
+            </div>
+            
+            <div class="button-container">
+                <button id="editPhotoButton" class="back" style="display: {% if signature_url %}'block'{% else %}'none'{% endif %};" onclick="toggleEditControls()">Edit Photo</button>
+                <button class ="back" type="button" onclick="handleFormSubmission(false)">Save For Later</button>
+                <button type="button" class="back" onclick="handleFormSubmission(true)">Submit Form</button>
+
+                <div id="successMessage" style="display: none; color: green;">Form submitted successfully!</div>
+                <div id="errorMessage" style="display: none; color: red;">An error occurred while submitting the form. Please try again.</div>
+
+                <script>
+                    document.getElementById("rclForm").addEventListener("submit", function () {
+                        event.preventDefault(); // Prevent default form submission
+                        // Ensure unchecked checkboxes are submitted
+                        document.querySelectorAll("input[type=checkbox]").forEach(checkbox => {
+                            if (!checkbox.checked) {
+                                let hiddenInput = document.createElement("input");
+                                hiddenInput.type = "hidden";
+                                hiddenInput.name = checkbox.name;
+                                hiddenInput.value = "off";  // Mark a 'off' if unchecked
+                                this.appendChild(hiddenInput);
+                            }
+                        });
+                    
+                        // Ensure "Other" fields are always submitted
+                        document.getElementById("hiddenOtherCategoryText").value = document.getElementById("otherCategoryText").value;
+                        document.getElementById("hiddenOtherInfoText").value = document.getElementById("otherInfoText").value;
+                        document.getElementById("hiddenOtherPurposeText").value = document.getElementById("otherPurposeText").value;
+                    });
+                </script>
+                
+                <button class ="back" onclick="redirectToBasicHome()">Back to Home</button>
+            </div>
+
+        </form>
+    </div>
+    <!-- END OF FORM INFORMATION -->
+
+    <script>
+        let cropper;
+        const previewImage = document.getElementById("signaturePreview");
+        const editControls = document.getElementById("editControls");
+        const editPhotoButton = document.getElementById("editPhotoButton");
+        const fileInput = document.getElementById("signatureInput");
+
+        let originalImageSrc = previewImage.src; // stores original image when opening the editor
+    
+        // Show Cropper when user selects an image
+        fileInput.addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // Keep the existing signature image
+                previewImage.src = previewImage.getAttribute("data-original") || "";
+            }
+        });
+
+        // Toggle Edit Controls
+        function toggleEditControls() {
+            if (editControls.style.display === "none") {
+                initializeCropper();
+                editControls.style.display = "block";
+            } else {
+                editControls.style.display = "none";
+                if (cropper) cropper.destroy();
+            }
+        }
+    
+        // Initialize Cropper.js
+        function initializeCropper() {
+            if (cropper) {
+                cropper.destroy();
+            }
+            cropper = new Cropper(previewImage, {
+                aspectRatio: NaN,  // Freeform cropping
+                viewMode: 1, // Restrict cropping box within the image
+                autoCropArea: 1, // Default full image
+                responsive: true,
+            });
+        }
+    
+        // Rotate Image
+        function rotateImage() {
+            if (cropper) {
+                cropper.rotate(90); // Rotate by 90 degrees
+            }
+        }
+
+        // Cancel Edit
+        function cancelEdit() {
+            if (cropper) {
+                cropper.destroy();
+            }
+            previewImage.src = originalImageSrc; // Restore the original image
+            editControls.style.display = "none"; // Hide controls
+        }
+    
+        // Save Edited Image
+        async function saveEditedImage() {
+            if (!cropper) {
+                alert("Please crop or rotate the image first.");
+                return;
+            }
+    
+            const croppedCanvas = cropper.getCroppedCanvas();
+            croppedCanvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append("signature", blob, "signature.png");
+    
+                try {
+                    const response = await fetch("/upload_signature", {
+                        method: "POST",
+                        body: formData
+                    });
+    
+                    const data = await response.json();
+                    if (response.ok && data.signature_url) {
+                        previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Cache busting
+                        editPhotoButton.style.display = "block"; // Show Edit button after saving
+                        alert("Signature updated successfully!");
+                    } else {
+                        alert("Upload failed: " + data.error);
+                    }
+                } catch (error) {
+                    console.error("Error uploading signature:", error);
+                    alert("An unexpected error occurred. Please try again.");
+                }
+            }, "image/png");
+        }
+        
+        function redirectToBasicHome() {
+            window.location.href = "{{ url_for('basic_user_home') }}";
+        }
+        
+        async function uploadSignature() {
+            const fileInput = document.getElementById("signatureInput");
+            const previewImage = document.getElementById("signaturePreview");
+    
+            if (fileInput.files.length === 0) {
+                alert("Please select a signature file.");
+                return;
+            }
+    
+            const formData = new FormData();
+            formData.append("signature", fileInput.files[0]);
+    
+            try {
+                const response = await fetch("/upload_signature", {
+                    method: "POST",
+                    body: formData
+                });
+    
+                const data = await response.json();
+                if (response.ok && data.signature_url) {
+                    // Update image preview
+                    previewImage.src = data.signature_url + "?t=" + new Date().getTime(); // Prevents caching
+                    previewImage.style.display = "block";
+    
+                    alert("Signature uploaded successfully!");
+                } else {
+                    alert("Upload failed: " + data.error);
+                }
+            } catch (error) {
+                console.error("Error uploading signature:", error);
+                alert("An unexpected error occurred. Please try again.");
+            }
+        }
+
+        document.getElementById("submission_date").value = new Date().toLocaleDateString();
+        
+        async function handleFormSubmission(isFinalSubmission) {
+            const form = document.getElementById("rclForm");
+            const formData = new FormData(form);
+
+            const formIdField = document.querySelector('input[name="form_id"]');
+            if (formIdField && formIdField.value) {
+                formData.append("form_id", formIdField.value);
+            }
+
+            formData.append("final_submission", isFinalSubmission ? "true" : "false");
+
+            try {
+                const response = await fetch("/submit_course_load", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById("successMessage").style.display = "block";
+                    document.getElementById("errorMessage").style.display = "none";
+                    console.log("PDF URL:", data.pdf_url);
+                } else {
+                    document.getElementById("errorMessage").textContent = data.error || "An error occurred.";
+                    document.getElementById("errorMessage").style.display = "block";
+                    document.getElementById("successMessage").style.display = "none";
+                }
+            } catch (error) {
+                console.error("Submission error:", error);
+                document.getElementById("errorMessage").textContent = "An unexpected error occurred.";
+                document.getElementById("errorMessage").style.display = "block";
+                document.getElementById("successMessage").style.display = "none";
+            }
+        }
+
+        function toggleOtherField(textboxId, checkbox) {
+            const textbox = document.getElementById(textboxId);
+            if (checkbox.checked) {
+                textbox.style.display = "block";
+            } else {
+                textbox.style.display = "none";
+                textbox.value = "";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const dateField = document.getElementById("submission_date");
+            if (dateField) {
+                const today = new Date().toISOString().split('T')[0];
+                dateField.value = today;
+            }
+        });
+
+        function showSection(id) {
+            const sections = ['academic_section', 'medical_section', 'final_section', 'concurrent_section'];
+            sections.forEach(section => {
+                const element = document.getElementById(section);
+                if (element) {
+                    element.style.display = section === id ? 'block' : 'none';
+                }
+            });
+        }
+    </script>
+
+    <!-- ALL BELOW IS FOR TOGGLE SIGNATURE METHOD AND DRAW SIGNATURE-->
+    <script>
+        let canvas, ctx, drawing = false;
+        
+        function openSignaturePad() {
+            document.getElementById("signatureModal").style.display = "flex";
+            initCanvas(); // Ensure canvas sizing is applied after display
+        }
+        
+        function closeSignaturePad() {
+            document.getElementById("signatureModal").style.display = "none";
+        }
+        
+        function initCanvas() {
+            canvas = document.getElementById("signaturePad");
+            // Set canvas resolution to match visible size
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            ctx = canvas.getContext("2d");
+
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 2;
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+
+            // Event listeners
+            canvas.onmousedown = startDrawing;
+            canvas.onmousemove = draw;
+            canvas.onmouseup = stopDrawing;
+            canvas.onmouseout = stopDrawing;
+
+            canvas.ontouchstart = startDrawing;
+            canvas.ontouchmove = draw;
+            canvas.ontouchend = stopDrawing;
+            canvas.ontouchcancel = stopDrawing;
+        }
+        
+        function getEventPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+            return { x, y };
+        }
+        
+        function startDrawing(e) {
+            drawing = true;
+            const pos = getEventPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            e.preventDefault();
+        }
+        
+        function draw(e) {
+            if (!drawing) return;
+            const pos = getEventPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            e.preventDefault();
+        }
+        
+        function stopDrawing(e) {
+            drawing = false;
+            ctx.closePath();
+            e.preventDefault();
+        }
+        
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function saveSignature() {
+            const dataURL = canvas.toDataURL("image/png");
+            fetch(dataURL)
+                .then(res => res.blob())
+                .then(blob => {
+                    const formData = new FormData();
+                    formData.append("signature", blob, "signature.png");
+
+                    fetch("/upload_signature", {
+                        method: "POST",
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.signature_url) {
+                            const preview = document.getElementById("signaturePreview");
+                            preview.src = data.signature_url + "?t=" + new Date().getTime();  // 🧽 cache buster
+                            preview.style.display = "block";
+
+                            // Attach to hidden input if needed
+                            let sigInput = document.querySelector('input[name="signature_url"]');
+                            if (!sigInput) {
+                                sigInput = document.createElement("input");
+                                sigInput.type = "hidden";
+                                sigInput.name = "signature_url";
+                                document.getElementById("rclForm").appendChild(sigInput);
+                            }
+                            sigInput.value = data.signature_url;
+
+                            alert("Signature saved!");
+                            closeSignaturePad();
+                        } else {
+                            alert("Upload failed.");
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Upload error", err);
+                        alert("Error uploading signature.");
+                    });
+                });
+        }
+
+        function toggleSignatureMethod() {
+            const method = document.querySelector('input[name="signature_method"]:checked').value;
+            const uploadInput = document.getElementById("signatureInput");
+            const drawButton = document.getElementById("drawSignatureContainer");
+
+            if (method === "upload") {
+                uploadInput.style.display = "inline-block";
+                drawButton.style.display = "none";
+            } else {
+                uploadInput.style.display = "none";
+                drawButton.style.display = "block";
+            }
+        }
+
+    </script>
+        
+</body>
+</html>

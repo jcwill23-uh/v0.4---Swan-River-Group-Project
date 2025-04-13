@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Swan River Group Project</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="userList">
+    <div>
+        <h1>Form Submission Status</h1>
+        <table id="userTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Form Name</th>
+                    <th>Student Name</th>
+                    <th>Status</th>
+                    <th>Submitted Date</th>
+                    <th>Preview PDF</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                {% if requests %}
+                    {% for request in requests %}
+                    <tr>
+                        <td>{{ request.id }}</td>
+                        <td>{{ request.form_name }}</td>
+                        <td>{{ request.student_name }}</td>
+                        <td>
+                            <button 
+                                data-status="{{ request.approval_status|default('pending')|lower }}"
+                                data-reviewed-by="{{ request.reviewed_by|default('Not reviewed yet')|e }}"
+                                data-reviewed-date="{{ request.reviewed_date.strftime('%Y-%m-%d %H:%M') if request.reviewed_date else 'Not reviewed yet' }}"
+                                data-comments="{{ request.comments|default('No comments provided')|e }}"
+                                class="btn-status view-status-btn"
+                            >
+                                View Status
+                            </button>
+                        </td>
+                        <td>{{ request.submitted_at.strftime('%Y-%m-%d %H:%M') if request.submitted_at else "Not Submitted" }}</td>
+                        <td>
+                            {% if request.pdf_url %}
+                            <button onclick="previewPDF('/preview_pdf/{{ request.id }}')" class="preview-btn">
+                                <span class="preview-icon">👁️</span>
+                                <span class="preview-text">Preview</span>
+                              </button>
+                            {% else %}
+                                <span class="text-muted">Not Available</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if request.approval_status == 'draft' %}
+                                <a href="{{ url_for('edit_draft_form', form_id=request.id) }}" class="btn btn-info">Edit Draft</a>
+                            {% elif request.pdf_url %}
+                                <a href="{{ request.pdf_url }}" target="_blank" class="btn btn-primary">Download</a>
+                            {% else %}
+                                <span class="text-muted">Not Available</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="10">No forms have been submitted yet.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <button class="back" onclick="redirectToAdmin()">Back to Home</button>
+    </div>
+
+    <!-- Status Modal -->
+    <div id="statusModal" class="status-modal">
+        <div class="status-popup-frame">
+            <!--<button id="statusCloseBtn" class="status-close-btn">×</button>-->
+            <button id="statusCloseBtn" class="status-close-btn" onclick="closeStatus()">×</button>
+            <div class="status-popup-content">
+                <div id="statusGraphic" class="status-graphic">
+                    <span id="statusIcon"></span>
+                </div>
+                <h3 id="statusTitle" class="status-title"></h3>
+
+                <div class="status-meta">
+                    <div class="status-meta-item">
+                        <div class="status-meta-label">Reviewed By</div>
+                        <div id="reviewedBy" class="status-meta-value">--</div>
+                    </div>
+                    <div class="status-meta-item">
+                        <div class="status-meta-label">Date</div>
+                        <div id="reviewedDate" class="status-meta-value">--</div>
+                    </div>
+                </div>
+
+                <div class="status-comments">
+                    <div class="status-meta-label">Comments</div>
+                    <div id="statusComments" class="status-comment-text">No comments provided</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Modal (if you use this) -->
+    <div id="pdfModal" class="pdf-modal">
+        <div class="pdf-modal-content">
+            <div class="pdf-modal-header">
+                <div class="pdf-modal-title">PDF Preview</div>
+                <button class="pdf-modal-close" onclick="closePDFModal()">×</button>
+            </div>
+            <div class="pdf-modal-body">
+                <div id="pdfLoading" class="pdf-loading"></div>
+                <iframe id="pdfFrame" class="pdf-modal-iframe"></iframe>
+            </div>
+            <div class="pdf-modal-footer">
+                <button class="pdf-modal-btn pdf-modal-btn-download" onclick="downloadPDF()">Download PDF</button>
+                <button class="pdf-modal-btn pdf-modal-btn-close" onclick="closePDFModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('click', function (event) {
+                const statusBtn = event.target.closest('.view-status-btn');
+                if (statusBtn) {
+                    showStatus(
+                        statusBtn.dataset.status,
+                        statusBtn.dataset.reviewedBy,
+                        statusBtn.dataset.reviewedDate,
+                        statusBtn.dataset.comments
+                    );
+                    return;
+                }
+
+                if (event.target.id === 'statusCloseBtn' || event.target.closest('.status-close-btn')) {
+                    closeStatus();
+                    return;
+                }   
+
+                if (event.target === document.getElementById('statusModal')) {
+                    closeStatus();
+                }
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    closeStatus();
+                }
+            });
+        });
+
+        function showStatus(status, reviewedBy, reviewedDate, comments) {
+            const modal = document.getElementById('statusModal');
+            const graphic = document.getElementById('statusGraphic');
+            const icon = document.getElementById('statusIcon');
+            const title = document.getElementById('statusTitle');
+
+            graphic.className = 'status-graphic ' + status.toLowerCase();
+
+            switch (status.toLowerCase()) {
+                case 'approved':
+                    icon.textContent = '✓';
+                    title.textContent = 'Approved!';
+                    break;
+                case 'declined':
+                    icon.textContent = '✗';
+                    title.textContent = 'Declined';
+                    break;
+                default:
+                    icon.textContent = '⏳';
+                    title.textContent = 'Pending Review';
+            }
+
+            document.getElementById('reviewedBy').textContent = reviewedBy || '--';
+            document.getElementById('reviewedDate').textContent = reviewedDate || '--';
+            document.getElementById('statusComments').textContent = comments || 'No comments provided';
+
+            modal.style.display = 'flex';
+        }
+
+        function closeStatus() {
+            const modal = document.getElementById('statusModal')
+            const graphic = document.getElementById('statusGraphic');
+            const icon = document.getElementById('statusIcon');
+            const title = document.getElementById('statusTitle');
+            modal.style.display = 'none';
+        }
+
+        function previewPDF(url) {
+            const modal = document.getElementById('pdfModal');
+            const frame = document.getElementById('pdfFrame');
+            const loading = document.getElementById('pdfLoading');
+
+            loading.style.display = 'block';
+            frame.style.display = 'none';
+            modal.style.display = 'block';
+            frame.src = url;
+
+            frame.onload = function () {
+                loading.style.display = 'none';
+                frame.style.display = 'block';
+            };
+        }
+
+        function closePDFModal() {
+            const modal = document.getElementById('pdfModal');
+            const frame = document.getElementById('pdfFrame');
+            frame.src = '';
+            modal.style.display = 'none';
+        }
+
+        function downloadPDF() {
+            const frame = document.getElementById('pdfFrame');
+            if (frame.src) {
+                window.open(frame.src, '_blank');
+            }
+        }
+
+        function redirectToAdmin() {
+            window.location.href = "/basic_user_home";
+        }
+    </script>
+</body>
+
+</html>
