@@ -68,7 +68,7 @@
                     <th>Student Name</th>
                     <th>Form Name</th>
                     <th>Preview PDF</th>
-                    <th>Download PDF</th>
+                    <!--<th>Download PDF</th>-->
                     <th>Status</th>
                     <th>Action</th>
                     <th>Submitted At</th>
@@ -91,7 +91,7 @@
                                 <span class="text-muted">Not Available</span>
                             {% endif %}
                         </td>
-                        <td><button onclick="viewPDF('{{ request.pdf_url }}')">Download PDF</button></td>
+                        <!--<td><button onclick="downloadPDF('{{ request.pdf_url }}')">Download PDF</button></td>-->
                         <td>
                             <button 
                                 data-status="{{ request.approval_status|default('pending')|lower }}"
