@@ -1497,9 +1497,16 @@ def create_account():
 def admin_home():
     if 'user' not in session:
         return redirect(url_for('index'))
+    
+    # Get the current user from database to check clearance level
+    user = User.query.filter_by(email=session['user']['email']).first()
+    if not user:
+        return redirect(url_for('index'))
+    
     return render_template(
         'admin.html',
-        user_name=f"{session['user']['first_name']} {session['user'].get('middle_name', '').strip()} {session['user']['last_name']}".strip()
+        user_name=f"{session['user']['first_name']} {session['user'].get('middle_name', '').strip()} {session['user']['last_name']}".strip(),
+        clearance_level=user.clearance_level  # Pass clearance level to template
     )
 
 @app.route('/admin_create_user')
