@@ -10,11 +10,13 @@ body.normal {
     background: var(--primary-color);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    height: 85vh;
+    min-height: 100vh;
     margin: 0;
     text-align: center;
+    padding-top: 50px;
+    padding-bottom: 50px;
 }
 
 body.forms {
