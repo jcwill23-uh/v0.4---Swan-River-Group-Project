@@ -1092,3 +1092,9 @@ button.submit:hover {
     background-color: #f44336;
     color: white;
 }
+
+body.centered {
+    justify-content: center;
+    padding-top: 0;
+    padding-bottom: 0;   
+}
