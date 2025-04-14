@@ -1407,7 +1407,7 @@ def sign_in():
             last_name = name_parts[-1] if len(name_parts) > 1 else ""  # Last name
 
             session['user'] = {
-                'id': user.id,   # <-- Add this line
+                'id': user.id,
                 'first_name': first_name,
                 'middle_name': middle_name,
                 'last_name': last_name,
