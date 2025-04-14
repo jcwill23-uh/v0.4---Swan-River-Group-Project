@@ -1029,3 +1029,66 @@ button.submit:hover {
 .shake {
     animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
 }
+
+.filter-button {
+    background-color: #005a9c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.filter-button:hover {
+    background-color: #004080;
+}
+
+/* Make filter dropdown match page background */
+.filter-dropdown {
+    background-color: inherit;  /* same as page */
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* Style dropdowns like buttons */
+.filter-select {
+    background-color: #005a9c;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 10px;
+    appearance: none; /* Removes default arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.filter-select:hover {
+    background-color: #004080;
+}
+
+/* Filter action buttons */
+.filter-buttons {
+    margin-top: 10px;
+}
+
+.apply-filter-button, .clear-filter-button {
+    margin-right: 10px;
+    padding: 5px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.apply-filter-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.clear-filter-button {
+    background-color: #f44336;
+    color: white;
+}
