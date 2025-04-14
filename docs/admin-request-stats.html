@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="COSC 4353 group project.">
+    <meta name="keywords" content="swan river, group project, cosc 4353">
+    <meta property="og:title" content="Swan River Group Project">
+    <meta property="og:description" content="COSC 4353 group project. Team: Swan River.">
+    <meta property="og:image" content="/images/swan.jpg">
+    <meta property="og:url" content="https://jcwill23-uh.github.io/Swan-River-Group-Project/">
+
+    <title>Swan River Group Project - Admin</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/swan.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    <script>
+        function redirectToAdmin() {
+            window.location.href = "/admin_home";
+        }
+    </script>
+</head>
+
+<body class="userList">
+    <h2>Admin Request Stats</h2>
+
+    <button class="filter-button" onclick="toggleFilter()">Filter</button>
+
+    <div id="filterSection" class="filter-dropdown" style="display: none;">
+        <form method="get" action="{{ url_for('admin_request_stats') }}">
+            <label for="manager">Manager:</label>
+            <select name="manager" id="manager">
+                <option value="">Any</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+    
+            <label for="level">Clearance Level:</label>
+            <select name="level" id="level">
+                <option value="">Any</option>
+                {% for level in range(1, 5) %}
+                    <option value="{{ level }}">{{ level }}</option>
+                {% endfor %}
+            </select>
+    
+            <div class="filter-buttons">
+                <button type="submit" class="apply-filter-button">Apply Filters</button>
+                <button type="button" class="clear-filter-button" onclick="clearFilters()">Clear Filters</button>
+            </div>
+        </form>
+    </div>    
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Level</th>
+                <th>Manager</th>
+                <th>Pending</th>
+                <th>Approved</th>
+                <th>Delegations</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+                <tr>
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.level }}</td>
+                    <td>{{ row.manager }}</td>
+                    <td>{{ row.pending }}</td>
+                    <td>{{ row.approved }}</td>
+                    <td>{{ row.delegations }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if not data %}
+        <p>No results found.</p>
+    {% endif %}
+
+    <script>
+        function toggleFilter() {
+            const section = document.getElementById('filterSection');
+            section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        }
+    
+        function clearFilters() {
+            window.location.href = "{{ url_for('admin_request_stats') }}";
+        }
+    </script>    
+
+    <button class="back" onclick="redirectToAdmin()">Back to Home</button>
+
+</body>
+
+</html>
