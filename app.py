@@ -2035,6 +2035,41 @@ def update_comment(request_id):
         db.session.commit()  
         return jsonify({"message": "Comment saved successfully"}), 200
     return jsonify({"error": "Request not found"}), 404 
+
+# Route to Admin Request Stats Page
+@app.route('/admin_request_stats')
+def admin_request_stats():
+    if 'user' not in session or session['user']['role'] != 'admin':
+        return redirect(url_for('login'))
+
+    manager_filter = request.args.get('manager')
+    level_filter = request.args.get('level')
+
+    query = User.query.filter(User.role == 'admin')
+
+    if manager_filter:
+        query = query.filter(User.manager == manager_filter)
+    if level_filter:
+        query = query.filter(User.clearance_level == int(level_filter))
+
+    admins = query.all()
+
+    data = []
+    for admin in admins:
+        pending = ReleaseFormRequest.query.filter_by(delegated_to_id=admin.id, approval_status='pending').count()
+        approved = ReleaseFormRequest.query.filter_by(delegated_to_id=admin.id, approval_status='approved').count()
+        delegations = ReleaseFormRequest.query.filter_by(delegated_by_id=admin.id).count()
+
+        data.append({
+            'name': f"{admin.first_name} {admin.last_name}",
+            'level': admin.clearance_level,
+            'manager': 'Yes' if admin.manager == 'yes' else 'No',
+            'pending': pending,
+            'approved': approved,
+            'delegations': delegations
+        })
+
+    return render_template('admin-request-stats.html', data=data)
     
 # Helper functions
 def _build_auth_url(scopes=None, state=None):
