@@ -54,4 +54,4 @@ RUN mkdir -p /tmp/flask_session
 EXPOSE 8000
 
 # Default command
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "app:app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8000", "--timeout", "300", "app:app"]
