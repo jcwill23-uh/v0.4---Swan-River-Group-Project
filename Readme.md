@@ -16,7 +16,7 @@ Easiest way to run this app:
 
 To run this app locally, you will need to have a database set up on your local host via sqlite, as well as an account on Microsoft Azure. Once you have these, you will need to edit `app.py` as follows:
                                                                                                 Open a terminal (Command Prompt, PowerShell, or Git Bash on Windows; Terminal on macOS/Linux).
-                                                                                                Run the git clone: `git clone https://github.com/jcwill23-uh/Swan-River-Group-Project.git`
+                                                                                                Run the git clone: `git clone https://github.com/jcwill23-uh/v0.4---Swan-River-Group-Project.git`
                                                                                                 Go to directory: `cd Swan-River-Group-Project`
                                                                                                 Create a Virtual Environment: `python -m venv venv`
                                                                                                 Activate the Virtual Environment:
