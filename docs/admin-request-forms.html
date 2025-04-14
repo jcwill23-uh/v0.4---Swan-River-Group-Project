@@ -61,14 +61,24 @@
 
 <body class="userList">
     <div>
-        <h1>View New Requested Forms</h1><br>
+        <h1>View Request Forms</h1><br>
+        <div style="margin-bottom: 15px;">
+            <label for="statusFilter"><strong>Filter by Status:</strong></label>
+            <select id="statusFilter" class="status-filter-dropdown" onchange="filterRequests()">
+                <option value="pending" selected>Pending</option>
+                <option value="approved">Approved</option>
+                <option value="declined">Declined</option>
+                <option value="all">All</option>
+            </select>            
+        </div>        
         <table id="userTable">
             <thead>
                 <tr>
                     <th>Student Name</th>
                     <th>Form Name</th>
+                    <th>Delegated By</th>
+                    <th>Delegated To</th>
                     <th>Preview PDF</th>
-                    <!--<th>Download PDF</th>-->
                     <th>Status</th>
                     <th>Action</th>
                     <th>Submitted At</th>
@@ -79,8 +89,31 @@
                 {% if requests %}
                     {% for request in requests %}
                     <tr>
+                        <!-- Student Name -->
                         <td>{{ request.student_name }}</td>
+
+                        <!-- Form Name -->
                         <td>{{ request.form_name }}</td>
+
+                        <!-- Delegated By -->
+                        <td>
+                            {% if request.delegated_by %}
+                                {{ request.delegated_by.first_name }} {{ request.delegated_by.last_name }}
+                            {% else %}
+                                Not Delegated
+                            {% endif %}
+                        </td>
+
+                        <!-- Delegated To -->
+                        <td>
+                            {% if request.delegated_to %}
+                                {{ request.delegated_to.first_name }} {{ request.delegated_to.last_name }}
+                            {% else %}
+                                Not Delegated
+                            {% endif %}
+                        </td>
+                        
+                        <!-- Preview PDF -->
                         <td>
                             {% if request.pdf_url %}
                             <button onclick="previewPDF('/preview_pdf/{{ request.id }}')" class="preview-btn">
@@ -91,7 +124,8 @@
                                 <span class="text-muted">Not Available</span>
                             {% endif %}
                         </td>
-                        <!--<td><button onclick="downloadPDF('{{ request.pdf_url }}')">Download PDF</button></td>-->
+
+                        <!-- Status -->
                         <td>
                             <button 
                                 data-status="{{ request.approval_status|default('pending')|lower }}"
@@ -103,21 +137,39 @@
                                 View Status
                             </button>
                         </td>
+
+                        <!-- Action -->
                         <td class="action-buttons">
-                            <button onclick="approveRequest({{ request.id }})">Approve</button>
-                            <button onclick="declineRequest({{ request.id }})">Decline</button>
+                            <button onclick="approveRequest({{ request.id }})" class="btn-status view-status-btn">
+                                ✅ Approve
+                            </button>
+                        
+                            <button onclick="declineRequest({{ request.id }})" class="btn-status view-status-btn">
+                                ❌ Decline
+                            </button>
+                        
+                            {% if manager == 'yes' %}
+                            <button onclick="openDelegateModal({{ request.id }}, '{{ request.form_name }}')" class="btn-status view-status-btn">
+                                🔄 Delegate
+                            </button>
+                            {% endif %}
                         </td>
-                        <td>{{ request.submitted_at }}</td>
+
+                        <!-- Submitted at -->
                         <td>
-                            <textarea id="comment-{{ request.id }}" onblur="saveComment({{ request.id }})"
-                                style="vertical-align: top; text-align: left; width: 90%; min-height: 50px; padding: 5px;
-                                resize: none;">
-                                {{ request.comments or '' }}
-                            </textarea>
+                            {{ request.submitted_at.strftime('%Y-%m-%d %I:%M %p') if request.submitted_at else 'N/A' }}
+                        </td>                        
+
+                        <!-- Comments -->
+                        <td>
+                            <button 
+                                class="btn-status view-status-btn"
+                                onclick="openCommentModal({{ request.id }}, `{{ request.comments or '' }}`)">
+                                Add Comments
+                            </button>
                         </td>
-               
-                <!--<td>{{ request.pdf_url }}</td>-->
                     </tr>
+
                     {% endfor %}
                 {% else %}
                     <tr>
@@ -316,6 +368,102 @@
             }
         }
 
+        // Delegation script below
+        let currentRequestId = null;
+
+        function openDelegateModal(requestId, formName) {
+            currentRequestId = requestId;
+            document.getElementById('delegateModal').style.display = 'block';
+
+            fetch(`/get_delegatable_users/${formName}`)
+            .then(response => response.json())
+            .then(data => {
+                const select = document.getElementById('delegateUserSelect');
+                select.innerHTML = '<option value="">Select User</option>';
+                data.users.forEach(user => {
+                    select.innerHTML += `<option value="${user.id}">${user.first_name} ${user.last_name}</option>`;
+                });
+            });
+        }
+
+        function closeDelegateModal() {
+            document.getElementById('delegateModal').style.display = 'none';
+        }
+
+        function submitDelegation() {
+            const selectedUser = document.getElementById('delegateUserSelect').value;
+
+            fetch(`/delegate_request/${currentRequestId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ delegated_to_id: selectedUser })
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                }
+            });
+        }
+
+        // below is for Comments popup
+        let currentCommentId = null;
+
+        function openCommentModal(requestId, existingComment) {
+            currentCommentId = requestId;
+            document.getElementById('commentInput').value = existingComment.trim();
+            document.getElementById('commentModal').style.display = 'flex';
+        }
+
+        function closeCommentModal() {
+            document.getElementById('commentModal').style.display = 'none';
+            currentCommentId = null;
+        }
+
+        function saveComment() {
+            const commentText = document.getElementById('commentInput').value;
+
+            fetch(`/update_comment/${currentCommentId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ comments: commentText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data.message);
+                location.reload();
+            });
+
+            closeCommentModal();
+        }
+
+        // below is for filtering the table based on status of request
+        function filterRequests() {
+            const filterValue = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('#userTableBody tr');
+
+            rows.forEach(row => {
+                const statusButton = row.querySelector('.view-status-btn');
+
+                if (!statusButton) {
+                    row.style.display = 'table-row';
+                    return;
+                }
+
+                const rowStatus = statusButton.dataset.status;
+
+                if (filterValue === 'all' || rowStatus === filterValue) {
+                    row.style.display = 'table-row';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // auto filter to Pending for status of request on page load
+        window.onload = function() {
+            filterRequests();
+        };
+
+
     </script>
         <!-- Add an iframe to display the PDF -->
         <!--<iframe id="pdfViewer" style="display:none; width: 100%; height: 600px;" frameborder="0"></iframe>-->
@@ -323,13 +471,45 @@
         <button class="back" onclick="redirectToAdmin()">Back to Home</button>
     </div>
 
-    <!-- Modal for PDF Preview -->
-   <!-- <div id="pdfModal" style="display:none; position:fixed; top:10%; left:10%; width:80%; height:80%; background:white; border:2px solid #ccc; z-index:1000; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
-        <div style="text-align:right; padding:10px;">
-            <button onclick="closePDFModal()" style="padding:5px 10px;">Close</button>
+    <div id="delegateModal" class="delegate-modal" style="display: none;">
+        <div class="status-popup-frame" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: none;">
+            <button class="status-close-btn" onclick="closeDelegateModal()">×</button>
+    
+            <div class="status-popup-content">
+                <h3 class="status-title">Delegate Request</h3>
+    
+                <select id="delegateUserSelect" style="width: 80%; max-width: 300px; margin: 20px 0; padding: 8px; border-radius: 8px;">
+                    <option value="">Select User</option>
+                </select>
+    
+                <div style="margin-top: 10px; display: flex; justify-content: center; gap: 10px;">
+                    <button onclick="submitDelegation()" class="pdf-modal-btn pdf-modal-btn-download">Assign</button>
+                    <button onclick="closeDelegateModal()" class="pdf-modal-btn pdf-modal-btn-close">Cancel</button>
+                </div>
+            </div>
         </div>
-        <iframe id="pdfFrame" style="width:100%; height:90%; border:none;"></iframe>
-    </div>   -->  
+    </div>
+    
+    
+    
+    
+    <!-- Comment Modal -->
+    <div id="commentModal" class="status-modal">
+        <div class="status-popup-frame">
+            <button id="commentCloseBtn" class="status-close-btn" onclick="closeCommentModal()">×</button>
+            <div class="status-popup-content">
+                <h3 class="status-title">Add Comments</h3>
+    
+                <textarea id="commentInput" style="width: 100%; height: 120px; padding: 8px; font-size: 14px;"></textarea>
+    
+                <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button onclick="saveComment()" class="pdf-modal-btn pdf-modal-btn-download">Save</button>
+                    <button onclick="closeCommentModal()" class="pdf-modal-btn pdf-modal-btn-close">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 
 </body>
 
