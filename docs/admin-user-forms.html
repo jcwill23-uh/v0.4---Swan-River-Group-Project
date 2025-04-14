@@ -19,13 +19,16 @@
 
     <script src="{{ url_for('static', filename='script.js') }}" defer></script>
     <script>
-      function redirectToAdmin() {
-          window.location.href = "/admin_home";
-      }
+        function redirectToAdmin() {
+            window.location.href = "/admin_home";
+        }
         function redirectToRequestForms() {
-          window.location.href = "/admin_request_forms";
-      }
-      </script>
+            window.location.href = "/admin_request_forms";
+        }
+        function redirectToAdminStats() {
+            window.location.href = "{{ url_for('admin_request_stats') }}";
+        }
+    </script>
     
 
 </head>
@@ -34,6 +37,7 @@
     <div class="welcome">
         <h1>View User Forms</h1><br>
         <button class="back" onclick="redirectToRequestForms()">View Requested Forms</button>
+        <button class="back" onclick="redirectToAdminStats()">View Admin Request Stats</button>
         <button class="back" onclick="redirectToAdmin()">Back to Home</button>
     </div>
 
