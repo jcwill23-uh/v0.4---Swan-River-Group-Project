@@ -1662,7 +1662,8 @@ def get_delegatable_users(form_name):
 
     users_data = [{
         'id': u.id,
-        'name': f"{u.first_name} {u.last_name}",
+        'first_name': u.first_name,
+        'last_name': u.last_name,
         'level': u.clearance_level,
         'manager': u.manager
     } for u in delegatable_users]
