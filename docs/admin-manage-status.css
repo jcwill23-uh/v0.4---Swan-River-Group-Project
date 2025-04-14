@@ -1,0 +1,249 @@
+/* MatrixAdmin Theme - Terminal-inspired UI with neon green accents */
+:root {
+    --bg-color: #000000;
+    --container-bg: #0d0d0d;
+    --text-color: #00ff00;
+    --text-muted: #00bb00;
+    --border-color: #00aa00;
+    --hover-color: #003300;
+    --badge-color: #00cc00;
+    --button-color: #00ff00;
+    --button-text: #000000;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding-top: 20px;
+    font-family: 'Courier New', monospace;
+}
+
+.container {
+    background-color: var(--container-bg);
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    padding: 25px;
+    border: 1px solid var(--border-color);
+}
+
+/* Override Bootstrap's white backgrounds */
+.table {
+    --bs-table-bg: transparent !important;
+    --bs-table-striped-bg: var(--hover-color) !important;
+    --bs-table-striped-color: var(--text-color) !important;
+    --bs-table-active-bg: var(--hover-color) !important;
+    --bs-table-active-color: var(--text-color) !important;
+    --bs-table-hover-bg: var(--hover-color) !important;
+    --bs-table-hover-color: var(--text-color) !important;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+/* Force table cells to be black */
+.table td, .table th {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color);
+}
+
+.table-responsive {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.table-dark-header th {
+    background-color: var(--container-bg) !important;
+    color: var(--text-color) !important;
+    border-bottom: 2px solid var(--border-color);
+    padding: 12px 8px;
+}
+
+/* Fix Bootstrap's table hover */
+.table-hover tbody tr:hover {
+    background-color: var(--hover-color) !important;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.level-badge {
+    font-size: 0.8em;
+    padding: 5px 10px;
+    border-radius: 10px;
+    color: var(--button-text);
+}
+
+.level-4 {
+    background-color: var(--text-color);
+}
+
+.level-3 {
+    background-color: #00cc00;
+}
+
+.level-2 {
+    background-color: #009900;
+}
+
+.level-1 {
+    background-color: #006600;
+}
+
+.form-select {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+/* Ensure dropdown options are also dark */
+.form-select option {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+h2 {
+    color: var(--text-color);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-primary {
+    background-color: var(--button-color);
+    border: none;
+    color: var(--button-text);
+}
+
+.btn-primary:hover {
+    background-color: #33ff33;
+    color: var(--button-text);
+}
+
+.btn-outline-secondary {
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+    background-color: transparent;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--hover-color);
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+
+.alert-success {
+    background-color: #004400;
+    color: var(--text-color);
+    border-color: #008800;
+}
+
+.alert-danger {
+    background-color: #440000;
+    color: #ff3333;
+    border-color: #880000;
+}
+
+.badge {
+    color: var(--button-text);
+}
+
+.clearance-guide {
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 15px;
+    margin-top: 30px;
+}
+
+.clearance-guide h5 {
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.clearance-guide ul {
+    padding-left: 20px;
+    margin-top: 10px;
+}
+
+.clearance-guide li {
+    color: var(--text-color);
+}
+
+/* Blinking cursor effect */
+.cursor-blink::after {
+    content: '|';
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    from, to { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Symbol styling */
+.symbol-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--hover-color);
+    color: var(--text-color);
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Close button styling */
+.btn-close {
+    filter: invert(1) brightness(200%) sepia(100%) saturate(1000%) hue-rotate(90deg);
+}
+
+/* Row colors */
+tbody tr:nth-child(odd) {
+    background-color: var(--bg-color) !important;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #0a0a0a !important;
+}
+
+/* Additional fixes for white backgrounds */
+input, select, textarea, button {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+}
+
+.dropdown-menu {
+    background-color: var(--bg-color) !important;
+    border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+    color: var(--text-color) !important;
+}
+
+.dropdown-item:hover {
+    background-color: var(--hover-color) !important;
+}
+
+/* Force form-control elements to be dark */
+.form-control, .form-control:focus {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Add green glow to focused elements */
+.form-control:focus, .form-select:focus, .btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(0, 255, 0, 0.25) !important;
+}

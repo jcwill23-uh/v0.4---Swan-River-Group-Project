@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Admin Status - University System</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-manage-status.css') }}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="cursor-blink"><i class="fas fa-user-shield me-2"></i>Manage Admin Status</h2>
+            <a href="{{ url_for('admin_home') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark-header">
+                    <tr>
+                        <th>Admin</th>
+                        <th>Contact</th>
+                        <th>Current Level</th>
+                        <th>Manager Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="symbol-circle">
+                                    {{ user.first_name[0] }}{{ user.last_name[0] }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ user.first_name }} {{ user.last_name }}</div>
+                                    <div class="text-muted">ID: {{ user.id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>{{ user.email }}</div>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm clearance-level" data-user-id="{{ user.id }}" style="width: 100px;">
+                                <option value="1" {% if user.clearance_level == 1 %}selected{% endif %}>Level 1</option>
+                                <option value="2" {% if user.clearance_level == 2 %}selected{% endif %}>Level 2</option>
+                                <option value="3" {% if user.clearance_level == 3 %}selected{% endif %}>Level 3</option>
+                                <option value="4" {% if user.clearance_level == 4 %}selected{% endif %}>Level 4</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm manager-status" data-user-id="{{ user.id }}" style="width: 120px;">
+                                <option value="no" {% if user.manager == 'no' %}selected{% endif %}>Regular Admin</option>
+                                <option value="yes" {% if user.manager == 'yes' %}selected{% endif %}>Manager</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary save-changes" data-user-id="{{ user.id }}">
+                                <i class="fas fa-save me-1"></i> Save
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="clearance-guide mt-4">
+            <h5><i class="fas fa-info-circle me-2"></i>Clearance Level Guide</h5>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <span class="badge level-4">Level 4</span>
+                    <ul class="mt-2 small">
+                        <li>Assign managers</li>
+                        <li>Assign levels</li>
+                        <li>Approve all requests</li>
+                        <li>Delegate to any manager</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <span class="badge level-3">Level 3</span>
+                    <ul class="mt-2 small">
+                        <li>Approve all requests</li>
+                        <li>Managers can delegate</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <span class="badge level-2">Level 2</span>
+                    <ul class="mt-2 small">
+                        <li>Release & SSN forms</li>
+                        <li>Managers can delegate</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <span class="badge level-1">Level 1</span>
+                    <ul class="mt-2 small">
+                        <li>Release forms only</li>
+                        <li>Managers can delegate</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+    $(document).ready(function() {
+        // Apply dark theme to all elements (this helps catch any missed elements)
+        $('*').each(function() {
+            if ($(this).css('background-color') === 'rgb(255, 255, 255)') {
+                $(this).css('background-color', '#000000');
+                $(this).css('color', '#00ff00');
+            }
+        });
+        
+        // Save changes button click handler
+        $('.save-changes').click(function() {
+            const userId = $(this).data('user-id');
+            const btn = $(this);
+            
+            // Get selected values
+            const clearanceLevel = $(`.clearance-level[data-user-id="${userId}"]`).val();
+            const managerStatus = $(`.manager-status[data-user-id="${userId}"]`).val();
+            
+            // Show loading state
+            btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
+            btn.prop('disabled', true);
+            
+            // Make AJAX request
+            $.ajax({
+                url: '/update_admin_status',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    user_id: userId,
+                    clearance_level: clearanceLevel,
+                    manager: managerStatus
+                }),
+                success: function(response) {
+                    // Show success message
+                    btn.html('<i class="fas fa-check me-1"></i> Saved');
+                    setTimeout(function() {
+                        btn.html('<i class="fas fa-save me-1"></i> Save');
+                        btn.prop('disabled', false);
+                    }, 2000);
+                    
+                    // Update badge display if needed
+                    updateBadgeDisplay(userId, clearanceLevel, managerStatus);
+                },
+                error: function(xhr) {
+                    // Show error message
+                    btn.html('<i class="fas fa-exclamation-triangle me-1"></i> Error');
+                    alert('Error saving changes: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                    setTimeout(function() {
+                        btn.html('<i class="fas fa-save me-1"></i> Save');
+                        btn.prop('disabled', false);
+                    }, 2000);
+                }
+            });
+        });
+        
+        function updateBadgeDisplay(userId, level, isManager) {
+            // Visual feedback for updates
+            console.log(`Updated user ${userId} to level ${level}, manager: ${isManager}`);
+        }
+        
+        // Add typing effect to the page title
+        const title = "Manage Admin Status";
+        let i = 0;
+        const speed = 100;
+        
+        function typeEffect() {
+            if (i < title.length) {
+                document.title = ">" + title.substring(0, i+1);
+                i++;
+                setTimeout(typeEffect, speed);
+            } else {
+                setTimeout(() => {
+                    i = 0;
+                    typeEffect();
+                }, 3000);
+            }
+        }
+        
+        typeEffect();
+    });
+    </script>
+</body>
+</html>
