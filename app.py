@@ -1552,57 +1552,58 @@ def admin_request_forms():
     user_id = session['user']['id']
     user = User.query.get(user_id)
 
-    clearance_level = user.clearance_level
-    manager = user.manager
-
     # Base Query
     requests_query = ReleaseFormRequest.query \
         .options(db.joinedload(ReleaseFormRequest.delegated_to)) \
         .options(db.joinedload(ReleaseFormRequest.delegated_by))
 
-    # Level 4 or Level 3 Manager → See all requests
-    if clearance_level == 4 or (clearance_level == 3 and manager == 'yes'):
+    # Level 4 can see all requests
+    if user.clearance_level == 4:
         requests = requests_query.all()
-
-    # Level 3 Non-Manager → Only requests delegated to them
-    elif clearance_level == 3 and manager == 'no':
+    
+    # Level 3 Manager can see all requests
+    elif user.clearance_level == 3 and user.manager == 'yes':
+        requests = requests_query.all()
+    
+    # Level 3 Non-Manager can see requests delegated to them
+    elif user.clearance_level == 3 and user.manager == 'no':
         requests = requests_query.filter(
             ReleaseFormRequest.delegated_to_id == user_id
         ).all()
-
-    # Level 2 Manager → Release/SSN forms OR delegated to them
-    elif clearance_level == 2 and manager == 'yes':
+    
+    # Level 2 Manager can see Release and SSN forms or delegated to them
+    elif user.clearance_level == 2 and user.manager == 'yes':
         requests = requests_query.filter(
             (ReleaseFormRequest.form_name.in_(['Release Form', 'SSN Form'])) |
             (ReleaseFormRequest.delegated_to_id == user_id)
         ).all()
-
-    # Level 2 Non-Manager → Only delegated to them
-    elif clearance_level == 2 and manager == 'no':
+    
+    # Level 2 Non-Manager can see requests delegated to them
+    elif user.clearance_level == 2 and user.manager == 'no':
         requests = requests_query.filter(
             ReleaseFormRequest.delegated_to_id == user_id
         ).all()
-
-    # Level 1 Manager → Release forms OR delegated to them
-    elif clearance_level == 1 and manager == 'yes':
+    
+    # Level 1 Manager can see Release forms or delegated to them
+    elif user.clearance_level == 1 and user.manager == 'yes':
         requests = requests_query.filter(
             (ReleaseFormRequest.form_name == 'Release Form') |
             (ReleaseFormRequest.delegated_to_id == user_id)
         ).all()
-
-    # Level 1 Non-Manager → Only delegated to them
-    elif clearance_level == 1 and manager == 'no':
+    
+    # Level 1 Non-Manager can see requests delegated to them
+    elif user.clearance_level == 1 and user.manager == 'no':
         requests = requests_query.filter(
             ReleaseFormRequest.delegated_to_id == user_id
         ).all()
-
+    
     else:
         requests = []
 
     return render_template('admin-request-forms.html',
-                           requests=requests,
-                           clearance_level=clearance_level,
-                           manager=manager)
+                         requests=requests,
+                         clearance_level=user.clearance_level,
+                         manager=user.manager)
 
 # Route to handle delegation
 @app.route('/get_delegatable_users/<form_name>')
@@ -1620,38 +1621,51 @@ def get_delegatable_users(form_name):
 
     delegatable_users = []
 
-    # Level 4 logic
+    # Level 4 can delegate to any manager
     if user.clearance_level == 4:
         if form_name == "Release Form":
             delegatable_users = users_query.filter(
                 User.manager == 'yes',
                 User.clearance_level.in_([1, 2, 3])
             ).all()
-
         elif form_name == "SSN Form":
             delegatable_users = users_query.filter(
                 User.manager == 'yes',
                 User.clearance_level.in_([2, 3])
             ).all()
-
         elif form_name == "Reduced Course Load Form":
             delegatable_users = users_query.filter(
                 User.manager == 'yes',
                 User.clearance_level == 3
             ).all()
 
-    # Level 1, 2, 3 Managers Logic
-    elif user.clearance_level in [1, 2, 3] and user.manager == 'yes':
+    # Level 3 Manager can delegate to Level 3 Non-Managers
+    elif user.clearance_level == 3 and user.manager == 'yes':
         delegatable_users = users_query.filter(
             User.manager == 'no',
-            User.clearance_level == user.clearance_level
+            User.clearance_level == 3
         ).all()
 
-    # Non-managers can't delegate
-    else:
-        delegatable_users = []
+    # Level 2 Manager can delegate to Level 2 Non-Managers
+    elif user.clearance_level == 2 and user.manager == 'yes':
+        delegatable_users = users_query.filter(
+            User.manager == 'no',
+            User.clearance_level == 2
+        ).all()
 
-    users_data = [{'id': u.id, 'first_name': u.first_name, 'last_name': u.last_name} for u in delegatable_users]
+    # Level 1 Manager can delegate to Level 1 Non-Managers
+    elif user.clearance_level == 1 and user.manager == 'yes':
+        delegatable_users = users_query.filter(
+            User.manager == 'no',
+            User.clearance_level == 1
+        ).all()
+
+    users_data = [{
+        'id': u.id,
+        'name': f"{u.first_name} {u.last_name}",
+        'level': u.clearance_level,
+        'manager': u.manager
+    } for u in delegatable_users]
 
     return jsonify({'users': users_data})
 
@@ -1901,6 +1915,71 @@ def upload_user_signature():
     except Exception as e:
         logging.error(f"Error uploading signature: {str(e)}")
         return jsonify({"error": f"Error uploading signature: {str(e)}"}), 500
+    
+@app.route('/admin_manage_admins')
+def admin_manage_admins():
+    if 'user' not in session:
+        return redirect(url_for('index'))
+    
+    # Check if user is Level 4 admin
+    user = User.query.get(session['user']['id'])
+    if not user or user.clearance_level != 4:
+        flash("Access Denied: You don't have permission to access this page", "error")
+        return redirect(url_for('admin_home'))
+    
+    # Get all users except the current admin
+    users = User.query.filter(User.id != user.id).all()
+    return render_template('admin-manage-admins.html', users=users)
+
+@app.route('/update_admin_status', methods=['POST'])
+def update_admin_status():
+    if 'user' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    # Verify current user is Level 4 admin
+    current_user = User.query.get(session['user']['id'])
+    if not current_user or current_user.clearance_level != 4:
+        return jsonify({"error": "Access Denied"}), 403
+    
+    data = request.get_json()
+    user_id = data.get('user_id')
+    clearance_level = int(data.get('clearance_level', 1))
+    manager = data.get('manager', 'no')
+    
+    # Validate inputs
+    if clearance_level not in [1, 2, 3, 4]:
+        return jsonify({"error": "Invalid clearance level"}), 400
+    
+    if manager not in ['yes', 'no']:
+        return jsonify({"error": "Invalid manager status"}), 400
+    
+    # Prevent demoting yourself
+    if user_id == current_user.id and clearance_level != 4:
+        return jsonify({"error": "You cannot demote yourself"}), 400
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    # Update user
+    user.clearance_level = clearance_level
+    user.manager = manager
+    
+    # Update allowed forms based on clearance level
+    if clearance_level == 4:
+        user.allowed_forms = json.dumps(["Release Form", "SSN Form", "Reduced Course Load Form"])
+    elif clearance_level == 3:
+        user.allowed_forms = json.dumps(["Release Form", "SSN Form", "Reduced Course Load Form"])
+    elif clearance_level == 2:
+        user.allowed_forms = json.dumps(["Release Form", "SSN Form"])
+    else:
+        user.allowed_forms = json.dumps(["Release Form"])
+    
+    db.session.commit()
+    
+    return jsonify({"message": "Admin status updated successfully"})
+
+#-------------------------------Approve/Decline Requests----------------------------------
 
 @app.route('/approve_request/<int:request_id>', methods=['POST'])
 def approve_request(request_id):
@@ -1968,4 +2047,6 @@ if __name__ == '__main__':
         db.create_all()
     app.run(host='0.0.0.0', port=8000, debug=True)
     #app.run(host='localhost', port=5000, debug=True) 
+
+
 
