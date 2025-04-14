@@ -40,6 +40,9 @@
         function redirectToAdminForms() {
             window.location.href = "{{ url_for('admin_user_forms') }}";
         }
+        function redirectToManageAdmins() {
+            window.location.href = "{{ url_for('admin_manage_admins') }}";
+        }
         function confirmLogout() {
             var confirmLogout = confirm("Are you sure you want to log out?");
             if (confirmLogout) {
@@ -62,6 +65,7 @@
         <button class="admin-btn" onclick="redirectToUserView()">View Users</button><br>
         <button class="admin-btn" onclick="redirectToUpdateUser()">Update Users</button><br>
         <button class="admin-btn" onclick="redirectToDeleteUser()">Delete Users</button><br>
+        <button class="admin-btn" onclick="redirectToManageAdmins()">Manage Admins</button><br>
         <button class="admin-btn" onclick="redirectToAdminForms()">View Users Forms</button><br>
         <button class="admin-btn" onclick="redirectToIndex()">Logout</button><br>
     </div>
